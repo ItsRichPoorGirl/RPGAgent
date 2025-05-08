@@ -2,6 +2,7 @@
 
 import { useSubscription } from '@/hooks/react-query/subscriptions/use-subscriptions';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export const STORAGE_KEY_MODEL = 'suna-preferred-model';
 export const DEFAULT_FREE_MODEL_ID = 'qwen35';
@@ -13,7 +14,7 @@ export interface ModelOption {
   id: string;
   label: string;
   requiresSubscription: boolean;
-  description?: string;
+  description: string;
 }
 
 export const MODEL_OPTIONS: ModelOption[] = [
@@ -38,7 +39,25 @@ export const canAccessModel = (
   return subscriptionStatus === 'active' || !requiresSubscription;
 };
 
-export const useModelSelection = () => {
+export function useModelSelection() {
+  const { subscription } = useSubscription();
+  const { user } = useAuth();
+  
+  // Check if user is an admin
+  const isAdmin = user?.user_metadata?.account_role === 'admin';
+  
+  // If user is admin, they can use any model
+  const availableModels = isAdmin 
+    ? MODEL_OPTIONS 
+    : MODEL_OPTIONS.filter(model => !model.requiresSubscription || subscription?.status === 'active');
+  
+  return {
+    availableModels,
+    isAdmin
+  };
+}
+
+export const useModelSelectionOld = () => {
   const [selectedModel, setSelectedModel] = useState(DEFAULT_FREE_MODEL_ID);
   
   const { data: subscriptionData } = useSubscription();

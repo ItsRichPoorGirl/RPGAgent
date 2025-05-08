@@ -23,6 +23,8 @@ from utils import logger
 from utils.auth_utils import get_account_id_from_thread
 from services.billing import check_billing_status
 from agent.tools.sb_vision_tool import SandboxVisionTool
+from services.supabase import DBConnection
+from services.billing import get_user_subscription
 
 load_dotenv()
 
@@ -36,9 +38,40 @@ async def run_agent(
     model_name: str = "anthropic/claude-3-7-sonnet-latest",
     enable_thinking: Optional[bool] = False,
     reasoning_effort: Optional[str] = 'low',
-    enable_context_manager: bool = True
+    enable_context_manager: bool = True,
+    user_id: Optional[str] = None  # Add user_id parameter
 ):
     """Run the development agent with specified configuration."""
+    
+    # Check if user is admin
+    is_admin = False
+    if user_id:
+        try:
+            db = DBConnection()
+            client = await db.client
+            admin_check = await client.schema('basejump').from_('account_user') \
+                .select('account_role') \
+                .eq('user_id', user_id) \
+                .eq('account_role', 'admin') \
+                .execute()
+            
+            is_admin = admin_check.data and len(admin_check.data) > 0
+        except Exception as e:
+            logger.error(f"Error checking admin status: {str(e)}")
+    
+    # If user is not admin and trying to use Standard model without subscription, switch to Free model
+    if not is_admin and model_name == "anthropic/claude-3-7-sonnet-latest":
+        try:
+            db = DBConnection()
+            client = await db.client
+            subscription = await get_user_subscription(user_id)
+            if not subscription or subscription.get('status') != 'active':
+                model_name = "qwen3"  # Switch to Free model
+                logger.info(f"User {user_id} not subscribed, switching to Free model")
+        except Exception as e:
+            logger.error(f"Error checking subscription: {str(e)}")
+            model_name = "qwen3"  # Default to Free model on error
+    
     print(f"🚀 Starting agent with model: {model_name}")
 
     thread_manager = ThreadManager()
