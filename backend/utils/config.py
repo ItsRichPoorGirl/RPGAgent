@@ -40,14 +40,14 @@ class Configuration:
     ENV_MODE: EnvMode = EnvMode.LOCAL
     
     # Subscription tier IDs - Production
-    STRIPE_FREE_TIER_ID_PROD: str = 'price_1RMMnnFhg9K41oZlFWYO90BZ'
-    STRIPE_TIER_2_20_ID_PROD: str = 'price_1RMMMNFhg9K41oZl7qEznWpC'
-    STRIPE_TIER_6_50_ID_PROD: str = 'price_1RMNanFhg9K41oZldXQjd202'
-    STRIPE_TIER_12_100_ID_PROD: str = 'price_1RMNbWFhg9K41oZlkGcBoo30'
-    STRIPE_TIER_25_200_ID_PROD: str = 'price_1RMNc8Fhg9K41oZlT4rftd72'
-    STRIPE_TIER_50_400_ID_PROD: str = 'price_1RMNceFhg9K41oZlPHNx63RU'
-    STRIPE_TIER_125_800_ID_PROD: str = 'price_1RMNdWFhg9K41oZlHvi2l3Kj'
-    STRIPE_TIER_200_1000_ID_PROD: str = 'price_1RMNe6Fhg9K41oZlOzxsZbq8'
+    STRIPE_FREE_TIER_ID_PROD: str = 'price_1RMO5pCQSpuIbcUBaPRNGKS0'
+    STRIPE_TIER_2_20_ID_PROD: str = 'price_1RMO5vCQSpuIbcUBgdn505VI'
+    STRIPE_TIER_6_50_ID_PROD: str = 'price_1RMO5zCQSpuIbcUBfsU57SJH'
+    STRIPE_TIER_12_100_ID_PROD: str = 'price_1RMO63CQSpuIbcUBRSJEeZ8D'
+    STRIPE_TIER_25_200_ID_PROD: str = 'price_1RMO67CQSpuIbcUBjbkSKCUx'
+    STRIPE_TIER_50_400_ID_PROD: str = 'price_1RMO6ACQSpuIbcUBqc7ROJt9'
+    STRIPE_TIER_125_800_ID_PROD: str = 'price_1RMO6LCQSpuIbcUBk4ZfwQ95'
+    STRIPE_TIER_200_1000_ID_PROD: str = 'price_1RMO6OCQSpuIbcUBzibsYyXR'
     
     # Subscription tier IDs - Staging
     STRIPE_FREE_TIER_ID_STAGING: str = 'price_1RMMnnFhg9K41oZlFWYO90BZ'
