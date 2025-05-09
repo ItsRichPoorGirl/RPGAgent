@@ -49,15 +49,15 @@ class Configuration:
     STRIPE_TIER_125_800_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBF4PsfCG9'  # Tier 125
     STRIPE_TIER_200_1000_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBlv69Sl4i'  # Tier 200
     
-    # Subscription tier IDs - Staging
-    STRIPE_FREE_TIER_ID_STAGING: str = 'price_1RMMnnFhg9K41oZlFWYO90BZ'
-    STRIPE_TIER_2_20_ID_STAGING: str = 'price_1RMMMNFhg9K41oZl7qEznWpC'
-    STRIPE_TIER_6_50_ID_STAGING: str = 'price_1RMNanFhg9K41oZldXQjd202'
-    STRIPE_TIER_12_100_ID_STAGING: str = 'price_1RMNbWFhg9K41oZlkGcBoo30'
-    STRIPE_TIER_25_200_ID_STAGING: str = 'price_1RMNc8Fhg9K41oZlT4rftd72'
-    STRIPE_TIER_50_400_ID_STAGING: str = 'price_1RMNceFhg9K41oZlPHNx63RU'
-    STRIPE_TIER_125_800_ID_STAGING: str = 'price_1RMNdWFhg9K41oZlHvi2l3Kj'
-    STRIPE_TIER_200_1000_ID_STAGING: str = 'price_1RMNe6Fhg9K41oZlOzxsZbq8'
+    # Subscription tier IDs - Staging (using same IDs as production since we only use live products)
+    STRIPE_FREE_TIER_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBKkOp4qfZ'  # Free tier
+    STRIPE_TIER_2_20_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBEsEwW6cO'  # Tier 2
+    STRIPE_TIER_6_50_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBoLIdk8yv'  # Tier 6
+    STRIPE_TIER_12_100_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUB4xpnBWn2'  # Tier 12
+    STRIPE_TIER_25_200_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBrVEJblS7'  # Tier 25
+    STRIPE_TIER_50_400_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBXR5gNWHO'  # Tier 50
+    STRIPE_TIER_125_800_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBF4PsfCG9'  # Tier 125
+    STRIPE_TIER_200_1000_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBlv69Sl4i'  # Tier 200
     
     # Computed subscription tier IDs based on environment
     @property
@@ -156,7 +156,7 @@ class Configuration:
     
     # Stripe Product IDs
     STRIPE_PRODUCT_ID_PROD: str = 'prod_SH7nxrLxYVFTgM'  # Production product ID
-    STRIPE_PRODUCT_ID_STAGING: str = 'prod_SCgIj3G7yPOAWY'  # Staging product ID
+    STRIPE_PRODUCT_ID_STAGING: str = 'prod_SH7nxrLxYVFTgM'  # Staging product ID (using same as production)
     
     @property
     def STRIPE_PRODUCT_ID(self) -> str:

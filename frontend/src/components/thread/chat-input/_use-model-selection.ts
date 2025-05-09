@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { useSubscription } from '@/hooks/useSubscription';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useEffect } from 'react';
+import { useSubscription } from '@/hooks/react-query/subscriptions/use-subscriptions';
 
 export const STORAGE_KEY_MODEL = 'suna-preferred-model';
 export const DEFAULT_FREE_MODEL_ID = 'qwen35';
@@ -10,22 +9,27 @@ export const DEFAULT_PREMIUM_MODEL_ID = 'sonnet-3.7';
 
 export type SubscriptionStatus = 'no_subscription' | 'active';
 
-export const MODEL_OPTIONS = [
-  {
-    id: 'anthropic/claude-3-7-sonnet-latest',
-    name: 'Standard',
-    description: 'Best for most tasks',
-    requiresSubscription: true,
-  },
+export interface ModelOption {
+  id: string;
+  label: string;
+  requiresSubscription: boolean;
+  description: string;
+}
+
+export const MODEL_OPTIONS: ModelOption[] = [
   {
     id: 'qwen3',
-    name: 'Free',
-    description: 'Basic capabilities',
+    label: 'Free', 
     requiresSubscription: false,
+    description: 'Limited capabilities. Upgrade for full performance.'
   },
-] as const;
-
-export type ModelOption = (typeof MODEL_OPTIONS)[number];
+  { 
+    id: 'sonnet-3.7', 
+    label: 'Standard', 
+    requiresSubscription: true, 
+    description: 'Excellent for complex tasks and nuanced conversations'
+  },
+];
 
 export const canAccessModel = (
   subscriptionStatus: SubscriptionStatus,
@@ -34,43 +38,7 @@ export const canAccessModel = (
   return subscriptionStatus === 'active' || !requiresSubscription;
 };
 
-export function useModelSelection() {
-  const { data: subscriptionData } = useSubscription();
-  const { user } = useAuth();
-  
-  // Check if user is an admin
-  const isAdmin = user?.user_metadata?.account_role === 'admin';
-
-  // If user is admin, they can use any model
-  const availableModels = isAdmin 
-    ? MODEL_OPTIONS 
-    : MODEL_OPTIONS.filter(model => !model.requiresSubscription || subscriptionData?.status === 'active');
-
-  const [selectedModel, setSelectedModel] = useState<ModelOption>(availableModels[0]);
-
-  // Update selected model when available models change
-  useEffect(() => {
-    // If current selection is no longer available, switch to first available model
-    if (!availableModels.find(m => m.id === selectedModel.id)) {
-      setSelectedModel(availableModels[0]);
-    }
-  }, [availableModels, selectedModel.id]);
-
-  const handleModelChange = useCallback((modelId: string) => {
-    const model = MODEL_OPTIONS.find(m => m.id === modelId);
-    if (model) {
-      setSelectedModel(model);
-    }
-  }, []);
-
-  return {
-    selectedModel,
-    handleModelChange,
-    availableModels,
-  };
-}
-
-export const useModelSelectionOld = () => {
+export const useModelSelection = () => {
   const [selectedModel, setSelectedModel] = useState(DEFAULT_FREE_MODEL_ID);
   
   const { data: subscriptionData } = useSubscription();

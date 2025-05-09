@@ -213,6 +213,21 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
             "minutes_limit": "no limit"
         }
     
+    # Check if user is an admin
+    admin_check = await client.schema('basejump').from_('account_user') \
+        .select('account_role') \
+        .eq('user_id', user_id) \
+        .eq('account_role', 'admin') \
+        .execute()
+    
+    if admin_check.data and len(admin_check.data) > 0:
+        logger.info(f"User {user_id} is an admin - billing checks are disabled")
+        return True, "Admin access - billing disabled", {
+            "price_id": "admin",
+            "plan_name": "Admin",
+            "minutes_limit": "no limit"
+        }
+    
     # Get current subscription
     subscription = await get_user_subscription(user_id)
     # print("Current subscription:", subscription)
