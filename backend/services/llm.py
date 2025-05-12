@@ -23,9 +23,10 @@ from utils.config import config
 litellm.modify_params=True
 
 # Constants
-MAX_RETRIES = 2
+MAX_RETRIES = 3
 RATE_LIMIT_DELAY = 30
 RETRY_DELAY = 0.1
+OPENROUTER_RATE_LIMIT_DELAY = 60  # Longer delay for OpenRouter rate limits
 
 class LLMError(Exception):
     """Base exception for LLM-related errors."""
@@ -64,10 +65,16 @@ def setup_api_keys() -> None:
     else:
         logger.warning(f"Missing AWS credentials for Bedrock integration - access_key: {bool(aws_access_key)}, secret_key: {bool(aws_secret_key)}, region: {aws_region}")
 
-async def handle_error(error: Exception, attempt: int, max_attempts: int) -> None:
+async def handle_error(error: Exception, attempt: int, max_attempts: int, model_name: str) -> None:
     """Handle API errors with appropriate delays and logging."""
-    delay = RATE_LIMIT_DELAY if isinstance(error, litellm.exceptions.RateLimitError) else RETRY_DELAY
-    logger.warning(f"Error on attempt {attempt + 1}/{max_attempts}: {str(error)}")
+    if isinstance(error, litellm.exceptions.RateLimitError):
+        # Use longer delay for OpenRouter rate limits
+        delay = OPENROUTER_RATE_LIMIT_DELAY if model_name.startswith("openrouter/") else RATE_LIMIT_DELAY
+        logger.warning(f"Rate limit error on attempt {attempt + 1}/{max_attempts} for model {model_name}")
+    else:
+        delay = RETRY_DELAY
+        logger.warning(f"Error on attempt {attempt + 1}/{max_attempts} for model {model_name}: {str(error)}")
+    
     logger.debug(f"Waiting {delay} seconds before retry...")
     await asyncio.sleep(delay)
 
@@ -278,9 +285,10 @@ async def make_llm_api_call(
         LLMRetryError: If API call fails after retries
         LLMError: For other API-related errors
     """
-    # debug <timestamp>.json messages
+    # Log API call details
     logger.info(f"Making LLM API call to model: {model_name} (Thinking: {enable_thinking}, Effort: {reasoning_effort})")
     logger.info(f"📡 API Call: Using model {model_name}")
+
     params = prepare_params(
         messages=messages,
         model_name=model_name,
@@ -297,30 +305,28 @@ async def make_llm_api_call(
         enable_thinking=enable_thinking,
         reasoning_effort=reasoning_effort
     )
-    last_error = None
+
+    # Add specific error handling for OpenRouter
+    if model_name.startswith("openrouter/"):
+        if not config.OPENROUTER_API_KEY:
+            raise LLMError("OpenRouter API key not configured")
+        if not config.OPENROUTER_API_BASE:
+            raise LLMError("OpenRouter API base URL not configured")
+
     for attempt in range(MAX_RETRIES):
         try:
-            logger.debug(f"Attempt {attempt + 1}/{MAX_RETRIES}")
-            # logger.debug(f"API request parameters: {json.dumps(params, indent=2)}")
-
-            response = await litellm.acompletion(**params)
-            logger.debug(f"Successfully received API response from {model_name}")
-            logger.debug(f"Response: {response}")
-            return response
-
-        except (litellm.exceptions.RateLimitError, OpenAIError, json.JSONDecodeError) as e:
-            last_error = e
-            await handle_error(e, attempt, MAX_RETRIES)
-
+            if stream:
+                return await litellm.acompletion(**params)
+            else:
+                response = await litellm.acompletion(**params)
+                return response
         except Exception as e:
-            logger.error(f"Unexpected error during API call: {str(e)}", exc_info=True)
-            raise LLMError(f"API call failed: {str(e)}")
-
-    error_msg = f"Failed to make API call after {MAX_RETRIES} attempts"
-    if last_error:
-        error_msg += f". Last error: {str(last_error)}"
-    logger.error(error_msg, exc_info=True)
-    raise LLMRetryError(error_msg)
+            if attempt == MAX_RETRIES - 1:
+                error_msg = f"Failed to make API call after {MAX_RETRIES} attempts"
+                if isinstance(e, litellm.exceptions.BadRequestError):
+                    error_msg += f": {str(e)}"
+                raise LLMRetryError(error_msg)
+            await handle_error(e, attempt, MAX_RETRIES, model_name)
 
 # Initialize API keys on module import
 setup_api_keys()

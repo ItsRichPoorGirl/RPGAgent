@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronDown, LockIcon, ZapIcon } from 'lucide-react';
+import { Check, ChevronDown, LockIcon, ZapIcon, StarIcon } from 'lucide-react';
 import { ModelOption, SubscriptionStatus } from './_use-model-selection';
 import { PaywallDialog } from '@/components/payment/paywall-dialog';
 
@@ -51,6 +51,17 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     setLockedModel(null);
   };
 
+  const getModelIcon = (modelId: string) => {
+    switch (modelId) {
+      case 'sonnet-3.7':
+        return <ZapIcon className="h-4 w-4 text-yellow-500" />;
+      case 'opus-3.8':
+        return <StarIcon className="h-4 w-4 text-purple-500" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="relative">
       <DropdownMenu>
@@ -61,6 +72,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             className="h-8 rounded-md text-muted-foreground shadow-none border-none focus:ring-0 px-3"
           >
             <div className="flex items-center gap-1 text-sm font-medium">
+              {getModelIcon(selectedModel)}
               <span>{selectedLabel}</span>
               <ChevronDown className="h-3 w-3 opacity-50 ml-1" />
             </div>
@@ -81,9 +93,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                       <div className="flex flex-col w-full">
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
-                            {opt.id === 'sonnet-3.7' && (
-                              <ZapIcon className="h-4 w-4 text-yellow-500" />
-                            )}
+                            {getModelIcon(opt.id)}
                             <span className="font-medium">{opt.label}</span>
                             {!accessible && <LockIcon className="h-3 w-3 ml-1 text-gray-400" />}
                           </div>
