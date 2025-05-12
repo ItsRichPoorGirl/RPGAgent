@@ -36,6 +36,7 @@ class CreateCheckoutSessionRequest(BaseModel):
     price_id: str
     success_url: str
     cancel_url: str
+    coupon_code: Optional[str] = None  # Add optional coupon code field
 
 class CreatePortalSessionRequest(BaseModel):
     return_url: str
@@ -292,10 +293,23 @@ async def create_checkout_session(
         # Verify the price belongs to our product
         if product_id != config.STRIPE_PRODUCT_ID:
             raise HTTPException(status_code=400, detail="Price ID does not belong to the correct product.")
+
+        # Validate coupon if provided
+        coupon = None
+        if request.coupon_code:
+            try:
+                coupon = stripe.Coupon.retrieve(request.coupon_code)
+                # Check if coupon is valid
+                if not coupon.valid:
+                    raise HTTPException(status_code=400, detail="Invalid or expired coupon code")
+                # Check if coupon has been redeemed too many times
+                if coupon.max_redemptions and coupon.times_redeemed >= coupon.max_redemptions:
+                    raise HTTPException(status_code=400, detail="Coupon has reached maximum redemptions")
+            except stripe.error.InvalidRequestError:
+                raise HTTPException(status_code=400, detail="Invalid coupon code")
             
         # Check for existing subscription for our product
         existing_subscription = await get_user_subscription(current_user_id)
-        # print("Existing subscription for product:", existing_subscription)
         
         if existing_subscription:
             # --- Handle Subscription Change (Upgrade or Downgrade) ---
@@ -325,14 +339,22 @@ async def create_checkout_session(
 
                 if is_upgrade:
                     # --- Handle Upgrade --- Immediate modification
-                    updated_subscription = stripe.Subscription.modify(
-                        subscription_id,
-                        items=[{
+                    update_params = {
+                        'items': [{
                             'id': subscription_item['id'],
                             'price': request.price_id,
                         }],
-                        proration_behavior='always_invoice', # Prorate and charge immediately
-                        billing_cycle_anchor='now' # Reset billing cycle
+                        'proration_behavior': 'always_invoice', # Prorate and charge immediately
+                        'billing_cycle_anchor': 'now' # Reset billing cycle
+                    }
+
+                    # Add coupon if provided
+                    if coupon:
+                        update_params['coupon'] = request.coupon_code
+
+                    updated_subscription = stripe.Subscription.modify(
+                        subscription_id,
+                        **update_params
                     )
                     
                     # Update active status in database to true (customer has active subscription)
@@ -354,6 +376,8 @@ async def create_checkout_session(
                             "effective_date": "immediate",
                             "current_price": round(current_price['unit_amount'] / 100, 2) if current_price.get('unit_amount') else 0,
                             "new_price": round(new_price['unit_amount'] / 100, 2) if new_price.get('unit_amount') else 0,
+                            "coupon_applied": bool(coupon),
+                            "coupon_discount": coupon.percent_off if coupon and coupon.percent_off else (coupon.amount_off / 100 if coupon and coupon.amount_off else 0),
                             "invoice": {
                                 "id": latest_invoice['id'] if latest_invoice else None,
                                 "status": latest_invoice['status'] if latest_invoice else None,
@@ -368,39 +392,32 @@ async def create_checkout_session(
                         current_period_end_ts = subscription_item['current_period_end']
                         
                         # Retrieve the subscription again to get the schedule ID if it exists
-                        # This ensures we have the latest state before creating/modifying schedule
                         sub_with_schedule = stripe.Subscription.retrieve(subscription_id)
                         schedule_id = sub_with_schedule.get('schedule')
 
                         # Get the current phase configuration from the schedule or subscription
                         if schedule_id:
                             schedule = stripe.SubscriptionSchedule.retrieve(schedule_id)
-                            # Find the current phase in the schedule
-                            # This logic assumes simple schedules; might need refinement for complex ones
                             current_phase = None
                             for phase in reversed(schedule['phases']):
                                 if phase['start_date'] <= datetime.now(timezone.utc).timestamp():
                                     current_phase = phase
                                     break
-                            if not current_phase: # Fallback if logic fails
+                            if not current_phase:
                                 current_phase = schedule['phases'][-1]
                         else:
-                             # If no schedule, the current subscription state defines the current phase
                             current_phase = {
-                                'items': existing_subscription['items']['data'], # Use original items data
-                                'start_date': existing_subscription['current_period_start'], # Use sub start if no schedule
-                                # Add other relevant fields if needed for create/modify
+                                'items': existing_subscription['items']['data'],
+                                'start_date': existing_subscription['current_period_start'],
                             }
 
                         # Prepare the current phase data for the update/create
-                        # Ensure items is formatted correctly for the API
                         current_phase_items_for_api = []
                         for item in current_phase.get('items', []):
                             price_data = item.get('price')
                             quantity = item.get('quantity')
                             price_id = None
                             
-                            # Safely extract price ID whether it's an object or just the ID string
                             if isinstance(price_data, dict):
                                 price_id = price_data.get('id')
                             elif isinstance(price_data, str):
@@ -416,29 +433,23 @@ async def create_checkout_session(
 
                         current_phase_update_data = {
                             'items': current_phase_items_for_api,
-                            'start_date': current_phase['start_date'], # Preserve original start date
-                            'end_date': current_period_end_ts, # End this phase at period end
+                            'start_date': current_phase['start_date'],
+                            'end_date': current_period_end_ts,
                             'proration_behavior': 'none'
-                            # Include other necessary fields from current_phase if modifying?
-                            # e.g., 'billing_cycle_anchor', 'collection_method'? Usually inherited.
                         }
                         
-                        # Define the new (downgrade) phase
+                        # Define the new (downgrade) phase with coupon if provided
                         new_downgrade_phase_data = {
                             'items': [{'price': request.price_id, 'quantity': 1}],
-                            'start_date': current_period_end_ts, # Start immediately after current phase ends
+                            'start_date': current_period_end_ts,
                             'proration_behavior': 'none'
-                            # iterations defaults to 1, meaning it runs for one billing cycle
-                            # then schedule ends based on end_behavior
                         }
+
+                        if coupon:
+                            new_downgrade_phase_data['coupon'] = request.coupon_code
                         
                         # Update or Create Schedule
                         if schedule_id:
-                             # Update existing schedule, replacing all future phases
-                            # print(f"Updating existing schedule {schedule_id}")
-                            logger.info(f"Updating existing schedule {schedule_id} for subscription {subscription_id}")
-                            logger.debug(f"Current phase data: {current_phase_update_data}")
-                            logger.debug(f"New phase data: {new_downgrade_phase_data}")
                             updated_schedule = stripe.SubscriptionSchedule.modify(
                                 schedule_id,
                                 phases=[current_phase_update_data, new_downgrade_phase_data],
@@ -446,104 +457,72 @@ async def create_checkout_session(
                             )
                             logger.info(f"Successfully updated schedule {updated_schedule['id']}")
                         else:
-                             # Create a new schedule using the defined phases
-                            print(f"Creating new schedule for subscription {subscription_id}")
-                            logger.info(f"Creating new schedule for subscription {subscription_id}")
-                            # Deep debug logging - write subscription details to help diagnose issues
-                            logger.debug(f"Subscription details: {subscription_id}, current_period_end_ts: {current_period_end_ts}")
-                            logger.debug(f"Current price: {current_price_id}, New price: {request.price_id}")
-                            
-                            try:
                                 updated_schedule = stripe.SubscriptionSchedule.create(
                                     from_subscription=subscription_id,
-                                    phases=[
-                                        {
-                                            'start_date': current_phase['start_date'],
-                                            'end_date': current_period_end_ts,
-                                            'proration_behavior': 'none',
-                                            'items': [
-                                                {
-                                                    'price': current_price_id,
-                                                    'quantity': 1
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            'start_date': current_period_end_ts,
-                                            'proration_behavior': 'none',
-                                            'items': [
-                                                {
-                                                    'price': request.price_id,
-                                                    'quantity': 1
-                                                }
-                                            ]
-                                        }
-                                    ],
+                                phases=[current_phase_update_data, new_downgrade_phase_data],
                                     end_behavior='release'
                                 )
-                                # Don't try to link the schedule - that's handled by from_subscription
-                                logger.info(f"Created new schedule {updated_schedule['id']} from subscription {subscription_id}")
-                                # print(f"Created new schedule {updated_schedule['id']} from subscription {subscription_id}")
-                                
-                                # Verify the schedule was created correctly
-                                fetched_schedule = stripe.SubscriptionSchedule.retrieve(updated_schedule['id'])
-                                logger.info(f"Schedule verification - Status: {fetched_schedule.get('status')}, Phase Count: {len(fetched_schedule.get('phases', []))}")
-                                logger.debug(f"Schedule details: {fetched_schedule}")
-                            except Exception as schedule_error:
-                                logger.exception(f"Failed to create schedule: {str(schedule_error)}")
-                                raise schedule_error  # Re-raise to be caught by the outer try-except
+                            logger.info(f"Successfully created schedule {updated_schedule['id']}")
                         
                         return {
                             "subscription_id": subscription_id,
-                            "schedule_id": updated_schedule['id'],
                             "status": "scheduled",
-                            "message": "Subscription downgrade scheduled",
+                            "message": "Subscription downgrade scheduled for end of current period",
                             "details": {
                                 "is_upgrade": False,
-                                "effective_date": "end_of_period",
+                                "effective_date": datetime.fromtimestamp(current_period_end_ts, timezone.utc).isoformat(),
                                 "current_price": round(current_price['unit_amount'] / 100, 2) if current_price.get('unit_amount') else 0,
                                 "new_price": round(new_price['unit_amount'] / 100, 2) if new_price.get('unit_amount') else 0,
-                                "effective_at": datetime.fromtimestamp(current_period_end_ts, tz=timezone.utc).isoformat()
+                                "coupon_applied": bool(coupon),
+                                "coupon_discount": coupon.percent_off if coupon and coupon.percent_off else (coupon.amount_off / 100 if coupon and coupon.amount_off else 0)
                             }
                         }
                     except Exception as e:
-                         logger.exception(f"Error handling subscription schedule for sub {subscription_id}: {str(e)}")
-                         raise HTTPException(status_code=500, detail=f"Error handling subscription schedule: {str(e)}")
+                        logger.error(f"Error scheduling subscription change: {str(e)}")
+                        raise HTTPException(status_code=500, detail=f"Error scheduling subscription change: {str(e)}")
             except Exception as e:
-                logger.exception(f"Error updating subscription {existing_subscription.get('id') if existing_subscription else 'N/A'}: {str(e)}")
-                raise HTTPException(status_code=500, detail=f"Error updating subscription: {str(e)}")
+                logger.error(f"Error modifying subscription: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Error modifying subscription: {str(e)}")
         else:
-            # --- Create New Subscription via Checkout Session ---
-            session = stripe.checkout.Session.create(
-                customer=customer_id,
-                payment_method_types=['card'],
-                    line_items=[{'price': request.price_id, 'quantity': 1}],
-                mode='subscription',
-                success_url=request.success_url,
-                cancel_url=request.cancel_url,
-                metadata={
-                        'user_id': current_user_id,
-                        'product_id': product_id
+            # --- Handle New Subscription ---
+            try:
+                # Create checkout session for new subscription
+                session_params = {
+                    'customer': customer_id,
+                    'success_url': request.success_url,
+                    'cancel_url': request.cancel_url,
+                    'mode': 'subscription',
+                    'line_items': [{
+                        'price': request.price_id,
+                        'quantity': 1
+                    }],
+                    'allow_promotion_codes': True  # Enable promotion codes in checkout
                 }
-            )
-            
-            # Update customer status to potentially active (will be confirmed by webhook)
-            # This ensures customer is marked as active once payment is completed
-            await client.schema('basejump').from_('billing_customers').update(
-                {'active': True}
-            ).eq('id', customer_id).execute()
-            logger.info(f"Updated customer {customer_id} active status to TRUE after creating checkout session")
-            
-            return {"session_id": session['id'], "url": session['url'], "status": "new"}
-        
+
+                # Add coupon if provided
+                if coupon:
+                    session_params['discounts'] = [{
+                        'coupon': request.coupon_code
+                    }]
+
+                session = stripe.checkout.Session.create(**session_params)
+                
+                return {
+                    "session_id": session.id,
+                    "status": "new",
+                    "message": "New subscription checkout session created",
+                    "details": {
+                        "checkout_url": session.url,
+                        "coupon_applied": bool(coupon),
+                        "coupon_discount": coupon.percent_off if coupon and coupon.percent_off else (coupon.amount_off / 100 if coupon and coupon.amount_off else 0)
+                    }
+                }
+            except Exception as e:
+                logger.error(f"Error creating checkout session: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Error creating checkout session: {str(e)}")
     except Exception as e:
-        logger.exception(f"Error creating checkout session: {str(e)}")
-        # Check if it's a Stripe error with more details
-        if hasattr(e, 'json_body') and e.json_body and 'error' in e.json_body:
-            error_detail = e.json_body['error'].get('message', str(e))
-        else:
-            error_detail = str(e)
-        raise HTTPException(status_code=500, detail=f"Error creating checkout session: {error_detail}")
+        logger.error(f"Error in create_checkout_session: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/create-portal-session")
 async def create_portal_session(

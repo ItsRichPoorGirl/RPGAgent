@@ -17,8 +17,8 @@ export interface ModelOption {
 }
 
 export const MODEL_OPTIONS: ModelOption[] = [
-  {
-    id: 'qwen3',
+  { 
+    id: 'qwen3', 
     label: 'Free', 
     requiresSubscription: false,
     description: 'Limited capabilities. Upgrade for full performance.'
