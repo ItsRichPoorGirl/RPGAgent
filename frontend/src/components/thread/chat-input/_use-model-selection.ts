@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useSubscription } from '@/hooks/react-query/subscriptions/use-subscriptions';
+import { isLocalMode } from '@/lib/config';
 
 export const STORAGE_KEY_MODEL = 'suna-preferred-model';
-export const DEFAULT_FREE_MODEL_ID = 'qwen35';
+export const DEFAULT_FREE_MODEL_ID = 'deepseek';
 export const DEFAULT_PREMIUM_MODEL_ID = 'sonnet-3.7';
 
 export type SubscriptionStatus = 'no_subscription' | 'active';
@@ -18,7 +19,7 @@ export interface ModelOption {
 
 export const MODEL_OPTIONS: ModelOption[] = [
   { 
-    id: 'qwen3', 
+    id: 'deepseek', 
     label: 'Free', 
     requiresSubscription: false,
     description: 'Limited capabilities. Upgrade for full performance.'
@@ -35,6 +36,9 @@ export const canAccessModel = (
   subscriptionStatus: SubscriptionStatus,
   requiresSubscription: boolean,
 ): boolean => {
+  if (isLocalMode()) {
+    return true;
+  }
   return subscriptionStatus === 'active' || !requiresSubscription;
 };
 
@@ -52,6 +56,21 @@ export const useModelSelection = () => {
     
     try {
       const savedModel = localStorage.getItem(STORAGE_KEY_MODEL);
+      
+      // In local mode, use saved model if available or default to premium model
+      if (isLocalMode()) {
+        if (savedModel && MODEL_OPTIONS.find(option => option.id === savedModel)) {
+          setSelectedModel(savedModel);
+        } else {
+          setSelectedModel(DEFAULT_PREMIUM_MODEL_ID);
+          try {
+            localStorage.setItem(STORAGE_KEY_MODEL, DEFAULT_PREMIUM_MODEL_ID);
+          } catch (error) {
+            console.warn('Failed to save model preference to localStorage:', error);
+          }
+        }
+        return;
+      }
       
       if (subscriptionStatus === 'active') {
         if (savedModel) {
@@ -89,7 +108,12 @@ export const useModelSelection = () => {
   const handleModelChange = (modelId: string) => {
     const modelOption = MODEL_OPTIONS.find(option => option.id === modelId);
     
-    if (!modelOption || !canAccessModel(subscriptionStatus, modelOption.requiresSubscription)) {
+    if (!modelOption) {
+      return;
+    }
+    
+    // In local mode, allow any model selection
+    if (!isLocalMode() && !canAccessModel(subscriptionStatus, modelOption.requiresSubscription)) {
       return;
     }
     
@@ -105,11 +129,14 @@ export const useModelSelection = () => {
     selectedModel,
     setSelectedModel: handleModelChange,
     subscriptionStatus,
-    availableModels: MODEL_OPTIONS.filter(model => 
-      canAccessModel(subscriptionStatus, model.requiresSubscription)
-    ),
+    availableModels: isLocalMode() 
+      ? MODEL_OPTIONS 
+      : MODEL_OPTIONS.filter(model => 
+          canAccessModel(subscriptionStatus, model.requiresSubscription)
+        ),
     allModels: MODEL_OPTIONS,
     canAccessModel: (modelId: string) => {
+      if (isLocalMode()) return true;
       const model = MODEL_OPTIONS.find(m => m.id === modelId);
       return model ? canAccessModel(subscriptionStatus, model.requiresSubscription) : false;
     },
