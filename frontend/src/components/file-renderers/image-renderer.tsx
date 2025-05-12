@@ -11,6 +11,7 @@ import {
   Minimize2,
   Info,
 } from 'lucide-react';
+import Image from 'next/image';
 
 interface ImageRendererProps {
   url: string;
@@ -257,7 +258,7 @@ export function ImageRenderer({ url, className }: ImageRendererProps) {
                 }}
               >
                 {/* Fallback to img if object fails */}
-                <img
+                <Image
                   ref={imageRef}
                   src={url}
                   alt="SVG preview"
@@ -269,10 +270,13 @@ export function ImageRenderer({ url, className }: ImageRendererProps) {
                   draggable={false}
                   onLoad={handleImageLoad}
                   onError={handleImageError}
+                  width={imgInfo?.width || 800}
+                  height={imgInfo?.height || 600}
+                  unoptimized={isSvg}
                 />
               </object>
             ) : (
-              <img
+              <Image
                 ref={imageRef}
                 src={url}
                 alt="Image preview"
@@ -284,6 +288,9 @@ export function ImageRenderer({ url, className }: ImageRendererProps) {
                 draggable={false}
                 onLoad={handleImageLoad}
                 onError={handleImageError}
+                width={imgInfo?.width || 800}
+                height={imgInfo?.height || 600}
+                unoptimized={isSvg}
               />
             )}
           </div>

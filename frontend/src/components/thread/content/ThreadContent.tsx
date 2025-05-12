@@ -9,6 +9,7 @@ import { FileAttachmentGrid } from '@/components/thread/file-attachment';
 import { FileCache } from '@/hooks/use-cached-file';
 import { useAuth } from '@/components/AuthProvider';
 import { Project } from '@/lib/api';
+import { getToolIcon, extractPrimaryParam } from '@/components/thread/utils';
 
 // Define the set of tags whose raw XML should be hidden during streaming
 const HIDE_STREAMING_XML_TAGS = new Set([
@@ -138,8 +139,7 @@ export function renderMarkdownContent(
                 </div>
             );
         } else {
-            // Import dynamically to avoid circular dependencies
-            const { getToolIcon, extractPrimaryParam } = require('@/components/thread/utils');
+            // Use imported functions directly
             const IconComponent = getToolIcon(toolName);
             const paramDisplay = extractPrimaryParam(toolName, rawXml);
 
@@ -504,8 +504,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                                     {streamingToolCall && !detectedTag && (
                                                                                         <div className="mt-2 mb-1">
                                                                                             {(() => {
-                                                                                                // Import dynamically to avoid circular dependencies
-                                                                                                const { getToolIcon, extractPrimaryParam } = require('@/components/thread/utils');
+                                                                                                // Use imported functions directly
                                                                                                 const toolName = streamingToolCall.name || streamingToolCall.xml_tag_name || 'Tool';
                                                                                                 const IconComponent = getToolIcon(toolName);
                                                                                                 const paramDisplay = extractPrimaryParam(toolName, streamingToolCall.arguments || '');

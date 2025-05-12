@@ -341,20 +341,20 @@ export default function ThreadPage({
     }
   }, [agentRunId, startStreaming, currentHookRunId]);
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape' && isSidePanelOpen) {
       setIsSidePanelOpen(false);
     }
-  };
+  }, [isSidePanelOpen]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSidePanelOpen]);
+  }, [handleKeyDown]);
 
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
-  };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -457,7 +457,7 @@ export default function ThreadPage({
     return () => {
       isMounted = false;
     };
-  }, [threadId]);
+  }, [threadId, scrollToBottom]);
 
   const handleSubmitMessage = useCallback(
     async (
