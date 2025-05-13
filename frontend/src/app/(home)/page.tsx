@@ -4,7 +4,7 @@ import { useState, useEffect, type MouseEvent, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import RobotImage from "../../../components/robot-image"
+import RobotImage from "@/components/robot-image"
 import { ChevronDown, ChevronRight, Check, MessageSquare, FileText, Database, Zap, Link2, Bell } from "lucide-react"
 
 export default function LandingPage() {
