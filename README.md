@@ -1,6 +1,6 @@
 <div align="center">
 
-# Luciq - Generalist AI Agent
+# Luciq AI
 
 (that acts on your behalf)
 
@@ -12,10 +12,9 @@ Luciq's powerful toolkit includes seamless browser automation to navigate the we
 
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue)](./license)
 [![Discord Follow](https://dcbadge.limes.pink/api/server/Py6pCBUUPw?style=flat)](https://discord.gg/Py6pCBUUPw)
-[![Twitter Follow](https://img.shields.io/twitter/follow/kortixai)](https://x.com/kortixai)
-[![GitHub Repo stars](https://img.shields.io/github/stars/kortix-ai/suna)](https://github.com/kortix-ai/suna)
-[![Issues](https://img.shields.io/github/issues/kortix-ai/suna
-)](https://github.com/kortix-ai/suna/labels/bug)
+[![Twitter Follow](https://img.shields.io/twitter/follow/luciqai)](https://x.com/luciqai)
+[![GitHub Repo stars](https://img.shields.io/github/stars/luciq-ai/luciq)](https://github.com/luciq-ai/luciq)
+[![Issues](https://img.shields.io/github/issues/luciq-ai/luciq)](https://github.com/luciq-ai/luciq/labels/bug)
 </div>
 
 
@@ -79,7 +78,7 @@ Handles data persistence with authentication, user management, conversation hist
 
 ## Run Locally / Self-Hosting
 
-Suna can be self-hosted on your own infrastructure. Follow these steps to set up your own instance.
+Luciq can be self-hosted on your own infrastructure. Follow these steps to set up your own instance.
 
 ### Requirements
 
@@ -108,7 +107,7 @@ You'll need the following components:
    - Generate an API key from your account settings
    - Go to [Images](https://app.daytona.io/dashboard/images)
    - Click "Add Image"
-   - Enter `kortix/suna:0.1` as the image name
+   - Enter `luciq/luciq:0.1` as the image name
    - Set `/usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf` as the Entrypoint
 
 4. **LLM API Keys**:
@@ -132,8 +131,8 @@ You'll need the following components:
 
 1. **Clone the repository**:
 ```bash
-git clone https://github.com/kortix-ai/suna.git
-cd suna
+git clone https://github.com/luciq-ai/luciq.git
+cd luciq
 ```
 
 2. **Configure backend environment**:
@@ -260,10 +259,10 @@ docker compose up
 The Docker Compose setup includes a Redis service that will be used by the backend automatically.
 
 
-7. **Access Suna**:
+7. **Access Luciq**:
    - Open your browser and navigate to `http://localhost:3000`
    - Sign up for an account using the Supabase authentication
-   - Start using your self-hosted Suna instance!
+   - Start using your self-hosted Luciq instance!
 
 ## Acknowledgements
 
@@ -285,5 +284,5 @@ The Docker Compose setup includes a Redis service that will be used by the backe
 
 ## License
 
-Kortix Suna is licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE) for the full license text.
+Luciq AI is licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE) for the full license text.
 

@@ -27,6 +27,6 @@ You can modify the sandbox environment for development or to add new capabilitie
 
 To use your custom sandbox image:
 
-1. Change the `image` parameter in `docker-compose.yml` (that defines the image name `kortix/suna:___`)
+1. Change the `image` parameter in `docker-compose.yml` (that defines the image name `luciq/luciq:___`)
 2. Update the same image name in `backend/sandbox/sandbox.py` in the `create_sandbox` function
 3. If using Daytona for deployment, update the image reference there as well

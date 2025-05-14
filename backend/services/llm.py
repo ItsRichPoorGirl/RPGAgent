@@ -285,13 +285,17 @@ async def make_llm_api_call(
         LLMRetryError: If API call fails after retries
         LLMError: For other API-related errors
     """
+    # Resolve model name through alias mapping
+    resolved_model_name = get_model_name(model_name)
+    logger.info(f"Resolved model name from '{model_name}' to '{resolved_model_name}'")
+
     # Log API call details
-    logger.info(f"Making LLM API call to model: {model_name} (Thinking: {enable_thinking}, Effort: {reasoning_effort})")
-    logger.info(f"📡 API Call: Using model {model_name}")
+    logger.info(f"Making LLM API call to model: {resolved_model_name} (Thinking: {enable_thinking}, Effort: {reasoning_effort})")
+    logger.info(f"📡 API Call: Using model {resolved_model_name}")
 
     params = prepare_params(
         messages=messages,
-        model_name=model_name,
+        model_name=resolved_model_name,
         temperature=temperature,
         max_tokens=max_tokens,
         response_format=response_format,
@@ -307,12 +311,12 @@ async def make_llm_api_call(
     )
 
     # Add specific error handling for OpenRouter
-    if model_name.startswith("openrouter/"):
+    if resolved_model_name.startswith("openrouter/"):
         if not config.OPENROUTER_API_KEY:
             raise LLMError("OpenRouter API key not configured")
         if not config.OPENROUTER_API_BASE:
             raise LLMError("OpenRouter API base URL not configured")
-        logger.info(f"DEBUG: Using OpenRouter model: {model_name}, API key set: {bool(config.OPENROUTER_API_KEY)}, API base: {config.OPENROUTER_API_BASE}")
+        logger.info(f"DEBUG: Using OpenRouter model: {resolved_model_name}, API key set: {bool(config.OPENROUTER_API_KEY)}, API base: {config.OPENROUTER_API_BASE}")
 
     for attempt in range(MAX_RETRIES):
         try:
@@ -327,7 +331,7 @@ async def make_llm_api_call(
                 if isinstance(e, litellm.exceptions.BadRequestError):
                     error_msg += f": {str(e)}"
                 raise LLMRetryError(error_msg)
-            await handle_error(e, attempt, MAX_RETRIES, model_name)
+            await handle_error(e, attempt, MAX_RETRIES, resolved_model_name)
 
 # Initialize API keys on module import
 setup_api_keys()

@@ -1,11 +1,12 @@
 export const siteConfig = {
   name: 'Luciq AI',
-  url: 'https://luciqai.com/',
-  description: 'Luciq AI',
+  description: 'Your AI Agent for Complex Tasks',
+  url: 'https://luciq.ai',
+  ogImage: 'https://luciq.ai/og.jpg',
   links: {
-    twitter: 'https://x.com/kortixai',
-    github: 'https://github.com/kortix-ai/',
-    linkedin: 'https://www.linkedin.com/company/kortix/',
+    twitter: 'https://x.com/luciqai',
+    github: 'https://github.com/luciq-ai/',
+    linkedin: 'https://www.linkedin.com/company/luciq/',
   },
 };
 

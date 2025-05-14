@@ -14,12 +14,13 @@ export function KortixLogo() {
   }, []);
 
   return (
-    <div className="flex h-6 w-6 items-center justify-center flex-shrink-0">
+    <div className="flex items-center justify-center" style={{ width: 40, height: 40, minWidth: 40, minHeight: 40, maxWidth: 40, maxHeight: 40 }}>
       <Image
         src="/luciq-logo.png"
         alt="Luciq"
-        width={24}
-        height={24}
+        width={40}
+        height={40}
+        style={{ minWidth: 40, minHeight: 40, maxWidth: 40, maxHeight: 40 }}
         className={`${mounted && theme === 'dark' ? 'invert' : ''}`}
       />
     </div>

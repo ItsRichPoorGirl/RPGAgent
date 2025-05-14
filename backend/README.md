@@ -1,4 +1,4 @@
-# Suna Backend
+# Luciq AI Backend
 
 ## Running the backend
 
