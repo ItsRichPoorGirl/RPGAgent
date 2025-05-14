@@ -543,3 +543,117 @@
     }
   }
 }
+
+/* --- Luciq AI New Homepage Custom Styles --- */
+
+.hero-bg {
+  position: relative;
+}
+
+.grid-lines {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(to right, rgba(15, 222, 217, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 222, 217, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glowing-dot {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: rgba(15, 222, 217, 0.6);
+  box-shadow: 0 0 8px 1px rgba(15, 222, 217, 0.4);
+  z-index: 1;
+  opacity: 0.7;
+}
+.glowing-dot-1 { top: 15%; left: 10%; }
+.glowing-dot-2 { top: 25%; right: 15%; }
+.glowing-dot-3 { bottom: 20%; right: 10%; }
+.glowing-dot-4 { bottom: 30%; left: 20%; }
+.glowing-dot-5 { top: 50%; left: 30%; }
+
+.electric-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.4;
+  transition: opacity 0.5s ease;
+  z-index: 1;
+}
+.hero-section:hover .electric-container { opacity: 0.7; }
+.electric-line {
+  position: absolute;
+  background: linear-gradient(90deg, transparent, rgba(15, 222, 217, 0.5), transparent);
+  height: 1px;
+  width: 100%;
+  opacity: 0;
+}
+.electric-line-vertical {
+  position: absolute;
+  background: linear-gradient(180deg, transparent, rgba(15, 222, 217, 0.5), transparent);
+  width: 1px;
+  height: 100%;
+  opacity: 0;
+}
+.electric-pulse {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: rgba(15, 222, 217, 0.8);
+  filter: blur(1px);
+  box-shadow: 0 0 6px 1px rgba(15, 222, 217, 0.6);
+  opacity: 0;
+}
+.electric-line-1 { top: 20%; animation: electricFlow 4s infinite ease-out; }
+.electric-line-2 { top: 60%; animation: electricFlow 4.5s infinite ease-out; animation-delay: 0.5s; }
+.electric-line-3 { top: 40%; animation: electricFlow 5s infinite ease-out; animation-delay: 1.2s; }
+.electric-line-4 { top: 80%; animation: electricFlow 4.2s infinite ease-out; animation-delay: 2s; }
+.electric-line-v1 { left: 20%; animation: electricFlowVertical 4.5s infinite ease-out; animation-delay: 0.2s; }
+.electric-line-v2 { left: 80%; animation: electricFlowVertical 5s infinite ease-out; animation-delay: 1.2s; }
+.electric-line-v3 { left: 40%; animation: electricFlowVertical 4.8s infinite ease-out; animation-delay: 1.8s; }
+.electric-line-v4 { left: 60%; animation: electricFlowVertical 5.2s infinite ease-out; animation-delay: 0.8s; }
+.electric-diagonal { position: absolute; height: 1px; transform-origin: left center; background: linear-gradient(90deg, transparent, rgba(15, 222, 217, 0.5), transparent); opacity: 0; }
+.electric-diagonal-1 { top: 30%; left: 0; width: 100%; transform: rotate(15deg); animation: electricFlow 5s infinite ease-out; animation-delay: 0.7s; }
+.electric-diagonal-2 { top: 70%; left: 0; width: 100%; transform: rotate(-15deg); animation: electricFlow 4.8s infinite ease-out; animation-delay: 1.7s; }
+.electric-diagonal-3 { top: 50%; left: 0; width: 100%; transform: rotate(25deg); animation: electricFlow 5.5s infinite ease-out; animation-delay: 2.2s; }
+.electric-diagonal-4 { top: 20%; left: 0; width: 100%; transform: rotate(-25deg); animation: electricFlow 5.2s infinite ease-out; animation-delay: 1.5s; }
+.electric-pulse-1 { top: 20%; left: -10px; animation: pulseMoveRight 4s infinite linear; }
+.electric-pulse-2 { top: 40%; left: -10px; animation: pulseMoveRight 5s infinite linear; animation-delay: 1s; }
+.electric-pulse-3 { top: 60%; left: -10px; animation: pulseMoveRight 4.5s infinite linear; animation-delay: 0.5s; }
+.electric-pulse-4 { top: 80%; left: -10px; animation: pulseMoveRight 5.5s infinite linear; animation-delay: 1.5s; }
+.electric-pulse-5 { top: -10px; left: 20%; animation: pulseMoveDown 5s infinite linear; animation-delay: 0.2s; }
+.electric-pulse-6 { top: -10px; left: 80%; animation: pulseMoveDown 4.5s infinite linear; animation-delay: 1.2s; }
+.electric-pulse-7 { top: -10px; left: 40%; animation: pulseMoveDown 4.8s infinite linear; animation-delay: 0.8s; }
+.electric-pulse-8 { top: -10px; left: 60%; animation: pulseMoveDown 5.2s infinite linear; animation-delay: 1.8s; }
+.electric-node { position: absolute; width: 4px; height: 4px; border-radius: 50%; background-color: rgba(15, 222, 217, 0.6); box-shadow: 0 0 8px 1px rgba(15, 222, 217, 0.4); z-index: 2; animation: nodeGlow 4s infinite alternate; }
+.electric-node-1 { top: 20%; left: 20%; animation-delay: 0.2s; }
+.electric-node-2 { top: 40%; left: 80%; animation-delay: 0.7s; }
+.electric-node-3 { top: 60%; left: 40%; animation-delay: 1.2s; }
+.electric-node-4 { top: 80%; left: 60%; animation-delay: 1.7s; }
+@keyframes electricFlow { 0% { transform: scaleX(0); opacity: 0; background-position: -100% 0; } 10% { opacity: 0.5; } 30% { transform: scaleX(1); opacity: 0.5; } 100% { transform: scaleX(1); opacity: 0; background-position: 200% 0; } }
+@keyframes electricFlowVertical { 0% { transform: scaleY(0); opacity: 0; background-position: 0 -100%; } 10% { opacity: 0.5; } 30% { transform: scaleY(1); opacity: 0.5; } 100% { transform: scaleY(1); opacity: 0; background-position: 0 200%; } }
+@keyframes pulseMoveRight { 0% { left: -10px; opacity: 0; } 10% { opacity: 0.7; } 90% { opacity: 0.7; } 100% { left: 100%; opacity: 0; } }
+@keyframes pulseMoveDown { 0% { top: -10px; opacity: 0; } 10% { opacity: 0.7; } 90% { opacity: 0.7; } 100% { top: 100%; opacity: 0; } }
+@keyframes nodeGlow { 0%, 20%, 40%, 60%, 80% { opacity: 0.6; box-shadow: 0 0 8px 1px rgba(15, 222, 217, 0.4); } 10%, 30%, 50%, 70%, 90% { opacity: 0.8; box-shadow: 0 0 12px 2px rgba(15, 222, 217, 0.6); } }
+.feature-card { background-color: rgba(0, 0, 0, 0.1); border: 1px solid rgba(15, 222, 217, 0.2); border-radius: 1.5rem; padding: 1.75rem; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+.feature-card:hover { border-color: rgba(15, 222, 217, 0.4); background-color: rgba(0, 0, 0, 0.2); transform: translateY(-5px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); }
+.feature-icon-container { display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+.feature-card:hover .feature-icon-container { transform: scale(1.1); }
+.testimonial-card { background-color: rgba(0, 0, 0, 0.1); border: 1px solid rgba(15, 222, 217, 0.2); border-radius: 1.5rem; padding: 1.75rem; transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+.testimonial-card:hover { border-color: rgba(15, 222, 217, 0.4); background-color: rgba(0, 0, 0, 0.2); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); }
+.pricing-card { background-color: rgba(0, 0, 0, 0.1); border: 1px solid rgba(15, 222, 217, 0.2); border-radius: 1.5rem; padding: 1.75rem; transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+.pricing-card.popular { border-color: rgba(15, 222, 217, 0.6); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+.pricing-card:hover { border-color: rgba(15, 222, 217, 0.4); background-color: rgba(0, 0, 0, 0.2); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); }
+.robot-container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: visible; }
+.robot-image { width: 100%; height: auto; max-width: 500px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(15, 222, 217, 0.3)); position: relative; z-index: 1; transition: opacity 0.5s ease, transform 0.3s ease; }
+.robot-container:hover .robot-image { filter: drop-shadow(0 0 20px rgba(15, 222, 217, 0.5)); transform: translateY(-5px); }
+.custom-tier-dropdown { background-color: #001a1a; border: 1px solid rgba(15, 222, 217, 0.2); border-radius: 1.5rem; overflow: hidden; }
+.custom-tier-option { padding: 0.75rem 1rem; cursor: pointer; transition: all 0.2s ease; }
+.custom-tier-option:hover { background-color: rgba(15, 222, 217, 0.1); }
+.custom-tier-option.selected { background-color: rgba(15, 222, 217, 0.2); }
