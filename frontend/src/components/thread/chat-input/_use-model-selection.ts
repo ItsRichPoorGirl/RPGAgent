@@ -31,12 +31,12 @@ export const MODEL_OPTIONS: ModelOption[] = [
     requiresSubscription: true, 
     description: 'Excellent for complex tasks and nuanced conversations'
   },
-  {
-    id: 'gemini-pro-2.5',
-    label: 'Extended',
-    requiresSubscription: true,
-    description: 'Maximum performance for the most demanding tasks'
-  }
+  // {
+  //   id: 'gemini-pro-2.5',
+  //   label: 'Extended',
+  //   requiresSubscription: true,
+  //   description: 'Maximum performance for the most demanding tasks'
+  // }
 ];
 
 export const canAccessModel = (
