@@ -75,7 +75,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-[#0a0a1f]">
       {/* Header - Updated with scroll behavior */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
@@ -117,7 +117,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section - Updated with new design */}
-        <section className="hero-section relative w-full pt-32 pb-24 md:pt-40 md:pb-32 hero-bg overflow-hidden">
+        <section className="hero-section relative w-full pt-32 pb-24 md:pt-40 md:pb-32 hero-bg overflow-hidden bg-[#0a0a1f]">
           {/* Grid lines */}
           <div className="grid-lines"></div>
 
@@ -223,7 +223,7 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section - Updated with new design */}
-        <section id="features" className="w-full py-24 hero-bg border-t border-teal-400/10">
+        <section id="features" className="w-full py-24 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
           <div className="container max-w-6xl px-4 md:px-6">
             <div className="text-center mb-16">
               <div className="inline-block bg-gradient-to-r from-teal-400/20 to-purple-500/20 rounded-full px-4 py-1 text-sm text-white/80 mb-4">
@@ -301,7 +301,7 @@ export default function LandingPage() {
         </section>
 
         {/* Testimonials Section - Updated with capitalized words in headline */}
-        <section id="testimonials" className="w-full py-24 hero-bg border-t border-teal-400/10">
+        <section id="testimonials" className="w-full py-24 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
           <div className="container max-w-6xl px-4 md:px-6">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">
@@ -372,7 +372,7 @@ export default function LandingPage() {
         </section>
 
         {/* Pricing Section - Updated with gradient button only for Pro tier */}
-        <section id="pricing" className="w-full py-24 hero-bg border-t border-teal-400/10">
+        <section id="pricing" className="w-full py-24 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
           <div className="container max-w-6xl px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">
@@ -550,7 +550,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="w-full py-20 hero-bg border-t border-teal-400/10">
+        <section className="w-full py-20 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
           <div className="container max-w-6xl px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-6 text-center">
               <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-white">
@@ -569,11 +569,11 @@ export default function LandingPage() {
                 </Button>
               </div>
             </div>
-      </div>
+          </div>
         </section>
-    </main>
+      </main>
 
-      <footer className="w-full border-t border-teal-400/10 py-8 hero-bg">
+      <footer className="w-full border-t border-teal-400/10 py-8 hero-bg bg-[#0a0a1f]">
         <div className="container max-w-6xl px-4 md:px-6">
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div>
