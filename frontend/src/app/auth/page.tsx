@@ -299,219 +299,52 @@ function LoginContent() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen w-full">
-      <div className="min-h-screen bg-[#0a0a1f] relative overflow-hidden">
-        <div className="grid-lines"></div>
-        <div className="electric-container">
-          <div className="electric-line electric-line-1"></div>
-          <div className="electric-line electric-line-2"></div>
-          <div className="electric-line electric-line-3"></div>
-          <div className="electric-line electric-line-4"></div>
-          <div className="electric-line-v1"></div>
-          <div className="electric-line-v2"></div>
-          <div className="electric-line-v3"></div>
-          <div className="electric-line-v4"></div>
-          <div className="electric-diagonal electric-diagonal-1"></div>
-          <div className="electric-diagonal electric-diagonal-2"></div>
-          <div className="electric-diagonal electric-diagonal-3"></div>
-          <div className="electric-diagonal electric-diagonal-4"></div>
-          <div className="electric-pulse electric-pulse-1"></div>
-          <div className="electric-pulse electric-pulse-2"></div>
-          <div className="electric-pulse electric-pulse-3"></div>
-          <div className="electric-pulse electric-pulse-4"></div>
-          <div className="electric-pulse electric-pulse-5"></div>
-          <div className="electric-pulse electric-pulse-6"></div>
-          <div className="electric-pulse electric-pulse-7"></div>
-          <div className="electric-pulse electric-pulse-8"></div>
-          <div className="electric-node electric-node-1"></div>
-          <div className="electric-node electric-node-2"></div>
-          <div className="electric-node electric-node-3"></div>
-          <div className="electric-node electric-node-4"></div>
+    <main className="flex flex-col items-center justify-center min-h-screen w-full bg-[#10182a]">
+      <div className="w-full max-w-lg rounded-xl bg-[#10182a] border border-[#1de9b6]/30 shadow-lg p-10 mx-auto">
+        {/* Header */}
+        <div className="flex flex-col items-center mb-8">
+          <Link href="/" className="mb-6 text-sm text-muted-foreground hover:underline">Back to home</Link>
+          <h1 className="text-4xl font-bold text-white mb-2">{isSignUp ? 'Join Luciq' : 'Welcome back'}</h1>
+          <p className="text-base text-muted-foreground">{isSignUp ? 'Create your account and start building with AI' : 'Sign in to your account to continue'}</p>
         </div>
-        <div className="relative z-10">
-          <div className="w-full divide-y divide-border">
-            {/* Hero-like header with flickering grid */}
-            <section className="w-full relative overflow-hidden">
-              <div className="relative flex flex-col items-center w-full px-6">
-                {/* Left side flickering grid with gradient fades */}
-                <div className="absolute left-0 top-0 h-[600px] md:h-[800px] w-1/3 -z-10 overflow-hidden">
-                  {/* Horizontal fade from left to right */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background z-10" />
-
-                  {/* Vertical fade from top */}
-                  <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background via-background/90 to-transparent z-10" />
-
-                  {/* Vertical fade to bottom */}
-                  <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent z-10" />
-
-                  <div className="h-full w-full">
-                    <FlickeringGrid
-                      className="h-full w-full"
-                      squareSize={mounted && tablet ? 2 : 2.5}
-                      gridGap={mounted && tablet ? 2 : 2.5}
-                      color="var(--secondary)"
-                      maxOpacity={0.4}
-                      flickerChance={isScrolling ? 0.01 : 0.03}
-                    />
-                  </div>
-                </div>
-
-                {/* Right side flickering grid with gradient fades */}
-                <div className="absolute right-0 top-0 h-[600px] md:h-[800px] w-1/3 -z-10 overflow-hidden">
-                  {/* Horizontal fade from right to left */}
-                  <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-background z-10" />
-
-                  {/* Vertical fade from top */}
-                  <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background via-background/90 to-transparent z-10" />
-
-                  {/* Vertical fade to bottom */}
-                  <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent z-10" />
-
-                  <div className="h-full w-full">
-                    <FlickeringGrid
-                      className="h-full w-full"
-                      squareSize={mounted && tablet ? 2 : 2.5}
-                      gridGap={mounted && tablet ? 2 : 2.5}
-                      color="var(--secondary)"
-                      maxOpacity={0.4}
-                      flickerChance={isScrolling ? 0.01 : 0.03}
-                    />
-                  </div>
-                </div>
-
-                {/* Center content background with rounded bottom */}
-                <div className="absolute inset-x-1/4 top-0 h-[600px] md:h-[800px] -z-20 bg-background rounded-b-xl"></div>
-
-                {/* Header content */}
-                <div className="relative z-10 pt-24 pb-8 max-w-md mx-auto h-full w-full flex flex-col gap-2 items-center justify-center">
-                  <Link
-                    href="/"
-                    className="group border border-border/50 bg-background hover:bg-accent/20 rounded-full text-sm h-8 px-3 flex items-center gap-2 transition-all duration-200 shadow-sm mb-6"
-                  >
-                    <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-muted-foreground text-xs tracking-wide">
-                      Back to home
-                    </span>
-                  </Link>
-
-                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tighter text-center text-balance text-primary">
-                    {isSignUp ? 'Join Luciq' : 'Welcome back'}
-                  </h1>
-                  <p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight mt-2 mb-6">
-                    {isSignUp
-                      ? 'Create your account and start building with AI'
-                      : 'Sign in to your account to continue'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Auth form card */}
-              <div className="relative z-10 flex justify-center px-6 pb-24">
-                <div className="w-full max-w-xl rounded-xl bg-[#10182a] border border-[#1de9b6]/30 shadow-lg p-10">
-                  {/* Non-registration related messages */}
-                  {message && !isSuccessMessage && (
-                    <div className="mb-6 p-4 rounded-lg flex items-center gap-3 bg-secondary/10 border border-secondary/20 text-secondary">
-                      <AlertCircle className="h-5 w-5 flex-shrink-0 text-secondary" />
-                      <span className="text-sm font-medium">{message}</span>
-                    </div>
-                  )}
-
-                  {/* Google Sign In */}
-                  <div className="w-full mb-6">
-                    <button className="w-full h-12 rounded-full bg-white text-[#10182a] border border-[#1de9b6] font-semibold shadow-sm hover:bg-[#e0f7fa] transition-all flex items-center justify-center">
-                      <GoogleSignIn returnUrl={returnUrl || undefined} />
-                    </button>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="relative my-8">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-[#1de9b6]/30"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-[#10182a]/80 text-[#1de9b6] font-medium">or continue with email</span>
-                    </div>
-                  </div>
-
-                  {/* Form */}
-                  <form className="space-y-4">
-                    <div>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="Email address"
-                        className="h-12 rounded-full bg-[#181f2e] border border-[#1de9b6]/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Input
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder="Password"
-                        className="h-12 rounded-full bg-[#181f2e] border border-[#1de9b6]/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50"
-                        required
-                      />
-                    </div>
-
-                    {isSignUp && (
-                      <div>
-                        <Input
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          type="password"
-                          placeholder="Confirm password"
-                          className="h-12 rounded-full bg-[#181f2e] border border-[#1de9b6]/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50"
-                          required
-                        />
-                      </div>
-                    )}
-
-                    <div className="space-y-4 pt-4">
-                      {!isSignUp ? (
-                        <>
-                          <SubmitButton
-                            formAction={handleSignIn}
-                            className="w-full h-12 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md"
-                            pendingText="Signing in..."
-                          >
-                            Sign in
-                          </SubmitButton>
-
-                          <Link
-                            href={`/auth?mode=signup${returnUrl ? `&returnUrl=${returnUrl}` : ''}`}
-                            className="flex h-12 items-center justify-center w-full text-center rounded-full border border-border bg-background hover:bg-accent/20 transition-all"
-                          >
-                            Create new account
-                          </Link>
-                        </>
-                      ) : (
-                        <>
-                          <SubmitButton
-                            formAction={handleSignUp}
-                            className="w-full h-12 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md"
-                            pendingText="Creating account..."
-                          >
-                            Sign up
-                          </SubmitButton>
-
-                          <Link
-                            href={`/auth?mode=signin${returnUrl ? `&returnUrl=${returnUrl}` : ''}`}
-                            className="flex h-12 items-center justify-center w-full text-center rounded-full border border-border bg-background hover:bg-accent/20 transition-all"
-                          >
-                            Back to sign in
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </section>
+        {/* Google Sign In */}
+        <button className="w-full h-12 rounded-full bg-white text-[#10182a] border border-[#1de9b6] font-semibold shadow-sm hover:bg-[#e0f7fa] transition-all flex items-center justify-center mb-6">
+          <GoogleSignIn returnUrl={returnUrl || undefined} />
+        </button>
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-grow border-t border-[#1de9b6]/30"></div>
+          <span className="mx-4 text-[#1de9b6] text-sm font-medium">or continue with email</span>
+          <div className="flex-grow border-t border-[#1de9b6]/30"></div>
+        </div>
+        {/* Form */}
+        <form className="space-y-4">
+          <Input id="email" name="email" type="email" placeholder="Email address" className="h-12 rounded-full bg-[#181f2e] border border-[#1de9b6]/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50" required />
+          <Input id="password" name="password" type="password" placeholder="Password" className="h-12 rounded-full bg-[#181f2e] border border-[#1de9b6]/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50" required />
+          {isSignUp && (
+            <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="Confirm password" className="h-12 rounded-full bg-[#181f2e] border border-[#1de9b6]/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50" required />
+          )}
+          <div className="space-y-4 pt-4">
+            {!isSignUp ? (
+              <>
+                <SubmitButton formAction={handleSignIn} className="w-full h-12 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md" pendingText="Signing in...">Sign in</SubmitButton>
+                <Link href={`/auth?mode=signup${returnUrl ? `&returnUrl=${returnUrl}` : ''}`} className="flex h-12 items-center justify-center w-full text-center rounded-full border border-border bg-background hover:bg-accent/20 transition-all">Create new account</Link>
+              </>
+            ) : (
+              <>
+                <SubmitButton formAction={handleSignUp} className="w-full h-12 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md" pendingText="Creating account...">Sign up</SubmitButton>
+                <Link href={`/auth?mode=signin${returnUrl ? `&returnUrl=${returnUrl}` : ''}`} className="flex h-12 items-center justify-center w-full text-center rounded-full border border-border bg-background hover:bg-accent/20 transition-all">Back to sign in</Link>
+              </>
+            )}
           </div>
+        </form>
+        {!isSignUp && (
+          <div className="text-center pt-2">
+            <button type="button" onClick={() => setForgotPasswordOpen(true)} className="text-sm text-primary hover:underline">Forgot password?</button>
+          </div>
+        )}
+        <div className="mt-8 text-center text-xs text-muted-foreground">
+          By continuing, you agree to our <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
         </div>
       </div>
     </main>
