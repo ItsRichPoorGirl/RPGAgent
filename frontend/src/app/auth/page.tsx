@@ -407,7 +407,7 @@ function LoginContent() {
 
               {/* Auth form card */}
               <div className="relative z-10 flex justify-center px-6 pb-24">
-                <div className="w-full max-w-md rounded-xl bg-[#181f2e] border border-[#1de9b6]/30 shadow-lg p-8">
+                <div className="w-full max-w-xl rounded-xl bg-[#10182a] border border-[#1de9b6]/30 shadow-lg p-10">
                   {/* Non-registration related messages */}
                   {message && !isSuccessMessage && (
                     <div className="mb-6 p-4 rounded-lg flex items-center gap-3 bg-secondary/10 border border-secondary/20 text-secondary">
@@ -418,9 +418,9 @@ function LoginContent() {
 
                   {/* Google Sign In */}
                   <div className="w-full mb-6">
-                    <div className="w-full bg-white text-[#10182a] border border-[#1de9b6] shadow-sm hover:bg-[#e0f7fa] transition-all font-semibold rounded-full h-12 flex items-center justify-center">
+                    <button className="w-full h-12 rounded-full bg-white text-[#10182a] border border-[#1de9b6] font-semibold shadow-sm hover:bg-[#e0f7fa] transition-all flex items-center justify-center">
                       <GoogleSignIn returnUrl={returnUrl || undefined} />
-                    </div>
+                    </button>
                   </div>
 
                   {/* Divider */}
