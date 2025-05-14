@@ -86,8 +86,8 @@ export function SidebarLeft({
   return (
     <Sidebar
       collapsible="icon"
-      style={{ background: '#2563eb', minHeight: '100vh' }}
-      className="border-r-0 !bg-[#2563eb] backdrop-blur-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+      style={{ minHeight: '100vh' }}
+      className="border-r-0 bg-sidebar backdrop-blur-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
       {...props}
     >
       <SidebarHeader className="px-2 py-2">
