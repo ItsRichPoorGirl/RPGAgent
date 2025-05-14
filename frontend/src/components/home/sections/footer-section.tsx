@@ -31,20 +31,20 @@ export function FooterSection() {
         <div className="flex flex-col items-start justify-start gap-y-5 max-w-xs mx-0">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src={logoSrc}
-              alt="Kortix Logo"
+              src="/luciq-logo.png"
+              alt="Luciq Logo"
               width={122}
               height={22}
               priority
             />
           </Link>
           <p className="tracking-tight text-muted-foreground font-medium">
-            {siteConfig.hero.description}
+            {siteConfig.hero.description.replace('Suna', 'Luciq')}
           </p>
 
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com/kortix-ai/suna"
+              href="https://github.com/luciqai/luciq"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub"

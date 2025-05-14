@@ -184,6 +184,7 @@ class Configuration:
         
         # Perform validation
         self._validate()
+        logger.info(f"DEBUG: OpenRouter API key set: {bool(self.OPENROUTER_API_KEY)}, API base: {self.OPENROUTER_API_BASE}")
         
     def _load_from_env(self):
         """Load configuration values from environment variables."""

@@ -25,14 +25,14 @@ export function OpenSourceSection() {
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-2 text-primary font-medium">
                 <Github className="h-5 w-5" />
-                <span>kortix-ai/suna</span>
+                <span>luciqai/luciq</span>
               </div>
               <div className="relative">
                 <h3 className="text-2xl font-semibold tracking-tight">
                   The Generalist AI Agent
                 </h3>
                 <p className="text-muted-foreground mt-2">
-                  Explore, contribute, or fork our repository. Suna is built
+                  Explore, contribute, or fork our repository. Luciq is built
                   with transparency and collaboration at its core.
                 </p>
               </div>

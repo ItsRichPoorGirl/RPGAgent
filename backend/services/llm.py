@@ -312,6 +312,7 @@ async def make_llm_api_call(
             raise LLMError("OpenRouter API key not configured")
         if not config.OPENROUTER_API_BASE:
             raise LLMError("OpenRouter API base URL not configured")
+        logger.info(f"DEBUG: Using OpenRouter model: {model_name}, API key set: {bool(config.OPENROUTER_API_KEY)}, API base: {config.OPENROUTER_API_BASE}")
 
     for attempt in range(MAX_RETRIES):
         try:

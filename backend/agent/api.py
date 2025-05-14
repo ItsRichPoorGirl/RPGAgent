@@ -415,6 +415,8 @@ async def start_agent(
     # Update model_name to use the resolved version
     model_name = resolved_model
 
+    logger.info(f"DEBUG: Resolved model name for LLM call: {model_name}")
+
     logger.info(f"Starting new agent for thread: {thread_id} with config: model={model_name}, thinking={body.enable_thinking}, effort={body.reasoning_effort}, stream={body.stream}, context_manager={body.enable_context_manager} (Instance: {instance_id})")
     client = await db.client
 
@@ -945,7 +947,9 @@ async def initiate_agent_with_files(
     # Update model_name to use the resolved version
     model_name = resolved_model
 
-    logger.info(f"[\033[91mDEBUG\033[0m] Initiating new agent with prompt and {len(files)} files (Instance: {instance_id}), model: {model_name}, enable_thinking: {enable_thinking}")
+    logger.info(f"DEBUG: Resolved model name for LLM call: {model_name}")
+
+    logger.info(f"Starting new agent for thread: {thread_id} with config: model={model_name}, thinking={body.enable_thinking}, effort={body.reasoning_effort}, stream={body.stream}, context_manager={body.enable_context_manager} (Instance: {instance_id})")
     client = await db.client
     account_id = user_id # In Basejump, personal account_id is the same as user_id
 

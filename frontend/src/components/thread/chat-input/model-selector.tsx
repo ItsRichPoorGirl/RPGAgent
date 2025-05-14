@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronDown, LockIcon, ZapIcon, StarIcon } from 'lucide-react';
+import { Check, ChevronDown, LockIcon, ZapIcon, StarIcon, Wand2 } from 'lucide-react';
 import { ModelOption, SubscriptionStatus } from './_use-model-selection';
 import { PaywallDialog } from '@/components/payment/paywall-dialog';
 
@@ -57,6 +57,8 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
         return <ZapIcon className="h-4 w-4 text-yellow-500" />;
       case 'opus-3.8':
         return <StarIcon className="h-4 w-4 text-purple-500" />;
+      case 'gemini-pro-2.5':
+        return <Wand2 className="h-4 w-4 text-purple-500 drop-shadow-[0_0_4px_rgba(128,0,255,0.5)]" />;
       default:
         return null;
     }
