@@ -9,7 +9,8 @@ import {
   Plus,
   MessagesSquare,
   Loader2,
-  Share2
+  Share2,
+  Search
 } from "lucide-react"
 import { toast } from "sonner"
 import { usePathname, useRouter } from "next/navigation"
@@ -65,6 +66,7 @@ export function NavAgents() {
   const isNavigatingRef = useRef(false)
   const { performDelete, isOperationInProgress } = useDeleteOperation();
   const isPerformingActionRef = useRef(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Helper to sort threads by updated_at (most recent first)
   const sortThreads = (
@@ -274,6 +276,10 @@ export function NavAgents() {
     );
   };
 
+  const filteredThreads = threads.filter(thread =>
+    thread.projectName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <SidebarGroup>
       <div className="flex justify-between items-center">
@@ -322,9 +328,18 @@ export function NavAgents() {
             </SidebarMenuItem>
           ))
         ) : threads.length > 0 ? (
-          // Show all threads with project info
           <>
-            {threads.map((thread) => {
+            <div className="relative mb-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search threads..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 rounded bg-[#181f2e] text-white border border-[#1de9b6]/30 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50"
+              />
+            </div>
+            {filteredThreads.map((thread) => {
               // Check if this thread is currently active
               const isActive = pathname?.includes(thread.threadId) || false;
               const isThreadLoading = loadingThreadId === thread.threadId;
