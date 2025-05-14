@@ -553,8 +553,8 @@
 .grid-lines {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(to right, rgba(15, 222, 217, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 222, 217, 0.03) 1px, transparent 1px);
+  background-image: linear-gradient(to right, rgba(15, 222, 217, 0) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 222, 217, 0) 1px, transparent 1px);
   background-size: 50px 50px;
   pointer-events: none;
   z-index: 0;
