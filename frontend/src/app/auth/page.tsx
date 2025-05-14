@@ -395,7 +395,7 @@ function LoginContent() {
                   </Link>
 
                   <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tighter text-center text-balance text-primary">
-                    {isSignUp ? 'Join Suna' : 'Welcome back'}
+                    {isSignUp ? 'Join Luciq' : 'Welcome back'}
                   </h1>
                   <p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight mt-2 mb-6">
                     {isSignUp
@@ -407,7 +407,7 @@ function LoginContent() {
 
               {/* Auth form card */}
               <div className="relative z-10 flex justify-center px-6 pb-24">
-                <div className="w-full max-w-md rounded-xl bg-[#10182a]/80 border border-[#1de9b6] shadow-[0_0_8px_0_#1de9b6] p-8 text-white">
+                <div className="w-full max-w-md rounded-xl bg-[#181f2e] border border-[#1de9b6]/30 shadow-lg p-8">
                   {/* Non-registration related messages */}
                   {message && !isSuccessMessage && (
                     <div className="mb-6 p-4 rounded-lg flex items-center gap-3 bg-secondary/10 border border-secondary/20 text-secondary">
@@ -499,7 +499,7 @@ function LoginContent() {
                           </SubmitButton>
 
                           <Link
-                            href={`/auth${returnUrl ? `?returnUrl=${returnUrl}` : ''}`}
+                            href={`/auth?mode=signin${returnUrl ? `&returnUrl=${returnUrl}` : ''}`}
                             className="flex h-12 items-center justify-center w-full text-center rounded-full border border-border bg-background hover:bg-accent/20 transition-all"
                           >
                             Back to sign in
@@ -507,106 +507,13 @@ function LoginContent() {
                         </>
                       )}
                     </div>
-
-                    {!isSignUp && (
-                      <div className="text-center pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setForgotPasswordOpen(true)}
-                          className="text-sm text-primary hover:underline"
-                        >
-                          Forgot password?
-                        </button>
-                      </div>
-                    )}
                   </form>
-
-                  <div className="mt-8 text-center text-xs text-muted-foreground">
-                    By continuing, you agree to our{' '}
-                    <Link href="/terms" className="text-primary hover:underline">
-                      Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link href="/privacy" className="text-primary hover:underline">
-                      Privacy Policy
-                    </Link>
-                  </div>
                 </div>
               </div>
             </section>
           </div>
         </div>
       </div>
-
-      {/* Forgot Password Dialog */}
-      <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
-        <DialogContent className="sm:max-w-md rounded-xl bg-[#F3F4F6] dark:bg-[#F9FAFB]/[0.02] border border-border">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl font-medium">
-                Reset Password
-              </DialogTitle>
-              <button
-                onClick={() => setForgotPasswordOpen(false)}
-                className="rounded-full p-1 hover:bg-muted transition-colors"
-              >
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </div>
-            <DialogDescription className="text-muted-foreground">
-              Enter your email address and we'll send you a link to reset your
-              password.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleForgotPassword} className="space-y-4 py-4">
-            <Input
-              id="forgot-password-email"
-              type="email"
-              placeholder="Email address"
-              value={forgotPasswordEmail}
-              onChange={(e) => setForgotPasswordEmail(e.target.value)}
-              className="h-12 rounded-full bg-background border-border"
-              required
-            />
-
-            {forgotPasswordStatus.message && (
-              <div
-                className={`p-4 rounded-lg flex items-center gap-3 ${
-                  forgotPasswordStatus.success
-                    ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900/50 text-green-800 dark:text-green-400'
-                    : 'bg-secondary/10 border border-secondary/20 text-secondary'
-                }`}
-              >
-                {forgotPasswordStatus.success ? (
-                  <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-500 dark:text-green-400" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 flex-shrink-0 text-secondary" />
-                )}
-                <span className="text-sm font-medium">
-                  {forgotPasswordStatus.message}
-                </span>
-              </div>
-            )}
-
-            <DialogFooter className="flex sm:justify-start gap-3 pt-2">
-              <button
-                type="submit"
-                className="h-12 px-6 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md"
-              >
-                Send Reset Link
-              </button>
-              <button
-                type="button"
-                onClick={() => setForgotPasswordOpen(false)}
-                className="h-12 px-6 rounded-full border border-border bg-background hover:bg-accent/20 transition-all"
-              >
-                Cancel
-              </button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }
