@@ -300,35 +300,103 @@ function LoginContent() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen w-full">
-      <div className="min-h-screen bg-[#0a0a1f] flex items-center justify-center w-full">
-        <div className="relative z-10 w-full divide-y divide-border">
-          {/* Hero-like header with flickering grid and electric lines removed */}
-          <section className="w-full relative overflow-hidden">
-            <div className="relative flex flex-col items-center w-full px-6">
-              {/* Center content background with rounded bottom removed */}
-              {/* Header content */}
-              <div className="relative z-10 pt-24 pb-8 max-w-md mx-auto h-full w-full flex flex-col gap-2 items-center justify-center">
-                <Link
-                  href="/"
-                  className="group border border-border/50 bg-background hover:bg-accent/20 rounded-full text-sm h-8 px-3 flex items-center gap-2 transition-all duration-200 shadow-sm mb-6"
-                >
-                  <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium text-muted-foreground text-xs tracking-wide">
-                    Back to home
-                  </span>
-                </Link>
+      <div className="min-h-screen bg-[#0a0a1f] relative overflow-hidden">
+        <div className="grid-lines"></div>
+        <div className="electric-container">
+          <div className="electric-line electric-line-1"></div>
+          <div className="electric-line electric-line-2"></div>
+          <div className="electric-line electric-line-3"></div>
+          <div className="electric-line electric-line-4"></div>
+          <div className="electric-line-v1"></div>
+          <div className="electric-line-v2"></div>
+          <div className="electric-line-v3"></div>
+          <div className="electric-line-v4"></div>
+          <div className="electric-diagonal electric-diagonal-1"></div>
+          <div className="electric-diagonal electric-diagonal-2"></div>
+          <div className="electric-diagonal electric-diagonal-3"></div>
+          <div className="electric-diagonal electric-diagonal-4"></div>
+          <div className="electric-pulse electric-pulse-1"></div>
+          <div className="electric-pulse electric-pulse-2"></div>
+          <div className="electric-pulse electric-pulse-3"></div>
+          <div className="electric-pulse electric-pulse-4"></div>
+          <div className="electric-pulse electric-pulse-5"></div>
+          <div className="electric-pulse electric-pulse-6"></div>
+          <div className="electric-pulse electric-pulse-7"></div>
+          <div className="electric-pulse electric-pulse-8"></div>
+          <div className="electric-node electric-node-1"></div>
+          <div className="electric-node electric-node-2"></div>
+          <div className="electric-node electric-node-3"></div>
+          <div className="electric-node electric-node-4"></div>
+        </div>
+        <div className="relative z-10">
+          <div className="w-full divide-y divide-border">
+            {/* Hero-like header with flickering grid */}
+            <section className="w-full relative overflow-hidden">
+              <div className="relative flex flex-col items-center w-full px-6">
+                {/* Left side flickering grid with gradient fades */}
+                <div className="absolute left-0 top-0 h-[600px] md:h-[800px] w-1/3 -z-10 overflow-hidden">
+                  {/* Horizontal fade from left to right */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background z-10" />
+                  {/* Vertical fade from top */}
+                  <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background via-background/90 to-transparent z-10" />
+                  {/* Vertical fade to bottom */}
+                  <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent z-10" />
+                  <div className="h-full w-full">
+                    <FlickeringGrid
+                      className="h-full w-full"
+                      squareSize={mounted && tablet ? 2 : 2.5}
+                      gridGap={mounted && tablet ? 2 : 2.5}
+                      color="var(--secondary)"
+                      maxOpacity={0.4}
+                      flickerChance={isScrolling ? 0.01 : 0.03}
+                    />
+                  </div>
+                </div>
+                {/* Right side flickering grid with gradient fades */}
+                <div className="absolute right-0 top-0 h-[600px] md:h-[800px] w-1/3 -z-10 overflow-hidden">
+                  {/* Horizontal fade from right to left */}
+                  <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-background z-10" />
+                  {/* Vertical fade from top */}
+                  <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background via-background/90 to-transparent z-10" />
+                  {/* Vertical fade to bottom */}
+                  <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent z-10" />
+                  <div className="h-full w-full">
+                    <FlickeringGrid
+                      className="h-full w-full"
+                      squareSize={mounted && tablet ? 2 : 2.5}
+                      gridGap={mounted && tablet ? 2 : 2.5}
+                      color="var(--secondary)"
+                      maxOpacity={0.4}
+                      flickerChance={isScrolling ? 0.01 : 0.03}
+                    />
+                  </div>
+                </div>
+                {/* Center content background with rounded bottom */}
+                <div className="absolute inset-x-1/4 top-0 h-[600px] md:h-[800px] -z-20 bg-background rounded-b-xl"></div>
+                {/* Header content */}
+                <div className="relative z-10 pt-24 pb-8 max-w-md mx-auto h-full w-full flex flex-col gap-2 items-center justify-center">
+                  <Link
+                    href="/"
+                    className="group border border-border/50 bg-background hover:bg-accent/20 rounded-full text-sm h-8 px-3 flex items-center gap-2 transition-all duration-200 shadow-sm mb-6"
+                  >
+                    <ArrowLeft className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-muted-foreground text-xs tracking-wide">
+                      Back to home
+                    </span>
+                  </Link>
 
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tighter text-center text-balance text-primary">
-                  {isSignUp ? 'Join Luciq' : 'Welcome back'}
-                </h1>
-                <p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight mt-2 mb-6">
-                  {isSignUp
-                    ? 'Create your account and start building with AI'
-                    : 'Sign in to your account to continue'}
-                </p>
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tighter text-center text-balance text-primary">
+                    {isSignUp ? 'Join Luciq' : 'Welcome back'}
+                  </h1>
+                  <p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight mt-2 mb-6">
+                    {isSignUp
+                      ? 'Create your account and start building with AI'
+                      : 'Sign in to your account to continue'}
+                  </p>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
         </div>
       </div>
     </main>
