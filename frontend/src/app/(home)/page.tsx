@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import RobotImage from "@/components/robot-image"
 import { ChevronDown, ChevronRight, Check, MessageSquare, FileText, Database, Zap, Link2, Bell } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/components/AuthProvider"
 
 export default function LandingPage() {
   const [customTier, setCustomTier] = useState("6 hours - $50")
@@ -16,7 +16,7 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { user, isLoading } = useAuth();
   const [inputValue, setInputValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -95,7 +95,7 @@ export default function LandingPage() {
       e.preventDefault();
     }
     if (!inputValue.trim() || isSubmitting) return;
-    if (!session) {
+    if (!user && !isLoading) {
       router.push("/auth");
       return;
     }
@@ -109,7 +109,7 @@ export default function LandingPage() {
 
   // Handle Get Started and Get Started Free
   const handleGetStarted = () => {
-    if (!session) {
+    if (!user && !isLoading) {
       router.push("/auth");
     } else {
       router.push("/dashboard");
@@ -123,7 +123,7 @@ export default function LandingPage() {
 
   const handleCustomTierCheckout = async () => {
     const priceId = customTierToPriceId[customTier];
-    if (!session) {
+    if (!user && !isLoading) {
       router.push("/auth");
       return;
     }
@@ -642,9 +642,9 @@ export default function LandingPage() {
                 </Button>
               </div>
             </div>
-          </div>
+      </div>
         </section>
-      </main>
+    </main>
 
       <footer className="w-full border-t border-teal-400/10 py-8 hero-bg bg-[#0a0a1f]">
         <div className="container mx-auto max-w-6xl px-4 md:px-6">
