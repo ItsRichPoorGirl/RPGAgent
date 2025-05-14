@@ -6,6 +6,8 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import RobotImage from "@/components/robot-image"
 import { ChevronDown, ChevronRight, Check, MessageSquare, FileText, Database, Zap, Link2, Bell } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 
 export default function LandingPage() {
   const [customTier, setCustomTier] = useState("6 hours - $50")
@@ -13,6 +15,10 @@ export default function LandingPage() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [inputValue, setInputValue] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const customTierOptions = [
     "6 hours - $50",
@@ -22,6 +28,15 @@ export default function LandingPage() {
     "125 hours - $800",
     "200 hours - $1000",
   ]
+
+  const customTierToPriceId: Record<string, string> = {
+    "6 hours - $50": "price_1RMZYBCQSpuIbcUBoLIdk8yv",
+    "12 hours - $100": "price_1RMZYBCQSpuIbcUB4xpnBWn2",
+    "25 hours - $200": "price_1RMZYBCQSpuIbcUBrVEJblS7",
+    "50 hours - $400": "price_1RMZYBCQSpuIbcUBXR5gNWHO",
+    "125 hours - $800": "price_1RMZYBCQSpuIbcUBF4PsfCG9",
+    "200 hours - $1000": "price_1RMZYBCQSpuIbcUBlv69Sl4i",
+  };
 
   // Handle scroll event for navbar
   useEffect(() => {
@@ -74,6 +89,57 @@ export default function LandingPage() {
     }
   }
 
+  // Handle hero input submission
+  const handleHeroSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    if (!inputValue.trim() || isSubmitting) return;
+    if (!session) {
+      router.push("/auth");
+      return;
+    }
+    setIsSubmitting(true);
+    // Simulate agent creation and redirect (replace with real logic as needed)
+    setTimeout(() => {
+      setIsSubmitting(false);
+      router.push("/dashboard"); // Replace with /agents/[thread_id] if you have thread logic
+    }, 1000);
+  };
+
+  // Handle Get Started and Get Started Free
+  const handleGetStarted = () => {
+    if (!session) {
+      router.push("/auth");
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
+  // Handle Login
+  const handleLogin = () => {
+    router.push("/auth");
+  };
+
+  const handleCustomTierCheckout = async () => {
+    const priceId = customTierToPriceId[customTier];
+    if (!session) {
+      router.push("/auth");
+      return;
+    }
+    if (!priceId) return;
+    // Call backend or API to create Stripe checkout session
+    const res = await fetch("/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ priceId }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0a1f]">
       {/* Header - Updated with scroll behavior */}
@@ -82,7 +148,7 @@ export default function LandingPage() {
           scrolled ? "bg-[#0a0a1f]/90 backdrop-blur-md" : "bg-transparent"
         }`}
       >
-        <div className="container max-w-6xl flex h-16 items-center justify-between">
+        <div className="container mx-auto max-w-6xl flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <Image src="/luciq-logo.png" alt="Luciq AI Logo" width={40} height={40} className="h-10 w-auto" />
             <span className="text-xl font-semibold text-white">Luciq AI</span>
@@ -105,10 +171,11 @@ export default function LandingPage() {
             <Button
               variant="outline"
               className="border-teal-400/30 text-white hover:bg-teal-400/10 rounded-full hidden md:flex"
+              onClick={handleLogin}
             >
               Login
             </Button>
-            <Button className="bg-gradient-to-r from-teal-400 to-purple-500 hover:opacity-90 text-teal-950 font-medium rounded-full">
+            <Button className="bg-gradient-to-r from-teal-400 to-purple-500 hover:opacity-90 text-teal-950 font-medium rounded-full" onClick={handleGetStarted}>
               Get Started
             </Button>
           </div>
@@ -156,7 +223,7 @@ export default function LandingPage() {
             <div className="electric-node electric-node-4"></div>
           </div>
 
-          <div className="container max-w-6xl relative z-10 px-4 md:px-6">
+          <div className="container mx-auto max-w-6xl relative z-10 px-4 md:px-6">
             <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
               <div className="flex flex-col space-y-8 order-1">
                 {/* Introducing badge with white background */}
@@ -182,14 +249,19 @@ export default function LandingPage() {
 
                 {/* Input box instead of buttons */}
                 <div className="relative max-w-md w-full">
-                  <input
-                    type="text"
-                    placeholder="Ask Luciq AI to..."
-                    className="w-full px-6 py-4 rounded-full bg-black/20 border border-teal-400/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-teal-400/50 pr-12"
-                  />
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full text-white">
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
+                  <form onSubmit={handleHeroSubmit}>
+                    <input
+                      type="text"
+                      placeholder="Ask Luciq AI to..."
+                      className="w-full px-6 py-4 rounded-full bg-black/20 border border-teal-400/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-teal-400/50 pr-12"
+                      value={inputValue}
+                      onChange={e => setInputValue(e.target.value)}
+                      disabled={isSubmitting}
+                    />
+                    <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full text-white" disabled={isSubmitting || !inputValue.trim()}>
+                      {isSubmitting ? <span className="animate-spin">⏳</span> : <ChevronRight className="h-5 w-5" />}
+                    </button>
+                  </form>
                 </div>
 
                 <div className="pt-4">
@@ -224,7 +296,7 @@ export default function LandingPage() {
 
         {/* Features Section - Updated with new design */}
         <section id="features" className="w-full py-24 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
-          <div className="container max-w-6xl px-4 md:px-6">
+          <div className="container mx-auto max-w-6xl px-4 md:px-6">
             <div className="text-center mb-16">
               <div className="inline-block bg-gradient-to-r from-teal-400/20 to-purple-500/20 rounded-full px-4 py-1 text-sm text-white/80 mb-4">
                 Everything you need to
@@ -302,7 +374,7 @@ export default function LandingPage() {
 
         {/* Testimonials Section - Updated with capitalized words in headline */}
         <section id="testimonials" className="w-full py-24 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
-          <div className="container max-w-6xl px-4 md:px-6">
+          <div className="container mx-auto max-w-6xl px-4 md:px-6">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">
                 Trusted By{" "}
@@ -373,7 +445,7 @@ export default function LandingPage() {
 
         {/* Pricing Section - Updated with gradient button only for Pro tier */}
         <section id="pricing" className="w-full py-24 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
-          <div className="container max-w-6xl px-4 md:px-6">
+          <div className="container mx-auto max-w-6xl px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">
                 <span className="bg-gradient-to-r from-teal-400 to-purple-500 text-transparent bg-clip-text">
@@ -534,6 +606,7 @@ export default function LandingPage() {
                 <Button
                   variant="outline"
                   className="w-full border-teal-400/30 text-white hover:bg-teal-400/10 rounded-full"
+                  onClick={handleCustomTierCheckout}
                 >
                   Get Started
                 </Button>
@@ -551,7 +624,7 @@ export default function LandingPage() {
 
         {/* CTA Section */}
         <section className="w-full py-20 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
-          <div className="container max-w-6xl px-4 md:px-6">
+          <div className="container mx-auto max-w-6xl px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-6 text-center">
               <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-white">
                 Ready to transform your workflow?
@@ -560,12 +633,12 @@ export default function LandingPage() {
                 Get started with Luciq AI today and experience the future of intelligent assistance.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Button className="bg-gradient-to-r from-teal-400 to-purple-500 hover:opacity-90 text-white font-medium rounded-full">
+                <Button className="bg-gradient-to-r from-teal-400 to-purple-500 hover:opacity-90 text-white font-medium rounded-full" onClick={handleGetStarted}>
                   Get Started Free
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
-                <Button variant="outline" className="border-teal-400/30 text-white hover:bg-teal-400/10 rounded-full">
-                  Contact Sales
+                <Button variant="outline" className="border-teal-400/30 text-white hover:bg-teal-400/10 rounded-full" asChild>
+                  <a href="mailto:hello@luciq.ai">Contact Sales</a>
                 </Button>
               </div>
             </div>
@@ -574,7 +647,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="w-full border-t border-teal-400/10 py-8 hero-bg bg-[#0a0a1f]">
-        <div className="container max-w-6xl px-4 md:px-6">
+        <div className="container mx-auto max-w-6xl px-4 md:px-6">
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <div className="flex items-center gap-2 mb-4">
