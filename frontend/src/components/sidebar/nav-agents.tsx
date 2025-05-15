@@ -282,7 +282,31 @@ export function NavAgents() {
 
   return (
     <SidebarGroup>
-      <div className="flex justify-between items-center">
+      {/* Search bar above Agents label */}
+      <div className="mb-4">
+        {state === 'collapsed' ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="flex items-center justify-center w-10 h-10 rounded-full bg-[#181f2e] text-white hover:bg-[#232b3b] transition-all">
+                <Search className="h-5 w-5 text-zinc-400" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Search jobs</TooltipContent>
+          </Tooltip>
+        ) : (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Search jobs..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 rounded-full bg-[#181f2e] text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+            />
+          </div>
+        )}
+      </div>
+      <div className="flex justify-between items-center mb-2">
         <SidebarGroupLabel>Agents</SidebarGroupLabel>
         {state !== 'collapsed' ? (
           <Tooltip>
@@ -329,16 +353,6 @@ export function NavAgents() {
           ))
         ) : threads.length > 0 ? (
           <>
-            <div className="relative mb-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Search threads..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 rounded bg-[#181f2e] text-white border border-[#1de9b6]/30 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50"
-              />
-            </div>
             {filteredThreads.map((thread) => {
               // Check if this thread is currently active
               const isActive = pathname?.includes(thread.threadId) || false;
