@@ -201,7 +201,7 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
           <div className="w-full text-sm flex flex-col justify-between items-start rounded-lg">
             <CardContent className="w-full p-1.5 pb-2 pt-3 bg-[#1a2236]/70 dark:bg-[#1a2236]/60 rounded-2xl border border-[#1de9b6] shadow-[0_0_8px_0_#1de9b6]">
               <AttachmentGroup
-                files={uploadedFiles}
+                files={uploadedFiles || []}
                 sandboxId={sandboxId}
                 onRemove={removeUploadedFile}
                 layout="inline"

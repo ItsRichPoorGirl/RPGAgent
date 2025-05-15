@@ -8,9 +8,7 @@ export async function GET(request: NextRequest, { params }: { params: { path: st
     const path = params.path?.join('/') || '';
     const { searchParams } = new URL(request.url);
     
-    const url = `${BACKEND_URL}/${path}${
-      searchParams.toString() ? `?${searchParams.toString()}` : ''
-    }`;
+    const url = `${BACKEND_URL}/${path}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     
     console.log(`Proxying GET to backend (URL hidden for security)`);
     
@@ -133,4 +131,4 @@ export async function DELETE(request: NextRequest, { params }: { params: { path:
       { status: 500 }
     );
   }
-}
+} 
