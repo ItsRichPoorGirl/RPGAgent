@@ -20,7 +20,7 @@ from utils.logger import logger
 from services.billing import check_billing_status
 from utils.config import config
 from sandbox.sandbox import create_sandbox, get_or_start_sandbox
-from services.llm import make_llm_api_call
+from services.llm import make_llm_api_call, get_model_name
 
 # Initialize shared resources
 router = APIRouter()
@@ -396,7 +396,7 @@ async def start_agent(
         logger.info(f"Using model from config: {model_name}")
 
     # Log the model name after alias resolution
-    resolved_model = MODEL_NAME_ALIASES.get(model_name, model_name)
+    resolved_model = get_model_name(model_name)
     logger.info(f"Resolved model name: {resolved_model}")
 
     # Update model_name to use the resolved version
@@ -928,7 +928,7 @@ async def initiate_agent_with_files(
         logger.info(f"Using model from config: {model_name}")
 
     # Log the model name after alias resolution
-    resolved_model = MODEL_NAME_ALIASES.get(model_name, model_name)
+    resolved_model = get_model_name(model_name)
     logger.info(f"Resolved model name: {resolved_model}")
 
     # Update model_name to use the resolved version

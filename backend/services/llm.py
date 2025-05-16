@@ -28,6 +28,46 @@ RATE_LIMIT_DELAY = 30
 RETRY_DELAY = 0.1
 OPENROUTER_RATE_LIMIT_DELAY = 60  # Longer delay for OpenRouter rate limits
 
+MODEL_NAME_ALIASES = {
+    # Short names to full names (copy from upstream for completeness)
+    "sonnet-3.5": "anthropic/claude-3-5-sonnet-20240229-v1:0",
+    "sonnet-3.7": "anthropic/claude-3-7-sonnet-latest",
+    "opus-3.5": "anthropic/claude-3-5-opus-20240229-v1:0",
+    "opus-3.7": "anthropic/claude-3-7-opus-latest",
+    "gpt-4.1": "openai/gpt-4.1-2025-04-14",
+    "gpt-4o": "openai/gpt-4o",
+    "gpt-4-turbo": "openai/gpt-4-turbo",
+    "gpt-4": "openai/gpt-4",
+    "grok-3": "xai/grok-3-fast-latest",
+    "deepseek": "openrouter/deepseek/deepseek-chat",
+    "grok-3-mini": "xai/grok-3-mini-fast-beta",
+    "qwen3": "openrouter/qwen/qwen3-235b-a22b",
+    "gemini-pro-2.5": "openrouter/google/gemini-2.5-pro-preview",
+    # Add all full canonical names as keys to themselves
+    "anthropic/claude-3-5-sonnet-20240229-v1:0": "anthropic/claude-3-5-sonnet-20240229-v1:0",
+    "anthropic/claude-3-7-sonnet-latest": "anthropic/claude-3-7-sonnet-latest",
+    "anthropic/claude-3-5-opus-20240229-v1:0": "anthropic/claude-3-5-opus-20240229-v1:0",
+    "anthropic/claude-3-7-opus-latest": "anthropic/claude-3-7-opus-latest",
+    "openai/gpt-4.1-2025-04-14": "openai/gpt-4.1-2025-04-14",
+    "openai/gpt-4o": "openai/gpt-4o",
+    "openai/gpt-4-turbo": "openai/gpt-4-turbo",
+    "openai/gpt-4": "openai/gpt-4",
+    "xai/grok-3-fast-latest": "xai/grok-3-fast-latest",
+    "openrouter/deepseek/deepseek-chat": "openrouter/deepseek/deepseek-chat",
+    "xai/grok-3-mini-fast-beta": "xai/grok-3-mini-fast-beta",
+    "openrouter/qwen/qwen3-235b-a22b": "openrouter/qwen/qwen3-235b-a22b",
+    "openrouter/google/gemini-2.5-pro-preview": "openrouter/google/gemini-2.5-pro-preview"
+}
+
+def get_model_name(model_name: str) -> str:
+    """Resolve a model name or alias to its canonical name."""
+    resolved = MODEL_NAME_ALIASES.get(model_name, model_name)
+    if resolved != model_name:
+        logger.info(f"Model alias '{model_name}' resolved to '{resolved}'")
+    else:
+        logger.warning(f"Model name '{model_name}' not found in aliases, using as-is")
+    return resolved
+
 class LLMError(Exception):
     """Base exception for LLM-related errors."""
     pass
