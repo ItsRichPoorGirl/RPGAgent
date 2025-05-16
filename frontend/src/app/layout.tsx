@@ -27,11 +27,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: 'Luciq AI',
-    template: `%s - Luciq AI`,
+    default: 'Luciq',
+    template: `%s - Luciq`,
   },
   description:
-    'Luciq is a fully open source AI assistant that helps you accomplish real-world tasks with ease. Through natural conversation, Luciq becomes your digital companion for research, data analysis, and everyday challenges.',
+    'Your AI Super Agent',
   keywords: [
     'AI',
     'artificial intelligence',
@@ -62,9 +62,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Luciq - Open Source Generalist AI Agent',
-    description:
-      'Luciq is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
+    title: 'Luciq',
+    description: 'Your AI Super Agent',
     url: siteConfig.url,
     siteName: 'Luciq',
     images: [
@@ -72,7 +71,7 @@ export const metadata: Metadata = {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'Luciq - Open Source Generalist AI Agent',
+        alt: 'Luciq - Your AI Super Agent',
         type: 'image/png',
       },
     ],
@@ -81,9 +80,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Luciq - Open Source Generalist AI Agent',
-    description:
-      'Luciq is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
+    title: 'Luciq',
+    description: 'Your AI Super Agent',
     creator: '@luciqai',
     site: '@luciqai',
     images: [
@@ -91,7 +89,7 @@ export const metadata: Metadata = {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'Luciq - Open Source Generalist AI Agent',
+        alt: 'Luciq - Your AI Super Agent',
       },
     ],
   },
