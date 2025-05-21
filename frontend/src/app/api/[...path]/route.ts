@@ -5,7 +5,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'https://luciq-ai-agent-productio
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: any
 ) {
   try {
     const path = params.path?.join('/') || '';
@@ -47,7 +47,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: any
 ) {
   try {
     const path = params.path?.join('/') || '';
@@ -83,7 +83,7 @@ export async function POST(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: any
 ) {
   try {
     const path = params.path?.join('/') || '';
@@ -116,7 +116,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: any
 ) {
   try {
     const path = params.path?.join('/') || '';
