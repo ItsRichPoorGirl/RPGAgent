@@ -531,11 +531,11 @@ async def create_checkout_session(
                             )
                             logger.info(f"Successfully updated schedule {updated_schedule['id']}")
                         else:
-                                updated_schedule = stripe.SubscriptionSchedule.create(
-                                    from_subscription=subscription_id,
+                            updated_schedule = stripe.SubscriptionSchedule.create(
+                                from_subscription=subscription_id,
                                 phases=[current_phase_update_data, new_downgrade_phase_data],
-                                    end_behavior='release'
-                                )
+                                end_behavior='release'
+                            )
                             logger.info(f"Successfully created schedule {updated_schedule['id']}")
 
                         return {
