@@ -23,6 +23,8 @@ interface ModelSelectorProps {
   onModelChange: (modelId: string) => void;
   modelOptions: ModelOption[];
   canAccessModel: (modelId: string) => boolean;
+  subscriptionStatus: SubscriptionStatus;
+  initialAutoSelect?: boolean;
 }
 
 export const ModelSelector: React.FC<ModelSelectorProps> = ({
@@ -30,6 +32,8 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   onModelChange,
   modelOptions,
   canAccessModel,
+  subscriptionStatus,
+  initialAutoSelect,
 }) => {
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [lockedModel, setLockedModel] = useState<string | null>(null);
