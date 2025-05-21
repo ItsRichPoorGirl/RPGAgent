@@ -3,18 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 // Access server-side environment variable (not exposed to client)
 const BACKEND_URL = process.env.BACKEND_URL || 'https://luciq-ai-agent-production.up.railway.app/api';
 
-type RouteContext = {
-  params: {
-    path: string[];
-  };
-};
-
 export async function GET(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { path: string[] } }
 ) {
   try {
-    const path = context.params.path?.join('/') || '';
+    const path = params.path?.join('/') || '';
     const { searchParams } = new URL(request.url);
 
     const url = `${BACKEND_URL}/${path}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
@@ -53,10 +47,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { path: string[] } }
 ) {
   try {
-    const path = context.params.path?.join('/') || '';
+    const path = params.path?.join('/') || '';
 
     const url = `${BACKEND_URL}/${path}`;
 
@@ -89,10 +83,10 @@ export async function POST(
 
 export async function PUT(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { path: string[] } }
 ) {
   try {
-    const path = context.params.path?.join('/') || '';
+    const path = params.path?.join('/') || '';
     const url = `${BACKEND_URL}/${path}`;
 
     console.log(`Proxying PUT to backend (URL hidden for security)`);
@@ -122,10 +116,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { path: string[] } }
 ) {
   try {
-    const path = context.params.path?.join('/') || '';
+    const path = params.path?.join('/') || '';
     const url = `${BACKEND_URL}/${path}`;
 
     console.log(`Proxying DELETE to backend (URL hidden for security)`);
