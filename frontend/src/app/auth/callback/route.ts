@@ -18,15 +18,15 @@ export async function GET(request: Request) {
   // URL to redirect to after sign up process completes
   // Handle the case where returnUrl is 'null' (string) or actual null
   const redirectPath = returnUrl && returnUrl !== 'null' ? returnUrl : '/dashboard';
-  
+
   // Ensure we're using the correct origin for production
   const baseUrl = process.env.NEXT_PUBLIC_URL || origin;
-  
+
   // Construct the redirect URL
   const redirectUrl = `${baseUrl}${redirectPath.startsWith('/') ? '' : '/'}${redirectPath}`;
-  
+
   // Log the redirect for debugging
   console.log('Redirecting to:', redirectUrl);
-  
+
   return NextResponse.redirect(redirectUrl);
 }

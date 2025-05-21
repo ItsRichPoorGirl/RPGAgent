@@ -117,4 +117,4 @@ class SandboxVisionTool(SandboxToolsBase):
             return self.success_response(f"Successfully loaded the image '{cleaned_path}'.")
 
         except Exception as e:
-            return self.fail_response(f"An unexpected error occurred while trying to see the image: {str(e)}") 
+            return self.fail_response(f"An unexpected error occurred while trying to see the image: {str(e)}")

@@ -482,4 +482,4 @@ export function AttachmentGroup({
             </Dialog>
         </>
     );
-} 
+}

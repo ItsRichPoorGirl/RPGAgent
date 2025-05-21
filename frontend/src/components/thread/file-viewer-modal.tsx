@@ -234,14 +234,6 @@ export function FileViewerModal({
       loadingFileRef.current = file.path;
 
       try {
-        // Check if we have a valid session token
-        if (!session?.access_token) {
-          throw new Error('Authentication token missing. Please refresh the page and login again.');
-        }
-
-        // Start timer for performance logging
-        const startTime = performance.now();
-
         // For PDFs and Office documents, always use blob content type
         const contentType = isPdfFile || isOfficeFile ? 'blob' : FileCache.getContentTypeFromPath(file.path);
 
@@ -254,14 +246,11 @@ export function FileViewerModal({
           {
             contentType: contentType as 'text' | 'blob' | 'json',
             force: isPdfFile, // Force refresh for PDFs to ensure we get a blob
-            token: session.access_token,
+            token: session?.access_token,
           }
         );
 
-        const loadTime = Math.round(performance.now() - startTime);
-        console.log(
-          `[FILE VIEWER] Received content for ${file.path} in ${loadTime}ms (${typeof content})`,
-        );
+
 
         // Critical check: Ensure the file we just loaded is still the one selected
         if (loadingFileRef.current !== file.path) {
@@ -801,7 +790,7 @@ export function FileViewerModal({
           <title>${pdfName}</title>
           <style>
             @media print {
-              @page { 
+              @page {
                 size: ${orientation === 'landscape' ? 'A4 landscape' : 'A4'};
                 margin: 15mm;
               }
@@ -900,7 +889,7 @@ export function FileViewerModal({
                 );
               }
             });
-            
+
             // Print automatically when loaded
             window.onload = () => {
               setTimeout(() => {

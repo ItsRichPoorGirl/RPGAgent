@@ -53,7 +53,7 @@ export const PaywallDialog: React.FC<PaywallDialogProps> = ({
     return () => {
       document.body.classList.remove('overflow-hidden');
       document.body.style.pointerEvents = 'auto';
-      
+
       const strayBackdrops = document.querySelectorAll('[data-backdrop]');
       strayBackdrops.forEach(element => element.remove());
     };
@@ -77,13 +77,13 @@ export const PaywallDialog: React.FC<PaywallDialogProps> = ({
     <>
       {children}
 
-      <Dialog 
-        open={open} 
+      <Dialog
+        open={open}
         onOpenChange={(isOpen) => {
           if (!isOpen) {
             document.body.style.pointerEvents = 'auto';
             document.body.classList.remove('overflow-hidden');
-            
+
             setTimeout(() => {
               if (onDialogClose) {
                 onDialogClose();
@@ -92,7 +92,7 @@ export const PaywallDialog: React.FC<PaywallDialogProps> = ({
           }
         }}
       >
-        <DialogContent 
+        <DialogContent
           className="sm:max-w-md"
           onEscapeKeyDown={() => {
             handleClose();
@@ -120,22 +120,22 @@ export const PaywallDialog: React.FC<PaywallDialogProps> = ({
           </div>
 
           <DialogFooter className="flex items-center gap-2">
-            <Button 
+            <Button
               onClick={() => {
                 document.body.style.pointerEvents = 'auto';
                 document.body.classList.remove('overflow-hidden');
                 handleClose();
-              }} 
+              }}
               variant="outline"
             >
               {cancelText}
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 document.body.style.pointerEvents = 'auto';
                 document.body.classList.remove('overflow-hidden');
                 handleUpgrade();
-              }} 
+              }}
               variant="default"
             >
               <Rocket className="h-4 w-4" />

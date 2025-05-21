@@ -137,7 +137,7 @@ if __name__ == "__main__":
         }
     )
     print("User Info:", user_info)
-    
+
     # Example for getting user timeline
     timeline = tool.call_endpoint(
         route="timeline",
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         }
     )
     print("Timeline:", timeline)
-    
+
     # Example for getting user following
     following = tool.call_endpoint(
         route="following",
@@ -157,7 +157,7 @@ if __name__ == "__main__":
         }
     )
     print("Following:", following)
-    
+
     # Example for getting user followers
     followers = tool.call_endpoint(
         route="followers",
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         }
     )
     print("Followers:", followers)
-    
+
     # Example for searching tweets
     search_results = tool.call_endpoint(
         route="search",
@@ -178,7 +178,7 @@ if __name__ == "__main__":
         }
     )
     print("Search Results:", search_results)
-    
+
     # Example for getting user replies
     replies = tool.call_endpoint(
         route="replies",
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         }
     )
     print("Replies:", replies)
-    
+
     # Example for checking if user retweeted a tweet
     check_retweet = tool.call_endpoint(
         route="check_retweet",
@@ -198,7 +198,7 @@ if __name__ == "__main__":
         }
     )
     print("Check Retweet:", check_retweet)
-    
+
     # Example for getting tweet details
     tweet = tool.call_endpoint(
         route="tweet",
@@ -207,7 +207,7 @@ if __name__ == "__main__":
         }
     )
     print("Tweet:", tweet)
-    
+
     # Example for getting a tweet thread
     tweet_thread = tool.call_endpoint(
         route="tweet_thread",
@@ -217,7 +217,7 @@ if __name__ == "__main__":
         }
     )
     print("Tweet Thread:", tweet_thread)
-    
+
     # Example for getting retweets of a tweet
     retweets = tool.call_endpoint(
         route="retweets",
@@ -227,7 +227,7 @@ if __name__ == "__main__":
         }
     )
     print("Retweets:", retweets)
-    
+
     # Example for getting latest replies to a tweet
     latest_replies = tool.call_endpoint(
         route="latest_replies",
@@ -237,4 +237,3 @@ if __name__ == "__main__":
         }
     )
     print("Latest Replies:", latest_replies)
-  

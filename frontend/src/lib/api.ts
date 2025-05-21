@@ -864,10 +864,10 @@ export const streamAgent = (
             const jsonData = JSON.parse(rawData);
             if (jsonData.status === 'error') {
               console.error(`[STREAM] Error status received for ${agentRunId}:`, jsonData);
-              
+
               // Pass the error message to the callback
               callbacks.onError(jsonData.message || 'Unknown error occurred');
-              
+
               // Don't close the stream for error status messages as they may continue
               return;
             }
@@ -1159,10 +1159,10 @@ export const listSandboxFiles = async (
     } = await supabase.auth.getSession();
 
     const url = new URL(`${API_URL}/sandboxes/${sandboxId}/files`);
-    
+
     // Normalize the path to handle Unicode escape sequences
     const normalizedPath = normalizePathWithUnicode(path);
-    
+
     // Properly encode the path parameter for UTF-8 support
     url.searchParams.append('path', normalizedPath);
 
@@ -1207,10 +1207,10 @@ export const getSandboxFileContent = async (
     } = await supabase.auth.getSession();
 
     const url = new URL(`${API_URL}/sandboxes/${sandboxId}/files/content`);
-    
+
     // Normalize the path to handle Unicode escape sequences
     const normalizedPath = normalizePathWithUnicode(path);
-    
+
     // Properly encode the path parameter for UTF-8 support
     url.searchParams.append('path', normalizedPath);
 
@@ -1531,6 +1531,18 @@ export interface BillingStatusResponse {
   };
 }
 
+export interface Model {
+  id: string;
+  display_name: string;
+  short_name?: string;
+}
+
+export interface AvailableModelsResponse {
+  models: Model[];
+  subscription_tier: string;
+  total_models: number;
+}
+
 export interface CreateCheckoutSessionResponse {
   status:
     | 'upgraded'
@@ -1701,6 +1713,43 @@ export const getSubscription = async (): Promise<SubscriptionStatus> => {
     return response.json();
   } catch (error) {
     console.error('Failed to get subscription:', error);
+    throw error;
+  }
+};
+
+export const getAvailableModels = async (): Promise<AvailableModelsResponse> => {
+  try {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error('No access token available');
+    }
+
+    const response = await fetch(`${API_URL}/billing/available-models`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response
+        .text()
+        .catch(() => 'No error details available');
+      console.error(
+        `Error getting available models: ${response.status} ${response.statusText}`,
+        errorText,
+      );
+      throw new Error(
+        `Error getting available models: ${response.statusText} (${response.status})`,
+      );
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Failed to get available models:', error);
     throw error;
   }
 };

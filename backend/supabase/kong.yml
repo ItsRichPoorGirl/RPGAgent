@@ -11,6 +11,13 @@ services:
           - /rest/v1
     plugins:
       - name: cors
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+          headers: ["Accept", "Accept-Version", "Content-Length", "Content-MD5", "Content-Type", "Date", "Authorization"]
+          exposed_headers: ["Content-Length", "Content-Range"]
+          credentials: true
+          max_age: 3600
       - name: key-auth
         config:
           hide_credentials: true
@@ -23,6 +30,13 @@ services:
           - /auth/v1
     plugins:
       - name: cors
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+          headers: ["Accept", "Accept-Version", "Content-Length", "Content-MD5", "Content-Type", "Date", "Authorization"]
+          exposed_headers: ["Content-Length", "Content-Range"]
+          credentials: true
+          max_age: 3600
       - name: key-auth
         config:
           hide_credentials: true
@@ -35,6 +49,13 @@ services:
           - /storage/v1
     plugins:
       - name: cors
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+          headers: ["Accept", "Accept-Version", "Content-Length", "Content-MD5", "Content-Type", "Date", "Authorization"]
+          exposed_headers: ["Content-Length", "Content-Range"]
+          credentials: true
+          max_age: 3600
       - name: key-auth
         config:
           hide_credentials: true

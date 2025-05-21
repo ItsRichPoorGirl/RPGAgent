@@ -62,26 +62,26 @@ class SandboxExposeTool(SandboxToolsBase):
         try:
             # Ensure sandbox is initialized
             await self._ensure_sandbox()
-            
+
             # Convert port to integer if it's a string
             port = int(port)
-            
+
             # Validate port number
             if not 1 <= port <= 65535:
                 return self.fail_response(f"Invalid port number: {port}. Must be between 1 and 65535.")
 
             # Get the preview link for the specified port
             preview_link = self.sandbox.get_preview_link(port)
-            
+
             # Extract the actual URL from the preview link object
             url = preview_link.url if hasattr(preview_link, 'url') else str(preview_link)
-            
+
             return self.success_response({
                 "url": url,
                 "port": port,
                 "message": f"Successfully exposed port {port} to the public. Users can now access this service at: {url}"
             })
-                
+
         except ValueError:
             return self.fail_response(f"Invalid port number: {port}. Must be a valid integer between 1 and 65535.")
         except Exception as e:

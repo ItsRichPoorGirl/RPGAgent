@@ -367,7 +367,7 @@ export function HeroSection() {
               <DialogTitle className="text-xl font-medium">
                 Sign in to continue
               </DialogTitle>
-              {/* <button 
+              {/* <button
                 onClick={() => setAuthDialogOpen(false)}
                 className="rounded-full p-1 hover:bg-muted transition-colors"
               >

@@ -83,7 +83,7 @@ async def run_agent(
         sample_response_path = os.path.join(os.path.dirname(__file__), 'sample_responses/1.txt')
         with open(sample_response_path, 'r') as file:
             sample_response = file.read()
-        
+
         system_message = { "role": "system", "content": get_system_prompt() + "\n\n <sample_assistant_response>" + sample_response + "</sample_assistant_response>" }
     else:
         system_message = { "role": "system", "content": get_system_prompt() }
@@ -125,18 +125,29 @@ async def run_agent(
             try:
                 browser_content = json.loads(latest_browser_state_msg.data[0]["content"])
                 screenshot_base64 = browser_content.get("screenshot_base64")
-                # Create a copy of the browser state without screenshot
+                screenshot_url = browser_content.get("screenshot_url")
+
+                # Create a copy of the browser state without screenshot data
                 browser_state_text = browser_content.copy()
                 browser_state_text.pop('screenshot_base64', None)
                 browser_state_text.pop('screenshot_url', None)
-                browser_state_text.pop('screenshot_url_base64', None)
 
                 if browser_state_text:
                     temp_message_content_list.append({
                         "type": "text",
                         "text": f"The following is the current state of the browser:\n{json.dumps(browser_state_text, indent=2)}"
                     })
-                if screenshot_base64:
+
+                # Prioritize screenshot_url if available
+                if screenshot_url:
+                    temp_message_content_list.append({
+                        "type": "image_url",
+                        "image_url": {
+                            "url": screenshot_url,
+                        }
+                    })
+                elif screenshot_base64:
+                    # Fallback to base64 if URL not available
                     temp_message_content_list.append({
                         "type": "image_url",
                         "image_url": {
@@ -144,9 +155,8 @@ async def run_agent(
                         }
                     })
                 else:
-                    logger.warning("Browser state found but no screenshot base64 data.")
+                    logger.warning("Browser state found but no screenshot data.")
 
-                await client.table('messages').delete().eq('message_id', latest_browser_state_msg.data[0]["message_id"]).execute()
             except Exception as e:
                 logger.error(f"Error parsing browser state: {e}")
 
@@ -189,7 +199,7 @@ async def run_agent(
             max_tokens = 64000
         elif "gpt-4" in model_name.lower():
             max_tokens = 4096
-            
+
         try:
             # Make the LLM call and process the response
             response = await thread_manager.run_thread(
@@ -235,7 +245,7 @@ async def run_agent(
                         error_detected = True
                         yield chunk  # Forward the error chunk
                         continue     # Continue processing other chunks but don't break yet
-                        
+
                     # Check for XML versions like <ask>, <complete>, or <web-browser-takeover> in assistant content chunks
                     if chunk.get('type') == 'assistant' and 'content' in chunk:
                         try:
@@ -272,7 +282,7 @@ async def run_agent(
                 if error_detected:
                     logger.info(f"Stopping due to error detected in response")
                     break
-                    
+
                 if last_tool_call in ['ask', 'complete', 'web-browser-takeover']:
                     logger.info(f"Agent decided to stop with tool: {last_tool_call}")
                     continue_execution = False
@@ -287,7 +297,7 @@ async def run_agent(
                 }
                 # Stop execution immediately on any error
                 break
-                
+
         except Exception as e:
             # Just log the error and re-raise to stop all iterations
             error_msg = f"Error running thread: {str(e)}"

@@ -174,7 +174,7 @@ export function FileAttachment({
     collapsed = true,
     project
 }: FileAttachmentProps) {
-    // Authentication 
+    // Authentication
     const { session } = useAuth();
 
     // Simplified state management
@@ -535,4 +535,4 @@ export function FileAttachmentGrid({
             project={project}
         />
     );
-} 
+}

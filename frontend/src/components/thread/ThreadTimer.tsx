@@ -25,11 +25,11 @@ export function ThreadTimer({ threadId }: ThreadTimerProps) {
   const [isAgentRunning, setIsAgentRunning] = useState(false)
   const lastUpdateRef = useRef<number>(0)
   const lastMinutesRef = useRef<number>(0)
-  
+
   // Ref to track the max minutes we've seen to prevent "going backwards"
   // Initialize from localStorage if available to persist across refreshes
   const maxMinutesSeenRef = useRef<number>(0) // Initialize with default value
-  
+
   // Set the initial value from localStorage if available
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -42,29 +42,29 @@ export function ThreadTimer({ threadId }: ThreadTimerProps) {
       }
     }
   }, [threadId])
-  
+
   // Store the agent runs for continuous time calculation
   const agentRunsRef = useRef<AgentRun[]>([])
-  
+
   // Store the last fetch time to avoid unnecessary API calls
   const lastFetchTimeRef = useRef<number>(0)
-  
+
   // Track retry attempts for fetch failures
   const retryAttemptsRef = useRef<number>(0)
-  
+
   // Calculate real-time minutes including active runs
   const calculateRealTimeMinutes = () => {
     if (!agentRunsRef.current || agentRunsRef.current.length === 0) return 0;
-    
+
     let totalMinutes = 0;
     const currentTime = new Date().getTime();
-    
+
     for (const run of agentRunsRef.current) {
       // For completed runs, use the exact time
       if (run.status === 'completed' && run.completed_at && run.started_at) {
         const startTime = new Date(run.started_at).getTime();
         const endTime = new Date(run.completed_at).getTime();
-        
+
         if (startTime && endTime) {
           // Same formula as the backend: round up to nearest minute with minimum of 1
           const durationMs = endTime - startTime;
@@ -75,7 +75,7 @@ export function ThreadTimer({ threadId }: ThreadTimerProps) {
       // For active runs, calculate real-time from start until now
       else if (run.status === 'running' && run.started_at) {
         const startTime = new Date(run.started_at).getTime();
-        
+
         if (startTime) {
           // Real-time calculation using current timestamp
           const durationMs = currentTime - startTime;
@@ -84,17 +84,17 @@ export function ThreadTimer({ threadId }: ThreadTimerProps) {
         }
       }
     }
-    
+
     return totalMinutes;
   };
-  
+
   // Save max minutes to localStorage whenever it changes
   useEffect(() => {
     if (typeof window !== 'undefined' && minutesUsed > 0) {
       localStorage.setItem(`thread-timer-${threadId}`, maxMinutesSeenRef.current.toString());
     }
   }, [threadId, minutesUsed]);
-  
+
   // Fetch time usage for this thread
   useEffect(() => {
     const fetchAgentRuns = async () => {
@@ -142,7 +142,7 @@ export function ThreadTimer({ threadId }: ThreadTimerProps) {
       window.removeEventListener('agent-status-change', handleAgentStatusChange as EventListener);
     };
   }, [threadId]);
-  
+
   // Update timer display every second if agent is running
   useEffect(() => {
     if (!isAgentRunning) return;
@@ -157,7 +157,7 @@ export function ThreadTimer({ threadId }: ThreadTimerProps) {
 
     return () => clearInterval(intervalId);
   }, [isAgentRunning]);
-  
+
   // Always render the component even while loading to reserve space in the layout
   if (isLoading) {
     return null;
@@ -184,4 +184,4 @@ export function ThreadTimer({ threadId }: ThreadTimerProps) {
       </Tooltip>
     </TooltipProvider>
   )
-} 
+}

@@ -19,16 +19,16 @@ export interface ModelOption {
 }
 
 export const MODEL_OPTIONS: ModelOption[] = [
-  { 
-    id: 'deepseek', 
-    label: 'Free', 
+  {
+    id: 'deepseek',
+    label: 'Free',
     requiresSubscription: false,
     description: 'Limited capabilities. Upgrade for full performance.'
   },
-  { 
-    id: 'sonnet-3.7', 
-    label: 'Advanced', 
-    requiresSubscription: true, 
+  {
+    id: 'sonnet-3.7',
+    label: 'Advanced',
+    requiresSubscription: true,
     description: 'Excellent for complex tasks and nuanced conversations'
   },
   // {
@@ -51,19 +51,19 @@ export const canAccessModel = (
 
 export const useModelSelection = () => {
   const [selectedModel, setSelectedModel] = useState(DEFAULT_FREE_MODEL_ID);
-  
+
   const { data: subscriptionData } = useSubscription();
-  
-  const subscriptionStatus: SubscriptionStatus = subscriptionData?.status === 'active' 
-    ? 'active' 
+
+  const subscriptionStatus: SubscriptionStatus = subscriptionData?.status === 'active'
+    ? 'active'
     : 'no_subscription';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     try {
       const savedModel = localStorage.getItem(STORAGE_KEY_MODEL);
-      
+
       // In local mode, use saved model if available or default to premium model
       if (isLocalMode()) {
         if (savedModel && MODEL_OPTIONS.find(option => option.id === savedModel)) {
@@ -78,7 +78,7 @@ export const useModelSelection = () => {
         }
         return;
       }
-      
+
       if (subscriptionStatus === 'active') {
         if (savedModel) {
           const modelOption = MODEL_OPTIONS.find(option => option.id === savedModel);
@@ -87,14 +87,14 @@ export const useModelSelection = () => {
             return;
           }
         }
-        
+
         setSelectedModel(DEFAULT_PREMIUM_MODEL_ID);
         try {
           localStorage.setItem(STORAGE_KEY_MODEL, DEFAULT_PREMIUM_MODEL_ID);
         } catch (error) {
           console.warn('Failed to save model preference to localStorage:', error);
         }
-      } 
+      }
       else if (savedModel) {
         const modelOption = MODEL_OPTIONS.find(option => option.id === savedModel);
         if (modelOption && canAccessModel(subscriptionStatus, modelOption.requiresSubscription)) {
@@ -114,16 +114,16 @@ export const useModelSelection = () => {
 
   const handleModelChange = (modelId: string) => {
     const modelOption = MODEL_OPTIONS.find(option => option.id === modelId);
-    
+
     if (!modelOption) {
       return;
     }
-    
+
     // In local mode, allow any model selection
     if (!isLocalMode() && !canAccessModel(subscriptionStatus, modelOption.requiresSubscription)) {
       return;
     }
-    
+
     setSelectedModel(modelId);
     try {
       localStorage.setItem(STORAGE_KEY_MODEL, modelId);
@@ -136,9 +136,9 @@ export const useModelSelection = () => {
     selectedModel,
     setSelectedModel: handleModelChange,
     subscriptionStatus,
-    availableModels: isLocalMode() 
-      ? MODEL_OPTIONS 
-      : MODEL_OPTIONS.filter(model => 
+    availableModels: isLocalMode()
+      ? MODEL_OPTIONS
+      : MODEL_OPTIONS.filter(model =>
           canAccessModel(subscriptionStatus, model.requiresSubscription)
         ),
     allModels: MODEL_OPTIONS,

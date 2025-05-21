@@ -336,7 +336,7 @@ function ResponseStream({
       from { opacity: 0; }
       to { opacity: 1; }
     }
-    
+
     .fade-segment {
       display: inline-block;
       opacity: 0;

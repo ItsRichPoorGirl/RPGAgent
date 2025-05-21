@@ -29,6 +29,7 @@ export function getToolTitle(toolName: string): string {
     'browser-extract': 'Browser Extract',
     'browser-fill': 'Browser Fill',
     'browser-wait': 'Browser Wait',
+    'see-image': 'View Image',
   };
 
   // Return the mapped title or a formatted version of the name
@@ -292,12 +293,12 @@ export function extractSearchQuery(content: string | undefined): string | null {
   // Try parsing as JSON first
   try {
     const parsedContent = JSON.parse(content);
-    
+
     // Check if it's the new Tavily response format
     if (parsedContent.query && typeof parsedContent.query === 'string') {
       return parsedContent.query;
     }
-    
+
     // Continue with existing logic for backward compatibility
     if (typeof parsedContent.content === 'string') {
       // If the outer content is JSON and has a 'content' string field,
@@ -776,7 +777,7 @@ export function extractSearchResults(
   // First check if it's the new Tavily response format
   try {
     const parsedContent = JSON.parse(content);
-    
+
     // Check if this is the new Tavily response format
     if (parsedContent.results && Array.isArray(parsedContent.results)) {
       return parsedContent.results.map(result => ({
@@ -785,7 +786,7 @@ export function extractSearchResults(
         snippet: result.content || '',
       }));
     }
-    
+
     // Continue with existing logic for backward compatibility
     if (parsedContent.content && typeof parsedContent.content === 'string') {
       // Look for a tool_result tag

@@ -74,7 +74,7 @@ async def handle_error(error: Exception, attempt: int, max_attempts: int, model_
     else:
         delay = RETRY_DELAY
         logger.warning(f"Error on attempt {attempt + 1}/{max_attempts} for model {model_name}: {str(error)}")
-    
+
     logger.debug(f"Waiting {delay} seconds before retry...")
     await asyncio.sleep(delay)
 

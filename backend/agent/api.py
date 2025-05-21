@@ -338,10 +338,10 @@ async def get_or_create_project_sandbox(client, project_id: str):
     try:
         # Get all projects with sandboxes
         all_projects = await client.table('projects').select('project_id', 'sandbox').not_('sandbox', 'is', None).execute()
-        
+
         # Sort by creation date (assuming there's a created_at field)
         sorted_projects = sorted(all_projects.data, key=lambda x: x.get('created_at', ''), reverse=True)
-        
+
         # Keep only the 10 most recent projects with sandboxes
         for old_project in sorted_projects[10:]:
             if old_project.get('sandbox', {}).get('id'):

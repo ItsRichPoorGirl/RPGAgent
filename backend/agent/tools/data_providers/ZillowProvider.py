@@ -184,4 +184,3 @@ if __name__ == "__main__":
         }
     )
     logger.debug("Mortgage Rates Result: %s", mortgage_result)
-  
