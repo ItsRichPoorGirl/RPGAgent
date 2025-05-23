@@ -57,8 +57,10 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 
   const getModelIcon = (modelId: string) => {
     switch (modelId) {
-      case 'sonnet-3.7':
+      case 'sonnet-4':
         return <ZapIcon className="h-4 w-4 text-yellow-500" />;
+      case 'sonnet-3.7':
+        return <ZapIcon className="h-4 w-4 text-yellow-400" />;
       case 'opus-3.8':
         return <StarIcon className="h-4 w-4 text-purple-500" />;
       case 'gemini-pro-2.5':

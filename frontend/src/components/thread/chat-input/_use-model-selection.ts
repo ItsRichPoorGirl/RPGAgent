@@ -6,7 +6,7 @@ import { isLocalMode } from '@/lib/config';
 
 export const STORAGE_KEY_MODEL = 'suna-preferred-model';
 export const DEFAULT_FREE_MODEL_ID = 'deepseek';
-export const DEFAULT_PREMIUM_MODEL_ID = 'sonnet-3.7';
+export const DEFAULT_PREMIUM_MODEL_ID = 'sonnet-4';
 export const DEFAULT_EXTENDED_MODEL_ID = 'gemini-pro-2.5';
 
 export type SubscriptionStatus = 'no_subscription' | 'active';
@@ -20,16 +20,22 @@ export interface ModelOption {
 
 export const MODEL_OPTIONS: ModelOption[] = [
   {
+    id: 'sonnet-4',
+    label: 'Sonnet 4',
+    requiresSubscription: true,
+    description: 'Balanced quality and speed, recommended for most tasks'
+  },
+  {
+    id: 'sonnet-3.7',
+    label: 'Sonnet 3.7',
+    requiresSubscription: true,
+    description: 'Excellent for complex tasks and nuanced conversations'
+  },
+  {
     id: 'deepseek',
     label: 'Free',
     requiresSubscription: false,
     description: 'Limited capabilities. Upgrade for full performance.'
-  },
-  {
-    id: 'sonnet-3.7',
-    label: 'Advanced',
-    requiresSubscription: true,
-    description: 'Excellent for complex tasks and nuanced conversations'
   },
   // {
   //   id: 'gemini-pro-2.5',

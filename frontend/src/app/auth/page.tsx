@@ -305,50 +305,50 @@ function LoginContent() {
         <div className="flex flex-col items-center mb-8">
           <button type="button" onClick={() => router.push('/')} className="flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-[#181f2e] text-white shadow-md hover:bg-[#232b3b] transition-all">
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="mr-1"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-            Back to home
+                  Back to home
           </button>
           <h1 className="text-4xl font-bold text-white mb-2">{isSignUp ? 'Join Luciq' : 'Welcome back'}</h1>
           <p className="text-base text-muted-foreground">{isSignUp ? 'Create your account and start building with AI' : 'Sign in to your account to continue'}</p>
-        </div>
-        {/* Google Sign In */}
+                </div>
+              {/* Google Sign In */}
         <button className="w-full h-12 rounded-full bg-white text-[#10182a] border border-[#1de9b6] font-semibold shadow-sm hover:bg-[#e0f7fa] transition-all flex items-center justify-center mb-6">
-          <GoogleSignIn returnUrl={returnUrl || undefined} />
+                <GoogleSignIn returnUrl={returnUrl || undefined} />
         </button>
-        {/* Divider */}
+              {/* Divider */}
         <div className="flex items-center my-6">
           <div className="flex-grow border-t border-[#1de9b6]/30"></div>
           <span className="mx-4 text-[#1de9b6] text-sm font-medium">or continue with email</span>
           <div className="flex-grow border-t border-[#1de9b6]/30"></div>
-        </div>
-        {/* Form */}
-        <form className="space-y-4">
+              </div>
+              {/* Form */}
+              <form className="space-y-4">
           <Input id="email" name="email" type="email" placeholder="Email address" className="h-12 rounded-full bg-[#181f2e] border border-[#1de9b6]/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50" required />
           <Input id="password" name="password" type="password" placeholder="Password" className="h-12 rounded-full bg-[#181f2e] border border-[#1de9b6]/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50" required />
-          {isSignUp && (
+                {isSignUp && (
             <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="Confirm password" className="h-12 rounded-full bg-[#181f2e] border border-[#1de9b6]/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#1de9b6]/50" required />
           )}
-          <div className="space-y-4 pt-4">
-            {!isSignUp ? (
-              <>
+                <div className="space-y-4 pt-4">
+                  {!isSignUp ? (
+                    <>
                 <SubmitButton formAction={handleSignIn} className="w-full h-12 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md" pendingText="Signing in...">Sign in</SubmitButton>
                 <Link href={`/auth?mode=signup${returnUrl ? `&returnUrl=${returnUrl}` : ''}`} className="flex h-12 items-center justify-center w-full text-center rounded-full border border-border bg-background hover:bg-accent/20 transition-all">Create new account</Link>
-              </>
-            ) : (
-              <>
+                    </>
+                  ) : (
+                    <>
                 <SubmitButton formAction={handleSignUp} className="w-full h-12 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md" pendingText="Creating account...">Sign up</SubmitButton>
                 <Link href={`/auth?mode=signin${returnUrl ? `&returnUrl=${returnUrl}` : ''}`} className="flex h-12 items-center justify-center w-full text-center rounded-full border border-border bg-background hover:bg-accent/20 transition-all">Back to sign in</Link>
-              </>
-            )}
-          </div>
+                    </>
+                  )}
+                </div>
         </form>
-        {!isSignUp && (
-          <div className="text-center pt-2">
+                {!isSignUp && (
+                  <div className="text-center pt-2">
             <button type="button" onClick={() => setForgotPasswordOpen(true)} className="text-sm text-primary hover:underline">Forgot password?</button>
-          </div>
-        )}
-        <div className="mt-8 text-center text-xs text-muted-foreground">
+                  </div>
+                )}
+              <div className="mt-8 text-center text-xs text-muted-foreground">
           By continuing, you agree to our <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
-        </div>
+          </div>
       </div>
     </main>
   );
