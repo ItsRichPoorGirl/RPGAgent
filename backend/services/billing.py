@@ -527,7 +527,7 @@ async def create_checkout_session(
                             updated_schedule = stripe.SubscriptionSchedule.modify(
                                 schedule_id,
                                 phases=[current_phase_update_data, new_downgrade_phase_data],
-                                end_behavior='release' 
+                                end_behavior='release'
                             )
                             logger.info(f"Successfully updated schedule {updated_schedule['id']}")
                         else:

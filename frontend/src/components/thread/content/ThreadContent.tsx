@@ -402,7 +402,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                         // Use the created_at of the last message in the group
                                         const lastMessage = group.messages[group.messages.length - 1];
 
-                                        return (
+                                                                            return (
                                             <MessageBubble
                                                 key={group.key}
                                                 sender="agent"
