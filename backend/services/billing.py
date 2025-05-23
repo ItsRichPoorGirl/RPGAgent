@@ -531,11 +531,11 @@ async def create_checkout_session(
                             )
                             logger.info(f"Successfully updated schedule {updated_schedule['id']}")
                         else:
-                                updated_schedule = stripe.SubscriptionSchedule.create(
-                                    from_subscription=subscription_id,
+                            updated_schedule = stripe.SubscriptionSchedule.create(
+                                from_subscription=subscription_id,
                                 phases=[current_phase_update_data, new_downgrade_phase_data],
-                                    end_behavior='release'
-                                )
+                                end_behavior='release'
+                            )
                             logger.info(f"Successfully created schedule {updated_schedule['id']}")
                         
                         return {
@@ -559,41 +559,37 @@ async def create_checkout_session(
                 raise HTTPException(status_code=500, detail=f"Error modifying subscription: {str(e)}")
         else:
             # --- Handle New Subscription ---
-            try:
-                # Create checkout session for new subscription
-                session_params = {
-                    'customer': customer_id,
-                    'success_url': request.success_url,
-                    'cancel_url': request.cancel_url,
-                    'mode': 'subscription',
-                    'line_items': [{
-                        'price': request.price_id,
-                        'quantity': 1
-                    }],
-                    'allow_promotion_codes': True  # Enable promotion codes in checkout
+            # Create checkout session for new subscription
+            session_params = {
+                'customer': customer_id,
+                'success_url': request.success_url,
+                'cancel_url': request.cancel_url,
+                'mode': 'subscription',
+                'line_items': [{
+                    'price': request.price_id,
+                    'quantity': 1
+                }],
+                'allow_promotion_codes': True  # Enable promotion codes in checkout
+            }
+
+            # Add coupon if provided
+            if coupon:
+                session_params['discounts'] = [{
+                    'coupon': request.coupon_code
+                }]
+
+            session = stripe.checkout.Session.create(**session_params)
+
+            return {
+                "session_id": session.id,
+                "status": "new",
+                "message": "New subscription checkout session created",
+                "details": {
+                    "checkout_url": session.url,
+                    "coupon_applied": bool(coupon),
+                    "coupon_discount": coupon.percent_off if coupon and coupon.percent_off else (coupon.amount_off / 100 if coupon and coupon.amount_off else 0)
                 }
-
-                # Add coupon if provided
-                if coupon:
-                    session_params['discounts'] = [{
-                        'coupon': request.coupon_code
-                    }]
-
-                session = stripe.checkout.Session.create(**session_params)
-
-                return {
-                    "session_id": session.id,
-                    "status": "new",
-                    "message": "New subscription checkout session created",
-                    "details": {
-                        "checkout_url": session.url,
-                        "coupon_applied": bool(coupon),
-                        "coupon_discount": coupon.percent_off if coupon and coupon.percent_off else (coupon.amount_off / 100 if coupon and coupon.amount_off else 0)
-                    }
-                }
-    except Exception as e:
-                logger.error(f"Error creating checkout session: {str(e)}")
-                raise HTTPException(status_code=500, detail=f"Error creating checkout session: {str(e)}")
+            }
     except Exception as e:
         logger.error(f"Error in create_checkout_session: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
