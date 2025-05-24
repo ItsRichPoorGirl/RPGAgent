@@ -119,6 +119,37 @@ async def create_pubsub():
     return redis_client.pubsub()
 
 
+async def create_streaming_pubsub():
+    """Create a Redis pubsub object optimized for long-running streams."""
+    # Get Redis configuration
+    redis_host = os.getenv('REDIS_HOST', 'redis')
+    redis_port = int(os.getenv('REDIS_PORT', 6379))
+    redis_password = os.getenv('REDIS_PASSWORD', '')
+    redis_ssl_str = os.getenv('REDIS_SSL', 'False')
+    redis_ssl = redis_ssl_str.lower() == 'true'
+
+    # Create a dedicated Redis client for streaming with longer timeouts
+    streaming_client = redis.Redis(
+        host=redis_host,
+        port=redis_port,
+        password=redis_password,
+        ssl=redis_ssl,
+        decode_responses=True,
+        socket_timeout=300.0,  # 5 minutes timeout instead of 5 seconds
+        socket_connect_timeout=10.0,  # 10 seconds to connect
+        socket_keepalive=True,  # Enable TCP keepalive
+        socket_keepalive_options={
+            'TCP_KEEPINTVL': 1,  # Interval between keepalive probes
+            'TCP_KEEPCNT': 3,    # Number of keepalive probes before timeout
+            'TCP_KEEPIDLE': 1    # Seconds before sending keepalive probes
+        },
+        retry_on_timeout=True,
+        health_check_interval=30
+    )
+    
+    return streaming_client.pubsub()
+
+
 # List operations
 async def rpush(key: str, *values: Any):
     """Append one or more values to a list."""

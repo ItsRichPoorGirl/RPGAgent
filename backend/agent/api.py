@@ -525,11 +525,11 @@ async def stream_agent_run(
                 return
 
             # 3. Set up Pub/Sub listeners for new responses and control signals
-            pubsub_response = await redis.create_pubsub()
+            pubsub_response = await redis.create_streaming_pubsub()
             await pubsub_response.subscribe(response_channel)
             logger.debug(f"Subscribed to response channel: {response_channel}")
 
-            pubsub_control = await redis.create_pubsub()
+            pubsub_control = await redis.create_streaming_pubsub()
             await pubsub_control.subscribe(control_channel)
             logger.debug(f"Subscribed to control channel: {control_channel}")
 
@@ -565,7 +565,12 @@ async def stream_agent_run(
                             return
                         except Exception as e:
                             logger.error(f"Error in listener for {agent_run_id}: {e}")
-                            await message_queue.put({"type": "error", "data": "Listener failed"})
+                            # If it's a connection error, try to recover once
+                            if "connection" in str(e).lower() or "closed" in str(e).lower():
+                                logger.warning(f"Connection error detected, attempting recovery for {agent_run_id}")
+                                await message_queue.put({"type": "error", "data": "Connection lost, ending stream"})
+                            else:
+                                await message_queue.put({"type": "error", "data": "Listener failed"})
                             return
                         finally:
                             # Reschedule the completed listener task
@@ -716,7 +721,7 @@ async def run_agent_background(
 
     try:
         # Setup Pub/Sub listener for control signals
-        pubsub = await redis.create_pubsub()
+        pubsub = await redis.create_streaming_pubsub()
         await pubsub.subscribe(instance_control_channel, global_control_channel)
         logger.debug(f"Subscribed to control channels: {instance_control_channel}, {global_control_channel}")
         stop_checker = asyncio.create_task(check_for_stop_signal())
