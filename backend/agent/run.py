@@ -23,8 +23,9 @@ from utils.logger import logger
 from utils.auth_utils import get_account_id_from_thread
 from services.billing import check_billing_status
 from agent.tools.sb_vision_tool import SandboxVisionTool
-from services.supabase import DBConnection
-from services.billing import get_user_subscription
+from services.langfuse import langfuse
+from langfuse.client import StatefulTraceClient
+from agent.gemini_prompt import get_gemini_system_prompt
 
 load_dotenv()
 
@@ -39,7 +40,7 @@ async def run_agent(
     enable_thinking: Optional[bool] = False,
     reasoning_effort: Optional[str] = 'low',
     enable_context_manager: bool = True,
-    user_id: Optional[str] = None  # Add user_id parameter
+    trace: Optional[StatefulTraceClient] = None
 ):
     """Run the development agent with specified configuration."""
     logger.info(f"🚀 Starting agent with model: {model_name}")
@@ -57,6 +58,10 @@ async def run_agent(
     project = await client.table('projects').select('*').eq('project_id', project_id).execute()
     if not project.data or len(project.data) == 0:
         raise ValueError(f"Project {project_id} not found")
+
+    if not trace:
+        logger.warning("No trace provided, creating a new one")
+        trace = langfuse.trace(name="agent_run", id=thread_id, session_id=thread_id, metadata={"project_id": project_id})
 
     project_data = project.data[0]
     sandbox_info = project_data.get('sandbox', {})
@@ -78,8 +83,10 @@ async def run_agent(
         thread_manager.add_tool(DataProvidersTool)
 
 
-    # Only include sample response if the model name does not contain "anthropic"
-    if "anthropic" not in model_name.lower():
+    if "gemini-2.5-flash" in model_name.lower():
+        system_message = { "role": "system", "content": get_gemini_system_prompt() } # example included
+    elif "anthropic" not in model_name.lower():
+        # Only include sample response if the model name does not contain "anthropic"
         sample_response_path = os.path.join(os.path.dirname(__file__), 'sample_responses/1.txt')
         with open(sample_response_path, 'r') as file:
             sample_response = file.read()
@@ -200,6 +207,7 @@ async def run_agent(
         elif "gpt-4" in model_name.lower():
             max_tokens = 4096
 
+        generation = trace.generation(name="thread_manager.run_thread")
         try:
             # Make the LLM call and process the response
             response = await thread_manager.run_thread(
@@ -224,7 +232,9 @@ async def run_agent(
                 include_xml_examples=True,
                 enable_thinking=enable_thinking,
                 reasoning_effort=reasoning_effort,
-                enable_context_manager=enable_context_manager
+                enable_context_manager=enable_context_manager,
+                generation=generation,
+                trace=trace
             )
 
             if isinstance(response, dict) and "status" in response and response["status"] == "error":
@@ -238,6 +248,7 @@ async def run_agent(
             # Process the response
             error_detected = False
             try:
+                full_response = ""
                 async for chunk in response:
                     # If we receive an error chunk, we should stop after this iteration
                     if isinstance(chunk, dict) and chunk.get('type') == 'status' and chunk.get('status') == 'error':
@@ -258,6 +269,7 @@ async def run_agent(
 
                             # The actual text content is nested within
                             assistant_text = assistant_content_json.get('content', '')
+                            full_response += assistant_text
                             if isinstance(assistant_text, str): # Ensure it's a string
                                  # Check for the closing tags as they signal the end of the tool usage
                                 if '</ask>' in assistant_text or '</complete>' in assistant_text or '</web-browser-takeover>' in assistant_text:
@@ -281,15 +293,19 @@ async def run_agent(
                 # Check if we should stop based on the last tool call or error
                 if error_detected:
                     logger.info(f"Stopping due to error detected in response")
+                    generation.end(output=full_response, status_message="error_detected", level="ERROR")
                     break
 
                 if last_tool_call in ['ask', 'complete', 'web-browser-takeover']:
                     logger.info(f"Agent decided to stop with tool: {last_tool_call}")
+                    generation.end(output=full_response, status_message="agent_stopped")
                     continue_execution = False
+
             except Exception as e:
                 # Just log the error and re-raise to stop all iterations
                 error_msg = f"Error during response streaming: {str(e)}"
                 logger.error(f"Error: {error_msg}")
+                generation.end(output=full_response, status_message=error_msg, level="ERROR")
                 yield {
                     "type": "status",
                     "status": "error",
@@ -309,6 +325,10 @@ async def run_agent(
             }
             # Stop execution immediately on any error
             break
+        generation.end(output=full_response)
+
+    langfuse.flush() # Flush Langfuse events at the end of the run
+  
 
 
 # # TESTING

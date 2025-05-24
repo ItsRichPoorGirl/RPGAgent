@@ -1,5 +1,4 @@
 import React, { useRef, useState, useCallback } from 'react';
-import Image from 'next/image';
 import { ArrowDown, CircleDashed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Markdown } from '@/components/ui/markdown';
@@ -8,8 +7,14 @@ import { FileAttachmentGrid } from '@/components/thread/file-attachment';
 import { FileCache } from '@/hooks/use-cached-file';
 import { useAuth } from '@/components/AuthProvider';
 import { Project } from '@/lib/api';
-import { getToolIcon, extractPrimaryParam, safeJsonParse } from '@/components/thread/utils';
-import { MessageBubble } from './MessageBubble';
+import {
+    extractPrimaryParam,
+    getToolIcon,
+    getUserFriendlyToolName,
+    safeJsonParse,
+} from '@/components/thread/utils';
+import { KortixLogo } from '@/components/sidebar/kortix-logo';
+import { AgentLoader } from './loader';
 
 // Define the set of tags whose raw XML should be hidden during streaming
 const HIDE_STREAMING_XML_TAGS = new Set([
@@ -36,7 +41,8 @@ const HIDE_STREAMING_XML_TAGS = new Set([
     'ask',
     'complete',
     'crawl-webpage',
-    'web-search'
+    'web-search',
+    'see-image'
 ]);
 
 // Helper function to render attachments
@@ -147,10 +153,12 @@ export function renderMarkdownContent(
                 <button
                     key={toolCallKey}
                     onClick={() => handleToolClick(messageId, toolName)}
-                    className="inline-flex items-center gap-1.5 py-1 px-2.5 my-1 text-xs text-muted-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors cursor-pointer border border-border"
+                    className="inline-flex items-center gap-1.5 py-1 px-1 my-1 text-xs text-muted-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors cursor-pointer border border-neutral-200 dark:border-neutral-700/50"
                 >
-                    <IconComponent className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                    <span className="font-mono text-xs text-foreground">{toolName}</span>
+                    <div className='border-2 bg-gradient-to-br from-neutral-200 to-neutral-300 dark:from-neutral-700 dark:to-neutral-800 flex items-center justify-center p-0.5 rounded-sm border-neutral-400/20 dark:border-neutral-600'>
+                        <IconComponent className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                    </div>
+                    <span className="font-mono text-xs text-foreground">{getUserFriendlyToolName(toolName)}</span>
                     {paramDisplay && <span className="ml-1 text-muted-foreground truncate max-w-[200px]" title={paramDisplay}>{paramDisplay}</span>}
                 </button>
             );
@@ -260,9 +268,10 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
 
     return (
         <>
+            
             <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto px-6 py-4 pb-72 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                className="flex-1 overflow-y-auto scrollbar-thin scrollbar-track-secondary/0 scrollbar-thumb-primary/10 scrollbar-thumb-rounded-full hover:scrollbar-thumb-primary/10 px-6 py-4 pb-72 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
                 onScroll={handleScroll}
             >
                 <div className="mx-auto max-w-3xl">
@@ -276,7 +285,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                     ) : (
                         <div className="space-y-8">
                             {(() => {
-                                // Group messages logic
+                                
                                 type MessageGroup = {
                                     type: 'user' | 'assistant_group';
                                     messages: UnifiedMessage[];
@@ -284,7 +293,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                 };
                                 const groupedMessages: MessageGroup[] = [];
                                 let currentGroup: MessageGroup | null = null;
-
+                                
                                 displayMessages.forEach((message, index) => {
                                     const messageType = message.type;
                                     const key = message.message_id || `msg-${index}`;
@@ -304,19 +313,47 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                             }
                                             currentGroup = { type: 'assistant_group', messages: [message], key };
                                         }
-                                    } else if (messageType === 'system' || messageType === 'status') {
+                                    } else if (messageType !== 'status') {
                                         if (currentGroup) {
                                             groupedMessages.push(currentGroup);
                                             currentGroup = null;
                                         }
-                                        groupedMessages.push({ type: 'user', messages: [message], key }); // treat as single message group
                                     }
                                 });
-
+                                
                                 if (currentGroup) {
                                     groupedMessages.push(currentGroup);
                                 }
-
+                                if(streamingTextContent) {
+                                    const lastMessages = groupedMessages.at(-1)
+                                    if(lastMessages.type === 'user'){
+                                            groupedMessages.push({type: 'assistant_group', messages: [{
+                                            content: streamingTextContent,
+                                            type: 'assistant',
+                                            message_id: 'streamingTextContent',
+                                            metadata: 'streamingTextContent',
+                                            created_at: new Date().toISOString(),
+                                            updated_at: new Date().toISOString(),
+                                            is_llm_message: true,
+                                            thread_id: 'streamingTextContent',
+                                            sequence: Infinity,
+                                        }], key: 'streamingTextContent'});
+                                    }
+                                    else {
+                                        lastMessages.messages.push({
+                                            content: streamingTextContent,
+                                            type: 'assistant',
+                                            message_id: 'streamingTextContent',
+                                            metadata: 'streamingTextContent',
+                                            created_at: new Date().toISOString(),
+                                            updated_at: new Date().toISOString(),
+                                            is_llm_message: true,
+                                            thread_id: 'streamingTextContent',
+                                            sequence: Infinity,
+                                        })
+                                    }
+                                }
+                                
                                 return groupedMessages.map((group, groupIndex) => {
                                     if (group.type === 'user') {
                                         const message = group.messages[0];
@@ -355,82 +392,253 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                         const cleanContent = messageContent.replace(/\[Uploaded File: .*?\]/g, '').trim();
 
                                         return (
-                                            <MessageBubble
-                                                key={group.key}
-                                                sender="user"
-                                                content={cleanContent}
-                                                attachments={renderAttachments(attachments as string[], handleOpenFileViewer, sandboxId, project)}
-                                                timestamp={message.created_at}
-                                            />
+                                            <div key={group.key} className="flex justify-end">
+                                                <div className="inline-flex max-w-[85%] rounded-xl bg-primary/10 px-4 py-3">
+                                                    <div className="space-y-3">
+                                                        {cleanContent && (
+                                                            <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3">{cleanContent}</Markdown>
+                                                        )}
+
+                                                        {/* Use the helper function to render user attachments */}
+                                                        {renderAttachments(attachments as string[], handleOpenFileViewer, sandboxId, project)}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         );
                                     } else if (group.type === 'assistant_group') {
-                                        // Combine all assistant/tool/browser_state messages into one bubble, separated by newlines
-                                        const combinedContent = group.messages.map((message) => {
-                                            if (message.type === 'assistant') {
-                                                const parsedContent = safeJsonParse<ParsedContent>(message.content, {});
-                                                return parsedContent.content || '';
-                                            } else if (message.type === 'tool' || message.type === 'browser_state') {
-                                                // For tool/browser_state, show as markdown or plain text
-                                                return message.content;
-                                            } else {
-                                                return '';
-                                            }
-                                        }).filter(Boolean).join('\n\n');
+                                        return (
+                                            <div key={group.key} ref={groupIndex === groupedMessages.length - 1 ? latestMessageRef : null}>
+                                                <div className="flex items-start gap-3">
+                                                    <div className="flex-shrink-0 w-5 h-5 mt-2 rounded-md flex items-center justify-center ml-auto mr-2">
+                                                    <KortixLogo />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="inline-flex max-w-[90%] rounded-lg px-4 text-sm">
+                                                            <div className="space-y-2">
+                                                                {(() => {
+                                                                    // In debug mode, just show raw messages content
+                                                                    if (debugMode) {
+                                                                        return group.messages.map((message, msgIndex) => {
+                                                                            const msgKey = message.message_id || `raw-msg-${msgIndex}`;
+                                                                            return (
+                                                                                <div key={msgKey} className="mb-4">
+                                                                                    <div className="text-xs font-medium text-muted-foreground mb-1">
+                                                                                        Type: {message.type} | ID: {message.message_id || 'no-id'}
+                                                                                    </div>
+                                                                                    <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto p-2 border border-border rounded-md bg-muted/30">
+                                                                                        {message.content}
+                                                                                    </pre>
+                                                                                    {message.metadata && message.metadata !== '{}' && (
+                                                                                        <div className="mt-2">
+                                                                                            <div className="text-xs font-medium text-muted-foreground mb-1">
+                                                                                                Metadata:
+                                                                                            </div>
+                                                                                            <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto p-2 border border-border rounded-md bg-muted/30">
+                                                                                                {message.metadata}
+                                                                                            </pre>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            );
+                                                                        });
+                                                                    }
 
-                                        // Attachments: collect from all messages if any
-                                        const allAttachments: string[] = [];
-                                        group.messages.forEach((message) => {
-                                            const content = (() => {
-                                                try {
-                                                    const parsed = safeJsonParse<ParsedContent>(message.content, { content: message.content });
-                                                    return parsed.content || message.content;
-                                                } catch {
-                                                    return message.content;
-                                                }
-                                            })();
-                                            const attachmentsMatch = content.match(/\[Uploaded File: (.*?)\]/g);
-                                            if (attachmentsMatch) {
-                                                attachmentsMatch.forEach(match => {
-                                                    const pathMatch = match.match(/\[Uploaded File: (.*?)\]/);
-                                                    if (pathMatch && pathMatch[1]) {
-                                                        allAttachments.push(pathMatch[1]);
-                                                    }
-                                                });
-                                            }
-                                        });
+                                                                    const toolResultsMap = new Map<string | null, UnifiedMessage[]>();
+                                                                    group.messages.forEach(msg => {
+                                                                        if (msg.type === 'tool') {
+                                                                            const meta = safeJsonParse<ParsedMetadata>(msg.metadata, {});
+                                                                            const assistantId = meta.assistant_message_id || null;
+                                                                            if (!toolResultsMap.has(assistantId)) {
+                                                                                toolResultsMap.set(assistantId, []);
+                                                                            }
+                                                                            toolResultsMap.get(assistantId)?.push(msg);
+                                                                        }
+                                                                    });
 
-                                        // Use the created_at of the last message in the group
-                                        const lastMessage = group.messages[group.messages.length - 1];
+                                                                    const renderedToolResultIds = new Set<string>();
+                                                                    const elements: React.ReactNode[] = [];
+
+                                                                    group.messages.forEach((message, msgIndex) => {
+                                                                        if (message.type === 'assistant') {
+                                                                            const parsedContent = safeJsonParse<ParsedContent>(message.content, {});
+                                                                            const msgKey = message.message_id || `submsg-assistant-${msgIndex}`;
+
+                                                                            if (!parsedContent.content) return;
+
+                                                                            const renderedContent = renderMarkdownContent(
+                                                                                parsedContent.content,
+                                                                                handleToolClick,
+                                                                                message.message_id,
+                                                                                handleOpenFileViewer,
+                                                                                sandboxId,
+                                                                                project,
+                                                                                debugMode
+                                                                            );
+
+                                                                            elements.push(
+                                                                                <div key={msgKey} className={msgIndex > 0 ? "mt-2" : ""}>
+                                                                                    <div className="prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3">
+                                                                                        {renderedContent}
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                    });
+
+                                                                    return elements;
+                                                                })()}
+
+                                                                {groupIndex === groupedMessages.length - 1 && !readOnly && (streamHookStatus === 'streaming' || streamHookStatus === 'connecting') && (
+                                                                    <div className="mt-2">
+                                                                        {(() => {
+                                                                            // In debug mode, show raw streaming content
+                                                                            if (debugMode && streamingTextContent) {
+                                                                                return (
+                                                                                    <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto p-2 border border-border rounded-md bg-muted/30">
+                                                                                        {streamingTextContent}
+                                                                                    </pre>
+                                                                                );
+                                                                            }
+
+                                                                            let detectedTag: string | null = null;
+                                                                            let tagStartIndex = -1;
+                                                                            if (streamingTextContent) {
+                                                                                for (const tag of HIDE_STREAMING_XML_TAGS) {
+                                                                                    const openingTagPattern = `<${tag}`;
+                                                                                    const index = streamingTextContent.indexOf(openingTagPattern);
+                                                                                    if (index !== -1) {
+                                                                                        detectedTag = tag;
+                                                                                        tagStartIndex = index;
+                                                                                        break;
+                                                                                    }
+                                                                                }
+                                                                            }
+
+
+                                                                            const textToRender = streamingTextContent || '';
+                                                                            const textBeforeTag = detectedTag ? textToRender.substring(0, tagStartIndex) : textToRender;
+                                                                            const showCursor = (streamHookStatus === 'streaming' || streamHookStatus === 'connecting') && !detectedTag;
+                                                                            const IconComponent = getToolIcon(detectedTag);
 
                                                                             return (
-                                            <MessageBubble
-                                                key={group.key}
-                                                sender="agent"
-                                                content={combinedContent}
-                                                attachments={renderAttachments(allAttachments, handleOpenFileViewer, sandboxId, project)}
-                                                timestamp={lastMessage.created_at}
-                                            />
+                                                                                <>
+                                                                                    {textBeforeTag && (
+                                                                                        <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3">{textBeforeTag}</Markdown>
+                                                                                    )}
+                                                                                    {showCursor && (
+                                                                                        <span className="inline-block h-4 w-0.5 bg-primary ml-0.5 -mb-1 animate-pulse" />
+                                                                                    )}
+
+                                                                                    {detectedTag && (
+                                                                                        <div className="mt-2 mb-1">
+                                                                                            <button
+                                                                                                className="animate-shimmer inline-flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-md transition-colors cursor-pointer border border-primary/20"
+                                                                                            >
+                                                                                                <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
+                                                                                                <span className="font-mono text-xs text-primary">{getUserFriendlyToolName(detectedTag)}</span>
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {streamingToolCall && !detectedTag && (
+                                                                                        <div className="mt-2 mb-1">
+                                                                                            {(() => {
+                                                                                                const toolName = streamingToolCall.name || streamingToolCall.xml_tag_name || 'Tool';
+                                                                                                const IconComponent = getToolIcon(toolName);
+                                                                                                const paramDisplay = extractPrimaryParam(toolName, streamingToolCall.arguments || '');
+                                                                                                return (
+                                                                                                    <button
+                                                                                                        className="animate-shimmer inline-flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-md transition-colors cursor-pointer border border-primary/20"
+                                                                                                    >
+                                                                                                        <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
+                                                                                                        <span className="font-mono text-xs text-primary">{toolName}</span>
+                                                                                                        {paramDisplay && <span className="ml-1 text-primary/70 truncate max-w-[200px]" title={paramDisplay}>{paramDisplay}</span>}
+                                                                                                    </button>
+                                                                                                );
+                                                                                            })()}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </>
+                                                                            );
+                                                                        })()}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* For playback mode, show streaming text and tool calls */}
+                                                                {readOnly && groupIndex === groupedMessages.length - 1 && isStreamingText && (
+                                                                    <div className="mt-2">
+                                                                        {(() => {
+                                                                            let detectedTag: string | null = null;
+                                                                            let tagStartIndex = -1;
+                                                                            if (streamingText) {
+                                                                                for (const tag of HIDE_STREAMING_XML_TAGS) {
+                                                                                    const openingTagPattern = `<${tag}`;
+                                                                                    const index = streamingText.indexOf(openingTagPattern);
+                                                                                    if (index !== -1) {
+                                                                                        detectedTag = tag;
+                                                                                        tagStartIndex = index;
+                                                                                        break;
+                                                                                    }
+                                                                                }
+                                                                            }
+
+                                                                            const textToRender = streamingText || '';
+                                                                            const textBeforeTag = detectedTag ? textToRender.substring(0, tagStartIndex) : textToRender;
+                                                                            const showCursor = isStreamingText && !detectedTag;
+
+                                                                            return (
+                                                                                <>
+                                                                                    {/* In debug mode, show raw streaming content */}
+                                                                                    {debugMode && streamingText ? (
+                                                                                        <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto p-2 border border-border rounded-md bg-muted/30">
+                                                                                            {streamingText}
+                                                                                        </pre>
+                                                                                    ) : (
+                                                                                        <>
+                                                                                            {textBeforeTag && (
+                                                                                                <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3">{textBeforeTag}</Markdown>
+                                                                                            )}
+                                                                                            {showCursor && (
+                                                                                                <span className="inline-block h-4 w-0.5 bg-primary ml-0.5 -mb-1 animate-pulse" />
+                                                                                            )}
+
+                                                                                            {detectedTag && (
+                                                                                                <div className="mt-2 mb-1">
+                                                                                                    <button
+                                                                                                        className="animate-shimmer inline-flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-md transition-colors cursor-pointer border border-primary/20"
+                                                                                                    >
+                                                                                                        <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
+                                                                                                        <span className="font-mono text-xs text-primary">{detectedTag}</span>
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </>
+                                                                                    )}
+                                                                                </>
+                                                                            );
+                                                                        })()}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         );
                                     }
                                     return null;
                                 });
                             })()}
-                            {(agentStatus === 'running' || agentStatus === 'connecting') &&
+                            {((agentStatus === 'running' || agentStatus === 'connecting' ) && !streamingTextContent &&
                                 !readOnly &&
-                                (messages.length === 0 || messages[messages.length - 1].type === 'user') && (
-                                    <div ref={latestMessageRef}>
+                                (messages.length === 0 || messages[messages.length - 1].type === 'user')) && (
+                                    <div ref={latestMessageRef} className='w-full h-22 rounded'>
                                         <div className="flex items-start gap-3">
-                                            <div className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center overflow-hidden bg-primary/10">
-                                                <Image src="/luciq-logo.png" alt="Luciq" width={14} height={14} className="object-contain" />
+                                            <div className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center bg-primary/10">
+                                            <KortixLogo />
                                             </div>
-                                            <div className="flex-1 space-y-2">
-                                                <div className="max-w-[90%] px-4 py-3 text-sm">
-                                                    <div className="flex items-center gap-1.5 py-1">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-primary/50 animate-pulse" />
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-primary/50 animate-pulse delay-150" />
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-primary/50 animate-pulse delay-300" />
-                                                    </div>
-                                                </div>
+                                            <div className="flex-1 space-y-2 w-full h-12">
+                                                <AgentLoader/>
                                             </div>
                                         </div>
                                     </div>
@@ -440,11 +648,11 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                             {readOnly && currentToolCall && (
                                 <div ref={latestMessageRef}>
                                     <div className="flex items-start gap-3">
-                                        <div className="flex-shrink-0 w-5 h-5 mt-2 rounded-md flex items-center justify-center overflow-hidden bg-primary/10">
-                                            <Image src="/luciq-logo.png" alt="Luciq" width={14} height={14} className="object-contain" />
+                                        <div className="flex-shrink-0 w-5 h-5 mt-2 rounded-md flex items-center justify-center bg-primary/10">
+                                            <KortixLogo />
                                         </div>
                                         <div className="flex-1 space-y-2">
-                                            <div className="inline-flex items-center gap-1.5 py-1.5 px-3 text-xs font-medium text-primary bg-primary/10 rounded-md border border-primary/20">
+                                            <div className="animate-shimmer inline-flex items-center gap-1.5 py-1.5 px-3 text-xs font-medium text-primary bg-primary/10 rounded-md border border-primary/20">
                                                 <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
                                                 <span className="font-mono text-xs text-primary">
                                                     {currentToolCall.name || 'Using Tool'}
@@ -459,8 +667,8 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                             {readOnly && visibleMessages && visibleMessages.length === 0 && isStreamingText && (
                                 <div ref={latestMessageRef}>
                                     <div className="flex items-start gap-3">
-                                        <div className="flex-shrink-0 w-5 h-5 mt-2 rounded-md flex items-center justify-center overflow-hidden bg-primary/10">
-                                            <Image src="/luciq-logo.png" alt="Luciq" width={14} height={14} className="object-contain" />
+                                        <div className="flex-shrink-0 w-5 h-5 mt-2 rounded-md flex items-center justify-center bg-primary/10">
+                                        <KortixLogo />
                                         </div>
                                         <div className="flex-1 space-y-2">
                                             <div className="max-w-[90%] px-4 py-3 text-sm">

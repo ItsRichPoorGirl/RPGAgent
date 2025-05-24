@@ -13,7 +13,7 @@ from utils.config import config, EnvMode
 from services.supabase import DBConnection
 from utils.auth_utils import get_current_user_id_from_jwt
 from pydantic import BaseModel
-from utils.constants import MODEL_ACCESS_TIERS
+from utils.constants import MODEL_ACCESS_TIERS, MODEL_NAME_ALIASES
 # Initialize Stripe
 stripe.api_key = config.STRIPE_SECRET_KEY
 
@@ -590,6 +590,7 @@ async def create_checkout_session(
                     "coupon_discount": coupon.percent_off if coupon and coupon.percent_off else (coupon.amount_off / 100 if coupon and coupon.amount_off else 0)
                 }
             }
+
     except Exception as e:
         logger.error(f"Error in create_checkout_session: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -955,6 +956,7 @@ async def get_available_models(
         
         # Get user's allowed models
         allowed_models = await get_allowed_models_for_user(client, current_user_id)
+        free_tier_models = MODEL_ACCESS_TIERS.get('free', [])
         
         # Convert to Model objects
         models = []
@@ -966,44 +968,41 @@ async def get_available_models(
                     short_name = alias
                     break
             
-            # Default short name logic if not in aliases
-            if not short_name:
-                if "claude-sonnet-4" in model_id:
-                    short_name = "claude-sonnet-4"
-                elif "claude-3-7-sonnet" in model_id:
-                    short_name = "sonnet-3.7"
-                elif "deepseek-chat" in model_id:
-                    short_name = "deepseek"
-                elif "gpt-4o" in model_id:
-                    short_name = "gpt-4o"
-                elif "qwen3" in model_id:
-                    short_name = "qwen3"
-                else:
-                    short_name = model_id.split("/")[-1]
+            # Get tier info for this price_id
+            tier_info = SUBSCRIPTION_TIERS.get(price_id)
+            if tier_info:
+                tier_name = tier_info['name']
+        
+        # Get all unique full model names from MODEL_NAME_ALIASES
+        all_models = set()
+        model_aliases = {}
+        
+        for short_name, full_name in MODEL_NAME_ALIASES.items():
+            # Add all unique full model names
+            all_models.add(full_name)
             
-            # Create display name
-            if "claude-sonnet-4" in model_id:
-                display_name = "Claude Sonnet 4"
-            elif "deepseek-chat" in model_id:
-                display_name = "Deepseek Chat V3 0324"
-            elif "gemini-2.5-flash-thinking" in model_id:
-                display_name = "Gemini 2.5 Flash:thinking"
-            elif "gemini-2.5-pro-preview" in model_id:
-                display_name = "Gemini 2.5 Pro Preview"
-            elif "gpt-4.1-2025-04-14" in model_id:
-                display_name = "Gpt 4.1"
-            elif "gpt-4o-mini" in model_id:
-                display_name = "Gpt 4.1 Mini"
-            elif "gpt-4o" in model_id and "mini" not in model_id:
-                display_name = "Gpt 4o"
-            else:
-                display_name = model_id.split("/")[-1].replace("-", " ").title()
-
-            models.append({
-                "id": model_id,
+            # Only include short names that don't match their full names for aliases
+            if short_name != full_name and not short_name.startswith("openai/") and not short_name.startswith("anthropic/") and not short_name.startswith("openrouter/") and not short_name.startswith("xai/"):
+                if full_name not in model_aliases:
+                    model_aliases[full_name] = short_name
+        
+        # Create model info with display names for ALL models
+        model_info = []
+        for model in all_models:
+            display_name = model_aliases.get(model, model.split('/')[-1] if '/' in model else model)
+            
+            # Check if model requires subscription (not in free tier)
+            requires_sub = model not in free_tier_models
+            
+            # Check if model is available with current subscription
+            is_available = model in allowed_models
+            
+            model_info.append({
+                "id": model,
                 "display_name": display_name,
-                "short_name": short_name,
-                "requires_subscription": model_id not in allowed_models
+                "short_name": model_aliases.get(model),
+                "requires_subscription": requires_sub,
+                "is_available": is_available
             })
 
         return models

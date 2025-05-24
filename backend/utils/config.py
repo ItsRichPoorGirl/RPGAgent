@@ -158,6 +158,11 @@ class Configuration:
     STRIPE_PRODUCT_ID_PROD: str = 'prod_SH7nxrLxYVFTgM'  # Production product ID
     STRIPE_PRODUCT_ID_STAGING: str = 'prod_SH7nxrLxYVFTgM'  # Staging product ID (using same as production)
 
+    # LangFuse configuration
+    LANGFUSE_PUBLIC_KEY: Optional[str] = None
+    LANGFUSE_SECRET_KEY: Optional[str] = None
+    LANGFUSE_HOST: str = "https://cloud.langfuse.com"
+
     @property
     def STRIPE_PRODUCT_ID(self) -> str:
         if self.ENV_MODE == EnvMode.STAGING:

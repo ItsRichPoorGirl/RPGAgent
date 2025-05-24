@@ -7,7 +7,7 @@ import { useAvailableModels } from '@/hooks/react-query/subscriptions/use-model'
 
 export const STORAGE_KEY_MODEL = 'suna-preferred-model';
 export const STORAGE_KEY_CUSTOM_MODELS = 'customModels';
-export const DEFAULT_FREE_MODEL_ID = 'deepseek-chat-v3';
+export const DEFAULT_FREE_MODEL_ID = 'deepseek';
 export const DEFAULT_PREMIUM_MODEL_ID = 'claude-sonnet-4';
 
 export type SubscriptionStatus = 'no_subscription' | 'active';
@@ -37,89 +37,126 @@ export const MODELS = {
     lowQuality: false,
     description: 'Claude Sonnet 4 - Anthropic\'s latest and most advanced AI assistant'
   },
-  'sonnet-3.7': { 
-    tier: 'premium',
+  'claude-sonnet-3.7': { 
+    tier: 'premium', 
     priority: 95, 
     recommended: true,
     lowQuality: false,
-    description: 'Sonnet 3.7 - Anthropic\'s advanced Sonnet model'
+    description: 'Claude 3.7 - Anthropic\'s most powerful AI assistant'
   },
-  'sonnet-3.5': { 
-    tier: 'premium',
-    priority: 90, 
+  'claude-sonnet-3.7-reasoning': { 
+    tier: 'premium', 
+    priority: 95, 
     recommended: true,
     lowQuality: false,
-    description: 'Sonnet 3.5 - Anthropic\'s Claude Sonnet model'
+    description: 'Claude 3.7 with enhanced reasoning capabilities'
   },
-  'haiku-3.5': { 
-    tier: 'premium',
-    priority: 85, 
+  'gpt-4.1': { 
+    tier: 'premium', 
+    priority: 95,
     recommended: false,
     lowQuality: false,
-    description: 'Haiku 3.5 - Anthropic\'s fast, efficient model'
+    description: 'GPT-4.1 - OpenAI\'s most advanced model with enhanced reasoning'
   },
-  'deepseek-chat-v3': { 
-    tier: 'free',
-    priority: 80, 
+  'gemini-2.5-pro-preview': { 
+    tier: 'premium', 
+    priority: 95,
     recommended: true,
     lowQuality: false,
-    description: 'Deepseek Chat V3 0324 - Advanced AI assistant with strong reasoning'
+    description: 'Gemini Pro 2.5 - Google\'s latest powerful model with strong reasoning'
   },
-  'deepseek': { 
-    tier: 'free',
-    priority: 75, 
+  'gemini-2.5-pro': { 
+    tier: 'premium', 
+    priority: 95,
+    recommended: true,
+    lowQuality: false,
+    description: 'Gemini Pro 2.5 - Google\'s latest advanced model'
+  },
+  'claude-3.5': { 
+    tier: 'premium', 
+    priority: 90,
+    recommended: true,
+    lowQuality: false,
+    description: 'Claude 3.5 - Anthropic\'s balanced model with solid capabilities'
+  },
+  'gemini-2.5': { 
+    tier: 'premium', 
+    priority: 90,
+    recommended: true,
+    lowQuality: false,
+    description: 'Gemini 2.5 - Google\'s powerful versatile model'
+  },
+  'gemini-flash-2.5:thinking': { 
+    tier: 'premium', 
+    priority: 90,
+    recommended: true,
+    lowQuality: false,
+    description: 'Gemini Flash 2.5 - Google\'s fast, responsive AI model'
+  },
+  'gpt-4o': { 
+    tier: 'premium', 
+    priority: 85,
     recommended: false,
     lowQuality: false,
-    description: 'Deepseek - Advanced AI assistant'
+    description: 'GPT-4o - Optimized for speed, reliability, and cost-effectiveness'
   },
-  'gemini-flash-thinking': { 
-    tier: 'free', 
-    priority: 70,
+  'gpt-4-turbo': { 
+    tier: 'premium', 
+    priority: 85,
+    recommended: false,
+    lowQuality: false,
+    description: 'GPT-4 Turbo - OpenAI\'s powerful model with a great balance of performance and cost'
+  },
+  'gpt-4': { 
+    tier: 'premium', 
+    priority: 80,
+    recommended: false,
+    lowQuality: false,
+    description: 'GPT-4 - OpenAI\'s highly capable model with advanced reasoning'
+  },
+  'deepseek-chat-v3-0324': { 
+    tier: 'premium', 
+    priority: 75,
     recommended: true,
     lowQuality: false,
-    description: 'Gemini 2.5 Flash:thinking - Google\'s fast, responsive AI model'
+    description: 'DeepSeek Chat - Advanced AI assistant with strong reasoning'
   },
-  'gemini-pro-preview': { 
-    tier: 'free', 
-    priority: 65,
-    recommended: true,
-    lowQuality: false,
-    description: 'Gemini 2.5 Pro Preview - Google\'s latest powerful model'
-  },
-  'gemini-flash-2.5': { 
+  
+  // Free tier models
+  'deepseek-r1': { 
     tier: 'free', 
     priority: 60,
     recommended: false,
     lowQuality: false,
-    description: 'Gemini Flash 2.5 - Google\'s fast model'
+    description: 'DeepSeek R1 - Advanced model with enhanced reasoning and coding capabilities'
   },
-  'gpt-4.1': { 
-    tier: 'premium', 
-    priority: 55,
-    recommended: false,
-    lowQuality: false,
-    description: 'Gpt 4.1 - OpenAI\'s most advanced model with enhanced reasoning'
-  },
-  'gpt-4.1-mini': { 
-    tier: 'premium', 
+  'deepseek': { 
+    tier: 'free', 
     priority: 50,
     recommended: false,
-    lowQuality: false,
-    description: 'Gpt 4.1 Mini - Compact version of GPT-4.1'
+    lowQuality: true,
+    description: 'DeepSeek - Free tier model with good general capabilities'
   },
-  'gpt-4o': { 
-    tier: 'premium', 
+  'gemini-flash-2.5': { 
+    tier: 'free', 
+    priority: 50,
+    recommended: false,
+    lowQuality: true,
+    description: 'Gemini Flash - Google\'s faster, more efficient model'
+  },
+  'grok-3-mini': { 
+    tier: 'free', 
     priority: 45,
     recommended: false,
-    lowQuality: false,
-    description: 'Gpt 4o - OpenAI\'s optimized model'
+    lowQuality: true,
+    description: 'Grok-3 Mini - Smaller, faster version of Grok-3 for simpler tasks'
   },
   'qwen3': { 
     tier: 'free', 
     priority: 40,
     recommended: false,
-    lowQuality: false,
-    description: 'Qwen3 - Advanced Chinese language model'
+    lowQuality: true,
+    description: 'Qwen3 - Alibaba\'s powerful multilingual language model'
   },
 };
 
@@ -232,7 +269,7 @@ export const useModelSelection = () => {
       models = [
         { 
           id: DEFAULT_FREE_MODEL_ID, 
-          label: 'Gemini Flash 2.5', 
+          label: 'DeepSeek', 
           requiresSubscription: false,
           description: MODELS[DEFAULT_FREE_MODEL_ID]?.description || MODEL_TIERS.free.baseDescription,
           priority: MODELS[DEFAULT_FREE_MODEL_ID]?.priority || 50
@@ -265,7 +302,7 @@ export const useModelSelection = () => {
         
         // Get model data from our central MODELS constant
         const modelData = MODELS[shortName] || {};
-        const isPremium = modelData.tier === 'premium';
+        const isPremium = model?.requires_subscription || modelData.tier === 'premium' || false;
         
         return {
           id: shortName,

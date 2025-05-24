@@ -21,6 +21,8 @@ from services.billing import check_billing_status
 from utils.config import config
 from sandbox.sandbox import create_sandbox, get_or_start_sandbox
 from services.llm import make_llm_api_call
+from run_agent_background import run_agent_background, _cleanup_redis_response_list, update_agent_run_status
+from utils.constants import MODEL_NAME_ALIASES
 
 # Initialize shared resources
 router = APIRouter()
@@ -30,37 +32,6 @@ instance_id = None # Global instance ID for this backend instance
 
 # TTL for Redis response lists (24 hours)
 REDIS_RESPONSE_LIST_TTL = 3600 * 24
-
-MODEL_NAME_ALIASES = {
-    # Short names to full names - matching upstream exactly
-    "claude-sonnet-4": "anthropic/claude-sonnet-4-20250514",
-    "sonnet-3.7": "anthropic/claude-3-7-sonnet-latest",
-    "sonnet-3.5": "anthropic/claude-3-5-sonnet-latest",
-    "haiku-3.5": "anthropic/claude-3-5-haiku-latest",
-    "deepseek-chat-v3": "openrouter/deepseek/deepseek-chat",
-    "deepseek": "openrouter/deepseek/deepseek-chat",
-    "gemini-flash-thinking": "openrouter/google/gemini-2.5-flash-thinking", 
-    "gemini-pro-preview": "openrouter/google/gemini-2.5-pro-preview",
-    "gemini-flash-2.5": "openrouter/google/gemini-2.5-flash-preview",
-    "gpt-4.1": "openai/gpt-4.1-2025-04-14",
-    "gpt-4.1-mini": "openai/gpt-4o-mini",
-    "gpt-4o": "openai/gpt-4o",
-    "qwen3": "openrouter/qwen/qwen3-235b-a22b",
-
-    # Also include full names as keys to ensure they map to themselves
-    "anthropic/claude-sonnet-4-20250514": "anthropic/claude-sonnet-4-20250514",
-    "anthropic/claude-3-7-sonnet-latest": "anthropic/claude-3-7-sonnet-latest",
-    "anthropic/claude-3-5-sonnet-latest": "anthropic/claude-3-5-sonnet-latest",
-    "anthropic/claude-3-5-haiku-latest": "anthropic/claude-3-5-haiku-latest",
-    "openrouter/deepseek/deepseek-chat": "openrouter/deepseek/deepseek-chat",
-    "openrouter/google/gemini-2.5-flash-thinking": "openrouter/google/gemini-2.5-flash-thinking",
-    "openrouter/google/gemini-2.5-pro-preview": "openrouter/google/gemini-2.5-pro-preview",
-    "openrouter/google/gemini-2.5-flash-preview": "openrouter/google/gemini-2.5-flash-preview",
-    "openai/gpt-4.1-2025-04-14": "openai/gpt-4.1-2025-04-14",
-    "openai/gpt-4o-mini": "openai/gpt-4o-mini",
-    "openai/gpt-4o": "openai/gpt-4o",
-    "openrouter/qwen/qwen3-235b-a22b": "openrouter/qwen/qwen3-235b-a22b",
-}
 
 class AgentStartRequest(BaseModel):
     model_name: Optional[str] = None  # Will be set from config.MODEL_TO_USE in the endpoint
