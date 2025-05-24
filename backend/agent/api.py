@@ -120,6 +120,12 @@ async def update_agent_run_status(
         # Retry up to 3 times
         for retry in range(3):
             try:
+                # Calculate exponential backoff delay
+                delay = 0.5 * (2 ** retry)
+                if retry > 0:
+                    await asyncio.sleep(delay)
+                    logger.info(f"Retrying agent run status update (attempt {retry + 1}/3) after {delay:.2f}s delay")
+                
                 update_result = await client.table('agent_runs').update(update_data).eq("id", agent_run_id).execute()
 
                 if hasattr(update_result, 'data') and update_result.data:
@@ -324,6 +330,14 @@ async def get_or_create_project_sandbox(client, project_id: str):
                 try:
                     old_sandbox_id = old_project['sandbox']['id']
                     logger.info(f"Cleaning up old sandbox {old_sandbox_id} for project {old_project['project_id']}")
+                    # Try to clean up the sandbox resources
+                    try:
+                        old_sandbox = await get_or_start_sandbox(old_sandbox_id)
+                        if old_sandbox:
+                            await old_sandbox.cleanup()
+                            logger.info(f"Successfully cleaned up sandbox resources for {old_sandbox_id}")
+                    except Exception as sandbox_cleanup_error:
+                        logger.error(f"Error cleaning up sandbox resources for {old_sandbox_id}: {sandbox_cleanup_error}")
                     # Update project to remove sandbox reference
                     await client.table('projects').update({'sandbox': None}).eq('project_id', old_project['project_id']).execute()
                 except Exception as cleanup_error:
@@ -400,6 +414,12 @@ async def start_agent(
     can_run, message, subscription = await check_billing_status(client, account_id)
     if not can_run:
         raise HTTPException(status_code=402, detail={"message": message, "subscription": subscription})
+
+    # Get project_id from thread
+    thread = await client.table('threads').select('project_id').eq('thread_id', thread_id).execute()
+    if not thread.data:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    project_id = thread.data[0]['project_id']
 
     active_run_id = await check_for_active_project_agent_run(client, project_id)
     if active_run_id:
@@ -568,7 +588,19 @@ async def stream_agent_run(
                             # If it's a connection error, try to recover once
                             if "connection" in str(e).lower() or "closed" in str(e).lower():
                                 logger.warning(f"Connection error detected, attempting recovery for {agent_run_id}")
-                                await message_queue.put({"type": "error", "data": "Connection lost, ending stream"})
+                                try:
+                                    # Attempt to reconnect
+                                    await pubsub_response.close()
+                                    pubsub_response = await redis.create_streaming_pubsub()
+                                    await pubsub_response.subscribe(response_channel)
+                                    await pubsub_control.close()
+                                    pubsub_control = await redis.create_streaming_pubsub()
+                                    await pubsub_control.subscribe(control_channel)
+                                    logger.info(f"Successfully reconnected for {agent_run_id}")
+                                    continue
+                                except Exception as reconnect_error:
+                                    logger.error(f"Failed to reconnect for {agent_run_id}: {reconnect_error}")
+                                    await message_queue.put({"type": "error", "data": "Connection lost, ending stream"})
                             else:
                                 await message_queue.put({"type": "error", "data": "Listener failed"})
                             return
@@ -985,16 +1017,24 @@ async def initiate_agent_with_files(
 
                         if upload_successful:
                             try:
-                                await asyncio.sleep(0.2)
-                                parent_dir = os.path.dirname(target_path)
-                                files_in_dir = sandbox.fs.list_files(parent_dir)
-                                file_names_in_dir = [f.name for f in files_in_dir]
-                                if safe_filename in file_names_in_dir:
-                                    successful_uploads.append(target_path)
-                                    logger.info(f"Successfully uploaded and verified file {safe_filename} to sandbox path {target_path}")
-                                else:
-                                    logger.error(f"Verification failed for {safe_filename}: File not found in {parent_dir} after upload attempt.")
-                                    failed_uploads.append(safe_filename)
+                                # Retry verification with exponential backoff
+                                max_retries = 3
+                                retry_delay = 0.2
+                                for retry in range(max_retries):
+                                    await asyncio.sleep(retry_delay)
+                                    parent_dir = os.path.dirname(target_path)
+                                    files_in_dir = sandbox.fs.list_files(parent_dir)
+                                    file_names_in_dir = [f.name for f in files_in_dir]
+                                    if safe_filename in file_names_in_dir:
+                                        successful_uploads.append(target_path)
+                                        logger.info(f"Successfully uploaded and verified file {safe_filename} to sandbox path {target_path}")
+                                        break
+                                    elif retry < max_retries - 1:
+                                        retry_delay *= 2
+                                        logger.warning(f"Verification attempt {retry + 1} failed for {safe_filename}, retrying in {retry_delay}s...")
+                                    else:
+                                        logger.error(f"Verification failed for {safe_filename} after {max_retries} attempts: File not found in {parent_dir}")
+                                        failed_uploads.append(safe_filename)
                             except Exception as verify_error:
                                 logger.error(f"Error verifying file {safe_filename} after upload: {str(verify_error)}", exc_info=True)
                                 failed_uploads.append(safe_filename)
