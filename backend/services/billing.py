@@ -20,37 +20,6 @@ stripe.api_key = config.STRIPE_SECRET_KEY
 # Initialize router
 router = APIRouter(prefix="/billing", tags=["billing"])
 
-MODEL_NAME_ALIASES = {
-    # Short names to full names - matching upstream exactly
-    "claude-sonnet-4": "anthropic/claude-sonnet-4-20250514",
-    "sonnet-3.7": "anthropic/claude-3-7-sonnet-latest",
-    "sonnet-3.5": "anthropic/claude-3-5-sonnet-latest",
-    "haiku-3.5": "anthropic/claude-3-5-haiku-latest",
-    "deepseek-chat-v3": "openrouter/deepseek/deepseek-chat",
-    "deepseek": "openrouter/deepseek/deepseek-chat",
-    "gemini-flash-thinking": "openrouter/google/gemini-2.5-flash-thinking",
-    "gemini-pro-preview": "openrouter/google/gemini-2.5-pro-preview",
-    "gemini-flash-2.5": "openrouter/google/gemini-2.5-flash-preview",
-    "gpt-4.1": "openai/gpt-4.1-2025-04-14",
-    "gpt-4.1-mini": "openai/gpt-4o-mini",
-    "gpt-4o": "openai/gpt-4o",
-    "qwen3": "openrouter/qwen/qwen3-235b-a22b",
-
-    # Also include full names as keys to ensure they map to themselves
-    "anthropic/claude-sonnet-4-20250514": "anthropic/claude-sonnet-4-20250514",
-    "anthropic/claude-3-7-sonnet-latest": "anthropic/claude-3-7-sonnet-latest",
-    "anthropic/claude-3-5-sonnet-latest": "anthropic/claude-3-5-sonnet-latest",
-    "anthropic/claude-3-5-haiku-latest": "anthropic/claude-3-5-haiku-latest",
-    "openrouter/deepseek/deepseek-chat": "openrouter/deepseek/deepseek-chat",
-    "openrouter/google/gemini-2.5-flash-thinking": "openrouter/google/gemini-2.5-flash-thinking",
-    "openrouter/google/gemini-2.5-pro-preview": "openrouter/google/gemini-2.5-pro-preview",
-    "openrouter/google/gemini-2.5-flash-preview": "openrouter/google/gemini-2.5-flash-preview",
-    "openai/gpt-4.1-2025-04-14": "openai/gpt-4.1-2025-04-14",
-    "openai/gpt-4o-mini": "openai/gpt-4o-mini",
-    "openai/gpt-4o": "openai/gpt-4o",
-    "openrouter/qwen/qwen3-235b-a22b": "openrouter/qwen/qwen3-235b-a22b",
-}
-
 SUBSCRIPTION_TIERS = {
     config.STRIPE_FREE_TIER_ID: {'name': 'free', 'minutes': 60},
     config.STRIPE_TIER_2_20_ID: {'name': 'tier_2_20', 'minutes': 120},  # 2 hours

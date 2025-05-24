@@ -433,8 +433,7 @@ async def start_agent(
             project_id=project_id, sandbox=sandbox,
             model_name=model_name,  # Already resolved above
             enable_thinking=body.enable_thinking, reasoning_effort=body.reasoning_effort,
-            stream=body.stream, enable_context_manager=body.enable_context_manager,
-            user_id=user_id  # Pass user_id to run_agent_background
+            stream=body.stream, enable_context_manager=body.enable_context_manager
         )
     )
 
@@ -671,8 +670,7 @@ async def run_agent_background(
     enable_thinking: Optional[bool],
     reasoning_effort: Optional[str],
     stream: bool,
-    enable_context_manager: bool,
-    user_id: str
+    enable_context_manager: bool
 ):
     """Run the agent in the background using Redis for state."""
     logger.info(f"Starting background agent run: {agent_run_id} for thread: {thread_id} (Instance: {instance_id})")
@@ -731,8 +729,7 @@ async def run_agent_background(
             thread_id=thread_id, project_id=project_id, stream=stream,
             thread_manager=thread_manager, model_name=model_name,
             enable_thinking=enable_thinking, reasoning_effort=reasoning_effort,
-            enable_context_manager=enable_context_manager,
-            user_id=user_id  # Pass user_id to run_agent
+            enable_context_manager=enable_context_manager
         )
 
         final_status = "running"
@@ -1043,8 +1040,7 @@ async def initiate_agent_with_files(
                 project_id=project_id, sandbox=sandbox,
                 model_name=model_name,  # Already resolved above
                 enable_thinking=enable_thinking, reasoning_effort=reasoning_effort,
-                stream=stream, enable_context_manager=enable_context_manager,
-                user_id=user_id  # Pass user_id to run_agent_background
+                stream=stream, enable_context_manager=enable_context_manager
             )
         )
         task.add_done_callback(lambda _: asyncio.create_task(_cleanup_redis_instance_key(agent_run_id)))
