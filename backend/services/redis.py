@@ -90,6 +90,12 @@ async def get_client():
 # Basic Redis operations
 async def set(key: str, value: str, ex: int = None):
     """Set a Redis key."""
+    # DEBUG: Log type and value of ex parameter to catch type issues
+    if ex is not None:
+        logger.debug(f"Redis SET debug - key: {key}, ex type: {type(ex)}, ex value: {ex}")
+        if not isinstance(ex, int):
+            logger.error(f"REDIS TYPE ERROR: set() ex parameter is not an integer! key={key}, ex type={type(ex)}, ex value={ex}")
+    
     redis_client = await get_client()
     return await redis_client.set(key, value, ex=ex)
 
@@ -159,6 +165,13 @@ async def rpush(key: str, *values: Any):
 
 async def lrange(key: str, start: int, end: int) -> List[str]:
     """Get a range of elements from a list."""
+    # DEBUG: Log type and value of start/end parameters to catch type issues
+    logger.debug(f"Redis LRANGE debug - key: {key}, start type: {type(start)}, start value: {start}, end type: {type(end)}, end value: {end}")
+    if not isinstance(start, int):
+        logger.error(f"REDIS TYPE ERROR: lrange() start parameter is not an integer! key={key}, start type={type(start)}, start value={start}")
+    if not isinstance(end, int):
+        logger.error(f"REDIS TYPE ERROR: lrange() end parameter is not an integer! key={key}, end type={type(end)}, end value={end}")
+    
     redis_client = await get_client()
     return await redis_client.lrange(key, start, end)
 
@@ -172,6 +185,11 @@ async def llen(key: str) -> int:
 # Key management
 async def expire(key: str, time: int):
     """Set a key's time to live in seconds."""
+    # DEBUG: Log type and value of time parameter to catch type issues
+    logger.debug(f"Redis EXPIRE debug - key: {key}, time type: {type(time)}, time value: {time}")
+    if not isinstance(time, int):
+        logger.error(f"REDIS TYPE ERROR: expire() time parameter is not an integer! key={key}, time type={type(time)}, time value={time}")
+    
     redis_client = await get_client()
     return await redis_client.expire(key, time)
 
