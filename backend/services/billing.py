@@ -23,32 +23,31 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 MODEL_NAME_ALIASES = {
     # Short names to full names
     "sonnet-3.7": "anthropic/claude-3-7-sonnet-latest",
-    # "gpt-4.1": "openai/gpt-4.1-2025-04-14",  # Commented out in constants.py
+    "claude-sonnet-4": "anthropic/claude-sonnet-4-20250514",
+    "gpt-4.1": "openai/gpt-4.1-2025-04-14",
     "gpt-4o": "openai/gpt-4o",
-    # "gpt-4-turbo": "openai/gpt-4-turbo",  # Commented out in constants.py
-    # "gpt-4": "openai/gpt-4",  # Commented out in constants.py
-    # "gemini-flash-2.5": "openrouter/google/gemini-2.5-flash-preview",  # Commented out in constants.py
-    # "grok-3": "xai/grok-3-fast-latest",  # Commented out in constants.py
+    "gpt-4-turbo": "openai/gpt-4-turbo",
+    "gpt-4": "openai/gpt-4",
+    "gemini-flash-2.5": "openrouter/google/gemini-2.5-flash-preview",
+    "grok-3": "xai/grok-3-fast-latest",
     "deepseek": "openrouter/deepseek/deepseek-chat",
-    # "deepseek-r1": "openrouter/deepseek/deepseek-r1",
-    # "grok-3-mini": "xai/grok-3-mini-fast-beta",  # Commented out in constants.py
-    "qwen3": "openrouter/qwen/qwen3-235b-a22b",  # Commented out in constants.py
-
-
+    "deepseek-r1": "openrouter/deepseek/deepseek-r1",
+    "grok-3-mini": "xai/grok-3-mini-fast-beta",
+    "qwen3": "openrouter/qwen/qwen3-235b-a22b",
 
     # Also include full names as keys to ensure they map to themselves
     "anthropic/claude-3-7-sonnet-latest": "anthropic/claude-3-7-sonnet-latest",
-    # "openai/gpt-4.1-2025-04-14": "openai/gpt-4.1-2025-04-14",  # Commented out in constants.py
+    "openai/gpt-4.1-2025-04-14": "openai/gpt-4.1-2025-04-14",
     "openai/gpt-4o": "openai/gpt-4o",
-    # "openai/gpt-4-turbo": "openai/gpt-4-turbo",  # Commented out in constants.py
-    # "openai/gpt-4": "openai/gpt-4",  # Commented out in constants.py
-    # "openrouter/google/gemini-2.5-flash-preview": "openrouter/google/gemini-2.5-flash-preview",  # Commented out in constants.py
-    # "xai/grok-3-fast-latest": "xai/grok-3-fast-latest",  # Commented out in constants.py
+    "openai/gpt-4-turbo": "openai/gpt-4-turbo",
+    "openai/gpt-4": "openai/gpt-4",
+    "openrouter/google/gemini-2.5-flash-preview": "openrouter/google/gemini-2.5-flash-preview",
+    "xai/grok-3-fast-latest": "xai/grok-3-fast-latest",
     "deepseek/deepseek-chat": "openrouter/deepseek/deepseek-chat",
-    # "deepseek/deepseek-r1": "openrouter/deepseek/deepseek-r1",
-
+    "deepseek/deepseek-r1": "openrouter/deepseek/deepseek-r1",
     "qwen/qwen3-235b-a22b": "openrouter/qwen/qwen3-235b-a22b",
-    # "xai/grok-3-mini-fast-beta": "xai/grok-3-mini-fast-beta",  # Commented out in constants.py
+    "xai/grok-3-mini-fast-beta": "xai/grok-3-mini-fast-beta",
+    "anthropic/claude-sonnet-4-20250514": "anthropic/claude-sonnet-4-20250514",
 }
 
 SUBSCRIPTION_TIERS = {
@@ -895,69 +894,114 @@ async def get_available_models(
         if config.ENV_MODE == EnvMode.LOCAL:
             logger.info("Running in local development mode - billing checks are disabled")
 
-            # In local mode, return all models from MODEL_NAME_ALIASES
-            model_info = []
-            for short_name, full_name in MODEL_NAME_ALIASES.items():
-                # Skip entries where the key is a full name to avoid duplicates
-                if short_name == full_name or '/' in short_name:
-                    continue
+            # Get all unique models from all tiers (since local dev has access to everything)
+            all_models = set()
+            for tier_models in MODEL_ACCESS_TIERS.values():
+                all_models.update(tier_models)
+            
+            # Convert to list of Model objects with proper short_name mapping
+            models = []
+            for model_id in all_models:
+                # Create short name mapping based on MODEL_NAME_ALIASES
+                short_name = None
+                for alias, full_name in MODEL_NAME_ALIASES.items():
+                    if full_name == model_id:
+                        short_name = alias
+                        break
+                
+                # Default short name logic if not in aliases
+                if not short_name:
+                    if "claude-sonnet-4" in model_id:
+                        short_name = "claude-sonnet-4"
+                    elif "claude-3-7-sonnet" in model_id:
+                        short_name = "sonnet-3.7"
+                    elif "deepseek-chat" in model_id:
+                        short_name = "deepseek"
+                    elif "gpt-4o" in model_id:
+                        short_name = "gpt-4o"
+                    elif "qwen3" in model_id:
+                        short_name = "qwen3"
+                    else:
+                        short_name = model_id.split("/")[-1]
+                
+                # Create display name
+                if "claude-sonnet-4" in model_id:
+                    display_name = "Claude Sonnet 4"
+                elif "claude-3-7-sonnet" in model_id:
+                    display_name = "Claude Sonnet 3.7"
+                elif "deepseek-chat" in model_id:
+                    display_name = "Deepseek Chat V3"
+                elif "gpt-4o" in model_id:
+                    display_name = "GPT-4o"
+                elif "qwen3" in model_id:
+                    display_name = "Qwen 3"
+                else:
+                    display_name = model_id.split("/")[-1].replace("-", " ").title()
 
-                model_info.append({
-                    "id": full_name,
-                    "display_name": short_name,
-                    "short_name": short_name
+                models.append({
+                    "id": model_id,
+                    "display_name": display_name,
+                    "short_name": short_name,
+                    "requires_subscription": model_id not in MODEL_ACCESS_TIERS.get("free", [])
                 })
 
-            return {
-                "models": model_info,
-                "subscription_tier": "Local Development",
-                "total_models": len(model_info)
-            }
+            return models
 
-        # For non-local mode, get list of allowed models for this user
+        # For production: Get all models from MODEL_ACCESS_TIERS and mark accessibility
+        all_models = set()
+        for tier_models in MODEL_ACCESS_TIERS.values():
+            all_models.update(tier_models)
+        
+        # Get user's allowed models
         allowed_models = await get_allowed_models_for_user(client, current_user_id)
-
-        # Get subscription info for context
-        subscription = await get_user_subscription(current_user_id)
-
-        # Determine tier name from subscription
-        tier_name = 'free'
-        if subscription:
-            price_id = None
-            if subscription.get('items') and subscription['items'].get('data') and len(subscription['items']['data']) > 0:
-                price_id = subscription['items']['data'][0]['price']['id']
+        
+        # Convert to Model objects
+        models = []
+        for model_id in all_models:
+            # Create short name mapping
+            short_name = None
+            for alias, full_name in MODEL_NAME_ALIASES.items():
+                if full_name == model_id:
+                    short_name = alias
+                    break
+            
+            if not short_name:
+                if "claude-sonnet-4" in model_id:
+                    short_name = "claude-sonnet-4"
+                elif "claude-3-7-sonnet" in model_id:
+                    short_name = "sonnet-3.7"
+                elif "deepseek-chat" in model_id:
+                    short_name = "deepseek"
+                elif "gpt-4o" in model_id:
+                    short_name = "gpt-4o"
+                elif "qwen3" in model_id:
+                    short_name = "qwen3"
+                else:
+                    short_name = model_id.split("/")[-1]
+            
+            # Create display name
+            if "claude-sonnet-4" in model_id:
+                display_name = "Claude Sonnet 4"
+            elif "claude-3-7-sonnet" in model_id:
+                display_name = "Claude Sonnet 3.7"
+            elif "deepseek-chat" in model_id:
+                display_name = "Deepseek Chat V3"
+            elif "gpt-4o" in model_id:
+                display_name = "GPT-4o"
+            elif "qwen3" in model_id:
+                display_name = "Qwen 3"
             else:
-                price_id = subscription.get('price_id', config.STRIPE_FREE_TIER_ID)
+                display_name = model_id.split("/")[-1].replace("-", " ").title()
 
-            # Get tier info for this price_id
-            tier_info = SUBSCRIPTION_TIERS.get(price_id)
-            if tier_info:
-                tier_name = tier_info['name']
-
-        # Get model aliases for better display
-        model_aliases = {}
-        for short_name, full_name in MODEL_NAME_ALIASES.items():
-            # Only include short names that don't match their full names
-            if short_name != full_name and not short_name.startswith("openai/") and not short_name.startswith("anthropic/") and not short_name.startswith("openrouter/") and not short_name.startswith("xai/"):
-                if full_name in allowed_models and full_name not in model_aliases:
-                    model_aliases[full_name] = short_name
-
-        # Create model info with display names
-        model_info = []
-        for model in allowed_models:
-            display_name = model_aliases.get(model, model.split('/')[-1] if '/' in model else model)
-            model_info.append({
-                "id": model,
+            models.append({
+                "id": model_id,
                 "display_name": display_name,
-                "short_name": model_aliases.get(model)
+                "short_name": short_name,
+                "requires_subscription": model_id not in allowed_models
             })
 
-        return {
-            "models": model_info,
-            "subscription_tier": tier_name,
-            "total_models": len(model_info)
-        }
+        return models
 
     except Exception as e:
         logger.error(f"Error getting available models: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error getting available models: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
