@@ -146,3 +146,15 @@ MODEL_NAME_ALIASES = {
     # "qwen/qwen3-235b-a22b": "openrouter/qwen/qwen3-235b-a22b",
     # "xai/grok-3-mini-fast-beta": "xai/grok-3-mini-fast-beta",  # Commented out in constants.py
 }
+
+def get_model_name(model_name: str) -> str:
+    """
+    Resolve model name using MODEL_NAME_ALIASES.
+    
+    Args:
+        model_name: The short model name or full model name
+        
+    Returns:
+        The full model name (either resolved from alias or the original if not found)
+    """
+    return MODEL_NAME_ALIASES.get(model_name, model_name)
