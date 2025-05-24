@@ -965,6 +965,7 @@ async def get_available_models(
                     short_name = alias
                     break
             
+            # Default short name logic if not in aliases
             if not short_name:
                 if "claude-sonnet-4" in model_id:
                     short_name = "claude-sonnet-4"

@@ -32,29 +32,23 @@ instance_id = None # Global instance ID for this backend instance
 REDIS_RESPONSE_LIST_TTL = 3600 * 24
 
 MODEL_NAME_ALIASES = {
-    # Short names to full names
-    "sonnet-3.7": "anthropic/claude-3-7-sonnet-latest",
+    # Short names to full names - matching upstream exactly
+    "claude-sonnet-4": "anthropic/claude-sonnet-4-20250514",
+    "deepseek-chat-v3": "openrouter/deepseek/deepseek-chat",
+    "gemini-flash-thinking": "openrouter/google/gemini-2.5-flash-thinking", 
+    "gemini-pro-preview": "openrouter/google/gemini-2.5-pro-preview",
     "gpt-4.1": "openai/gpt-4.1-2025-04-14",
+    "gpt-4.1-mini": "openai/gpt-4o-mini",
     "gpt-4o": "openai/gpt-4o",
-    "gpt-4-turbo": "openai/gpt-4-turbo",
-    "gpt-4": "openai/gpt-4",
-    "grok-3": "xai/grok-3-fast-latest",
-    "deepseek": "openrouter/deepseek/deepseek-chat",
-    "grok-3-mini": "xai/grok-3-mini-fast-beta",
-    "qwen3": "openrouter/qwen/qwen3-235b-a22b",
-    "gemini-pro-2.5": "openrouter/google/gemini-2.5-pro-preview",
 
     # Also include full names as keys to ensure they map to themselves
-    "anthropic/claude-3-7-sonnet-latest": "anthropic/claude-3-7-sonnet-latest",
-    "openai/gpt-4.1-2025-04-14": "openai/gpt-4.1-2025-04-14",
-    "openai/gpt-4o": "openai/gpt-4o",
-    "openai/gpt-4-turbo": "openai/gpt-4-turbo",
-    "openai/gpt-4": "openai/gpt-4",
-    "xai/grok-3-fast-latest": "xai/grok-3-fast-latest",
+    "anthropic/claude-sonnet-4-20250514": "anthropic/claude-sonnet-4-20250514",
     "openrouter/deepseek/deepseek-chat": "openrouter/deepseek/deepseek-chat",
-    "xai/grok-3-mini-fast-beta": "xai/grok-3-mini-fast-beta",
-    "openrouter/qwen/qwen3-235b-a22b": "openrouter/qwen/qwen3-235b-a22b",
-    "openrouter/google/gemini-2.5-pro-preview": "openrouter/google/gemini-2.5-pro-preview"
+    "openrouter/google/gemini-2.5-flash-thinking": "openrouter/google/gemini-2.5-flash-thinking",
+    "openrouter/google/gemini-2.5-pro-preview": "openrouter/google/gemini-2.5-pro-preview",
+    "openai/gpt-4.1-2025-04-14": "openai/gpt-4.1-2025-04-14",
+    "openai/gpt-4o-mini": "openai/gpt-4o-mini",
+    "openai/gpt-4o": "openai/gpt-4o"
 }
 
 class AgentStartRequest(BaseModel):
