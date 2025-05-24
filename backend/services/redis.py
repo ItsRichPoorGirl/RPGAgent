@@ -28,6 +28,20 @@ def initialize():
     # Convert string 'True'/'False' to boolean
     redis_ssl_str = os.getenv('REDIS_SSL', 'False')
     redis_ssl = redis_ssl_str.lower() == 'true'
+    
+    # Ensure timeout and interval values are safe from environment variable issues
+    socket_timeout = float(os.getenv('REDIS_SOCKET_TIMEOUT', 5.0))
+    socket_connect_timeout = float(os.getenv('REDIS_SOCKET_CONNECT_TIMEOUT', 5.0))
+    health_check_interval = int(os.getenv('REDIS_HEALTH_CHECK_INTERVAL', 30))
+
+    # DEBUG: Log all Redis connection parameters and their types
+    logger.info(f"Redis connection debug - host: {redis_host} (type: {type(redis_host)})")
+    logger.info(f"Redis connection debug - port: {redis_port} (type: {type(redis_port)})")
+    logger.info(f"Redis connection debug - password: {'***' if redis_password else 'None'} (type: {type(redis_password)})")
+    logger.info(f"Redis connection debug - ssl: {redis_ssl} (type: {type(redis_ssl)})")
+    logger.info(f"Redis connection debug - socket_timeout: {socket_timeout} (type: {type(socket_timeout)})")
+    logger.info(f"Redis connection debug - socket_connect_timeout: {socket_connect_timeout} (type: {type(socket_connect_timeout)})")
+    logger.info(f"Redis connection debug - health_check_interval: {health_check_interval} (type: {type(health_check_interval)})")
 
     logger.info(f"Initializing Redis connection to {redis_host}:{redis_port}")
 
@@ -38,10 +52,10 @@ def initialize():
         password=redis_password,
         ssl=redis_ssl,
         decode_responses=True,
-        socket_timeout=5.0,
-        socket_connect_timeout=5.0,
+        socket_timeout=socket_timeout,
+        socket_connect_timeout=socket_connect_timeout,
         retry_on_timeout=True,
-        health_check_interval=30
+        health_check_interval=health_check_interval
     )
 
     return client
@@ -133,24 +147,48 @@ async def create_streaming_pubsub():
     redis_password = os.getenv('REDIS_PASSWORD', '')
     redis_ssl_str = os.getenv('REDIS_SSL', 'False')
     redis_ssl = redis_ssl_str.lower() == 'true'
+    
+    # Ensure timeout and interval values are safe from environment variable issues
+    socket_timeout = float(os.getenv('REDIS_STREAMING_SOCKET_TIMEOUT', 300.0))
+    socket_connect_timeout = float(os.getenv('REDIS_STREAMING_SOCKET_CONNECT_TIMEOUT', 10.0))
+    health_check_interval = int(os.getenv('REDIS_STREAMING_HEALTH_CHECK_INTERVAL', 30))
+
+    # DEBUG: Log all Redis streaming connection parameters and their types
+    logger.info(f"Redis streaming debug - host: {redis_host} (type: {type(redis_host)})")
+    logger.info(f"Redis streaming debug - port: {redis_port} (type: {type(redis_port)})")
+    logger.info(f"Redis streaming debug - password: {'***' if redis_password else 'None'} (type: {type(redis_password)})")
+    logger.info(f"Redis streaming debug - ssl: {redis_ssl} (type: {type(redis_ssl)})")
+    logger.info(f"Redis streaming debug - socket_timeout: {socket_timeout} (type: {type(socket_timeout)})")
+    logger.info(f"Redis streaming debug - socket_connect_timeout: {socket_connect_timeout} (type: {type(socket_connect_timeout)})")
+    logger.info(f"Redis streaming debug - TCP_KEEPINTVL: 1 (type: {type(1)})")
+    logger.info(f"Redis streaming debug - TCP_KEEPCNT: 3 (type: {type(3)})")
+    logger.info(f"Redis streaming debug - TCP_KEEPIDLE: 1 (type: {type(1)})")
+    logger.info(f"Redis streaming debug - health_check_interval: {health_check_interval} (type: {type(health_check_interval)})")
 
     # Create a dedicated Redis client for streaming with longer timeouts
+    # Ensure all keepalive options are explicitly integers to avoid type errors
+    keepalive_options = {
+        'TCP_KEEPINTVL': int(os.getenv('TCP_KEEPINTVL', 1)),  # Interval between keepalive probes
+        'TCP_KEEPCNT': int(os.getenv('TCP_KEEPCNT', 3)),    # Number of keepalive probes before timeout
+        'TCP_KEEPIDLE': int(os.getenv('TCP_KEEPIDLE', 1))    # Seconds before sending keepalive probes
+    }
+    
+    # DEBUG: Log keepalive options after potential environment override
+    for key, value in keepalive_options.items():
+        logger.info(f"Redis streaming debug - {key}: {value} (type: {type(value)})")
+    
     streaming_client = redis.Redis(
         host=redis_host,
         port=redis_port,
         password=redis_password,
         ssl=redis_ssl,
         decode_responses=True,
-        socket_timeout=300.0,  # 5 minutes timeout instead of 5 seconds
-        socket_connect_timeout=10.0,  # 10 seconds to connect
+        socket_timeout=socket_timeout,  # 5 minutes timeout instead of 5 seconds
+        socket_connect_timeout=socket_connect_timeout,  # 10 seconds to connect
         socket_keepalive=True,  # Enable TCP keepalive
-        socket_keepalive_options={
-            'TCP_KEEPINTVL': 1,  # Interval between keepalive probes
-            'TCP_KEEPCNT': 3,    # Number of keepalive probes before timeout
-            'TCP_KEEPIDLE': 1    # Seconds before sending keepalive probes
-        },
+        socket_keepalive_options=keepalive_options,
         retry_on_timeout=True,
-        health_check_interval=30
+        health_check_interval=health_check_interval
     )
     
     return streaming_client.pubsub()
