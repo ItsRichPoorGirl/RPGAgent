@@ -333,7 +333,7 @@ async def get_or_create_project_sandbox(client, project_id: str):
                     # Try to clean up the sandbox resources
                     try:
                         old_sandbox = await get_or_start_sandbox(old_sandbox_id)
-                        if old_sandbox:
+                        if old_sandbox and hasattr(old_sandbox, 'cleanup'):
                             await old_sandbox.cleanup()
                             logger.info(f"Successfully cleaned up sandbox resources for {old_sandbox_id}")
                     except Exception as sandbox_cleanup_error:
@@ -341,7 +341,7 @@ async def get_or_create_project_sandbox(client, project_id: str):
                     # Update project to remove sandbox reference
                     await client.table('projects').update({'sandbox': None}).eq('project_id', old_project['project_id']).execute()
                 except Exception as cleanup_error:
-                    logger.error(f"Error cleaning up old sandbox: {str(cleanup_error)}")
+                    logger.error(f"Error during sandbox cleanup: {str(cleanup_error)}")
     except Exception as cleanup_error:
         logger.error(f"Error during sandbox cleanup: {str(cleanup_error)}")
 
@@ -546,10 +546,12 @@ async def stream_agent_run(
 
             # 3. Set up Pub/Sub listeners for new responses and control signals
             pubsub_response = await redis.create_streaming_pubsub()
+            # Subscribe to response channel first
             await pubsub_response.subscribe(response_channel)
             logger.debug(f"Subscribed to response channel: {response_channel}")
 
             pubsub_control = await redis.create_streaming_pubsub()
+            # Subscribe to control channel second
             await pubsub_control.subscribe(control_channel)
             logger.debug(f"Subscribed to control channel: {control_channel}")
 
@@ -700,7 +702,7 @@ async def stream_agent_run(
 async def run_agent_background(
     agent_run_id: str,
     thread_id: str,
-    instance_id: str, # Use the global instance ID passed during initialization
+    instance_id: str,
     project_id: str,
     sandbox,
     model_name: str,
@@ -753,8 +755,22 @@ async def run_agent_background(
 
     try:
         # Setup Pub/Sub listener for control signals
+        logger.error(f"CRITICAL DEBUG: About to create streaming pubsub")
         pubsub = await redis.create_streaming_pubsub()
-        await pubsub.subscribe(instance_control_channel, global_control_channel)
+        logger.error(f"CRITICAL DEBUG: Successfully created pubsub: {type(pubsub)}")
+        
+        # Ensure Redis connection is properly configured
+        if not hasattr(redis, 'REDIS_KEY_TTL'):
+            redis.REDIS_KEY_TTL = 3600  # Default TTL of 1 hour if not set
+        
+        # Subscribe to channels one at a time to avoid connection issues
+        logger.error(f"CRITICAL DEBUG: About to subscribe to channels")
+        logger.error(f"CRITICAL DEBUG: instance_control_channel = {instance_control_channel} (type: {type(instance_control_channel)})")
+        logger.error(f"CRITICAL DEBUG: global_control_channel = {global_control_channel} (type: {type(global_control_channel)})")
+        logger.error(f"CRITICAL DEBUG: pubsub type = {type(pubsub)}")
+        
+        await pubsub.subscribe(instance_control_channel)
+        await pubsub.subscribe(global_control_channel)
         logger.debug(f"Subscribed to control channels: {instance_control_channel}, {global_control_channel}")
         stop_checker = asyncio.create_task(check_for_stop_signal())
 

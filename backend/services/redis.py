@@ -48,22 +48,22 @@ def initialize():
     health_check_interval = int(os.getenv('REDIS_HEALTH_CHECK_INTERVAL', 30))
 
     # DEBUG: Log all environment variables that might affect Redis
-    logger.info(f"=== REDIS DEBUG START ===")
-    logger.info(f"REDIS_URL: {redis_url}")
+    logger.error(f"=== REDIS DEBUG START ===")
+    logger.error(f"REDIS_URL: {redis_url}")
     
     # Log all Redis-related environment variables
     for env_var in ['REDIS_HOST', 'REDIS_PORT', 'REDIS_PASSWORD', 'REDIS_SSL', 'REDIS_SOCKET_TIMEOUT', 'REDIS_SOCKET_CONNECT_TIMEOUT', 'REDIS_HEALTH_CHECK_INTERVAL']:
         env_val = os.getenv(env_var)
-        logger.info(f"{env_var}: {env_val} (type: {type(env_val)})")
+        logger.error(f"{env_var}: {env_val} (type: {type(env_val)})")
     
     # Log any environment variables containing 'REDIS' or socket/TCP related
-    logger.info("=== ALL REDIS/SOCKET/TCP ENVIRONMENT VARIABLES ===")
+    logger.error("=== ALL REDIS/SOCKET/TCP ENVIRONMENT VARIABLES ===")
     for key, value in os.environ.items():
         if any(keyword in key.upper() for keyword in ['REDIS', 'SOCKET', 'TCP', 'KEEPALIVE', 'TIMEOUT', 'CONNECTION']):
-            logger.info(f"{key}: {value} (type: {type(value)})")
-    logger.info("=== END ENVIRONMENT VARIABLES ===")
+            logger.error(f"{key}: {value} (type: {type(value)})")
+    logger.error("=== END ENVIRONMENT VARIABLES ===")
 
-    logger.info(f"Initializing Redis connection to {redis_host}:{redis_port}")
+    logger.error(f"Initializing Redis connection to {redis_host}:{redis_port}")
 
     # Create Redis client with basic configuration
     client = redis.Redis(
@@ -156,15 +156,15 @@ async def publish(channel: str, message: str):
 async def create_pubsub():
     """Create a Redis pubsub object."""
     try:
-        logger.info("Creating Redis pubsub connection...")
+        logger.error("CRITICAL DEBUG: Creating Redis pubsub connection...")
         redis_client = await get_client()
-        logger.info(f"Got Redis client: {type(redis_client)}")
+        logger.error(f"CRITICAL DEBUG: Got Redis client: {type(redis_client)}")
         pubsub = redis_client.pubsub()
-        logger.info(f"Created pubsub object: {type(pubsub)}")
+        logger.error(f"CRITICAL DEBUG: Created pubsub object: {type(pubsub)}")
         return pubsub
     except Exception as e:
-        logger.error(f"Error creating Redis pubsub: {e}")
-        logger.error(f"Exception type: {type(e)}")
+        logger.error(f"CRITICAL DEBUG: Error creating Redis pubsub: {e}")
+        logger.error(f"CRITICAL DEBUG: Exception type: {type(e)}")
         raise
 
 
