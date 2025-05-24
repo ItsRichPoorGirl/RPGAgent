@@ -37,47 +37,89 @@ export const MODELS = {
     lowQuality: false,
     description: 'Claude Sonnet 4 - Anthropic\'s latest and most advanced AI assistant'
   },
+  'sonnet-3.7': { 
+    tier: 'premium',
+    priority: 95, 
+    recommended: true,
+    lowQuality: false,
+    description: 'Sonnet 3.7 - Anthropic\'s advanced Sonnet model'
+  },
+  'sonnet-3.5': { 
+    tier: 'premium',
+    priority: 90, 
+    recommended: true,
+    lowQuality: false,
+    description: 'Sonnet 3.5 - Anthropic\'s Claude Sonnet model'
+  },
+  'haiku-3.5': { 
+    tier: 'premium',
+    priority: 85, 
+    recommended: false,
+    lowQuality: false,
+    description: 'Haiku 3.5 - Anthropic\'s fast, efficient model'
+  },
   'deepseek-chat-v3': { 
     tier: 'free',
-    priority: 95, 
+    priority: 80, 
     recommended: true,
     lowQuality: false,
     description: 'Deepseek Chat V3 0324 - Advanced AI assistant with strong reasoning'
   },
+  'deepseek': { 
+    tier: 'free',
+    priority: 75, 
+    recommended: false,
+    lowQuality: false,
+    description: 'Deepseek - Advanced AI assistant'
+  },
   'gemini-flash-thinking': { 
     tier: 'free', 
-    priority: 90,
+    priority: 70,
     recommended: true,
     lowQuality: false,
     description: 'Gemini 2.5 Flash:thinking - Google\'s fast, responsive AI model'
   },
   'gemini-pro-preview': { 
     tier: 'free', 
-    priority: 85,
+    priority: 65,
     recommended: true,
     lowQuality: false,
     description: 'Gemini 2.5 Pro Preview - Google\'s latest powerful model'
   },
+  'gemini-flash-2.5': { 
+    tier: 'free', 
+    priority: 60,
+    recommended: false,
+    lowQuality: false,
+    description: 'Gemini Flash 2.5 - Google\'s fast model'
+  },
   'gpt-4.1': { 
     tier: 'premium', 
-    priority: 80,
+    priority: 55,
     recommended: false,
     lowQuality: false,
     description: 'Gpt 4.1 - OpenAI\'s most advanced model with enhanced reasoning'
   },
   'gpt-4.1-mini': { 
     tier: 'premium', 
-    priority: 75,
+    priority: 50,
     recommended: false,
     lowQuality: false,
     description: 'Gpt 4.1 Mini - Compact version of GPT-4.1'
   },
   'gpt-4o': { 
     tier: 'premium', 
-    priority: 70,
+    priority: 45,
     recommended: false,
     lowQuality: false,
     description: 'Gpt 4o - OpenAI\'s optimized model'
+  },
+  'qwen3': { 
+    tier: 'free', 
+    priority: 40,
+    recommended: false,
+    lowQuality: false,
+    description: 'Qwen3 - Advanced Chinese language model'
   },
 };
 

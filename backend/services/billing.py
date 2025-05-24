@@ -21,33 +21,34 @@ stripe.api_key = config.STRIPE_SECRET_KEY
 router = APIRouter(prefix="/billing", tags=["billing"])
 
 MODEL_NAME_ALIASES = {
-    # Short names to full names
-    "sonnet-3.7": "anthropic/claude-3-7-sonnet-latest",
+    # Short names to full names - matching upstream exactly
     "claude-sonnet-4": "anthropic/claude-sonnet-4-20250514",
-    "gpt-4.1": "openai/gpt-4.1-2025-04-14",
-    "gpt-4o": "openai/gpt-4o",
-    "gpt-4-turbo": "openai/gpt-4-turbo",
-    "gpt-4": "openai/gpt-4",
-    "gemini-flash-2.5": "openrouter/google/gemini-2.5-flash-preview",
-    "grok-3": "xai/grok-3-fast-latest",
+    "sonnet-3.7": "anthropic/claude-3-7-sonnet-latest",
+    "sonnet-3.5": "anthropic/claude-3-5-sonnet-latest",
+    "haiku-3.5": "anthropic/claude-3-5-haiku-latest",
+    "deepseek-chat-v3": "openrouter/deepseek/deepseek-chat",
     "deepseek": "openrouter/deepseek/deepseek-chat",
-    "deepseek-r1": "openrouter/deepseek/deepseek-r1",
-    "grok-3-mini": "xai/grok-3-mini-fast-beta",
+    "gemini-flash-thinking": "openrouter/google/gemini-2.5-flash-thinking",
+    "gemini-pro-preview": "openrouter/google/gemini-2.5-pro-preview",
+    "gemini-flash-2.5": "openrouter/google/gemini-2.5-flash-preview",
+    "gpt-4.1": "openai/gpt-4.1-2025-04-14",
+    "gpt-4.1-mini": "openai/gpt-4o-mini",
+    "gpt-4o": "openai/gpt-4o",
     "qwen3": "openrouter/qwen/qwen3-235b-a22b",
 
     # Also include full names as keys to ensure they map to themselves
-    "anthropic/claude-3-7-sonnet-latest": "anthropic/claude-3-7-sonnet-latest",
-    "openai/gpt-4.1-2025-04-14": "openai/gpt-4.1-2025-04-14",
-    "openai/gpt-4o": "openai/gpt-4o",
-    "openai/gpt-4-turbo": "openai/gpt-4-turbo",
-    "openai/gpt-4": "openai/gpt-4",
-    "openrouter/google/gemini-2.5-flash-preview": "openrouter/google/gemini-2.5-flash-preview",
-    "xai/grok-3-fast-latest": "xai/grok-3-fast-latest",
-    "deepseek/deepseek-chat": "openrouter/deepseek/deepseek-chat",
-    "deepseek/deepseek-r1": "openrouter/deepseek/deepseek-r1",
-    "qwen/qwen3-235b-a22b": "openrouter/qwen/qwen3-235b-a22b",
-    "xai/grok-3-mini-fast-beta": "xai/grok-3-mini-fast-beta",
     "anthropic/claude-sonnet-4-20250514": "anthropic/claude-sonnet-4-20250514",
+    "anthropic/claude-3-7-sonnet-latest": "anthropic/claude-3-7-sonnet-latest",
+    "anthropic/claude-3-5-sonnet-latest": "anthropic/claude-3-5-sonnet-latest",
+    "anthropic/claude-3-5-haiku-latest": "anthropic/claude-3-5-haiku-latest",
+    "openrouter/deepseek/deepseek-chat": "openrouter/deepseek/deepseek-chat",
+    "openrouter/google/gemini-2.5-flash-thinking": "openrouter/google/gemini-2.5-flash-thinking",
+    "openrouter/google/gemini-2.5-pro-preview": "openrouter/google/gemini-2.5-pro-preview",
+    "openrouter/google/gemini-2.5-flash-preview": "openrouter/google/gemini-2.5-flash-preview",
+    "openai/gpt-4.1-2025-04-14": "openai/gpt-4.1-2025-04-14",
+    "openai/gpt-4o-mini": "openai/gpt-4o-mini",
+    "openai/gpt-4o": "openai/gpt-4o",
+    "openrouter/qwen/qwen3-235b-a22b": "openrouter/qwen/qwen3-235b-a22b",
 }
 
 SUBSCRIPTION_TIERS = {
@@ -983,14 +984,18 @@ async def get_available_models(
             # Create display name
             if "claude-sonnet-4" in model_id:
                 display_name = "Claude Sonnet 4"
-            elif "claude-3-7-sonnet" in model_id:
-                display_name = "Claude Sonnet 3.7"
             elif "deepseek-chat" in model_id:
-                display_name = "Deepseek Chat V3"
-            elif "gpt-4o" in model_id:
-                display_name = "GPT-4o"
-            elif "qwen3" in model_id:
-                display_name = "Qwen 3"
+                display_name = "Deepseek Chat V3 0324"
+            elif "gemini-2.5-flash-thinking" in model_id:
+                display_name = "Gemini 2.5 Flash:thinking"
+            elif "gemini-2.5-pro-preview" in model_id:
+                display_name = "Gemini 2.5 Pro Preview"
+            elif "gpt-4.1-2025-04-14" in model_id:
+                display_name = "Gpt 4.1"
+            elif "gpt-4o-mini" in model_id:
+                display_name = "Gpt 4.1 Mini"
+            elif "gpt-4o" in model_id and "mini" not in model_id:
+                display_name = "Gpt 4o"
             else:
                 display_name = model_id.split("/")[-1].replace("-", " ").title()
 
