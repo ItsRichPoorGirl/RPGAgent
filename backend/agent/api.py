@@ -417,16 +417,9 @@ async def start_agent(
 
     logger.info(f"DEBUG: Resolved model name for LLM call: {model_name}")
 
-    logger.info(f"Starting new agent for thread: {thread_id} with config: model={model_name}, thinking={body.enable_thinking}, effort={body.reasoning_effort}, stream={body.stream}, context_manager={body.enable_context_manager} (Instance: {instance_id})")
+    logger.info(f"Starting agent for thread: {thread_id} with config: model={model_name}, thinking={body.enable_thinking}, effort={body.reasoning_effort}, stream={body.stream}, context_manager={body.enable_context_manager} (Instance: {instance_id})")
     client = await db.client
-
-    await verify_thread_access(client, thread_id, user_id)
-    thread_result = await client.table('threads').select('project_id', 'account_id').eq('thread_id', thread_id).execute()
-    if not thread_result.data:
-        raise HTTPException(status_code=404, detail="Thread not found")
-    thread_data = thread_result.data[0]
-    project_id = thread_data.get('project_id')
-    account_id = thread_data.get('account_id')
+    account_id = user_id # In Basejump, personal account_id is the same as user_id
 
     can_run, message, subscription = await check_billing_status(client, account_id)
     if not can_run:
@@ -949,8 +942,8 @@ async def initiate_agent_with_files(
 
     logger.info(f"DEBUG: Resolved model name for LLM call: {model_name}")
 
-    logger.info(f"Starting new agent for thread: {thread_id} with config: model={model_name}, thinking={body.enable_thinking}, effort={body.reasoning_effort}, stream={body.stream}, context_manager={body.enable_context_manager} (Instance: {instance_id})")
     client = await db.client
+
     account_id = user_id # In Basejump, personal account_id is the same as user_id
 
     can_run, message, subscription = await check_billing_status(client, account_id)
@@ -974,6 +967,9 @@ async def initiate_agent_with_files(
         }).execute()
         thread_id = thread.data[0]['thread_id']
         logger.info(f"Created new thread: {thread_id}")
+
+        # Log agent configuration after thread_id is available
+        logger.info(f"Starting new agent for thread: {thread_id} with config: model={model_name}, thinking={enable_thinking}, effort={reasoning_effort}, stream={stream}, context_manager={enable_context_manager} (Instance: {instance_id})")
 
         # Trigger Background Naming Task
         asyncio.create_task(generate_and_update_project_name(project_id=project_id, prompt=prompt))
