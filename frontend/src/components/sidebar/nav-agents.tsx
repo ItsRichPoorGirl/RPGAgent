@@ -61,38 +61,38 @@ export function NavAgents() {
   const { performDelete } = useDeleteOperation();
   const isPerformingActionRef = useRef(false);
   const queryClient = useQueryClient();
-  
+
   const [selectedThreads, setSelectedThreads] = useState<Set<string>>(new Set());
   const [deleteProgress, setDeleteProgress] = useState(0);
   const [totalToDelete, setTotalToDelete] = useState(0);
 
-  const { 
-    data: projects = [], 
+  const {
+    data: projects = [],
     isLoading: isProjectsLoading,
-    error: projectsError 
+    error: projectsError
   } = useProjects();
-  
-  const { 
-    data: threads = [], 
+
+  const {
+    data: threads = [],
     isLoading: isThreadsLoading,
-    error: threadsError 
+    error: threadsError
   } = useThreads();
 
   const { mutate: deleteThreadMutation, isPending: isDeletingSingle } = useDeleteThread();
-  const { 
-    mutate: deleteMultipleThreadsMutation, 
-    isPending: isDeletingMultiple 
+  const {
+    mutate: deleteMultipleThreadsMutation,
+    isPending: isDeletingMultiple
   } = useDeleteMultipleThreads();
 
-  const combinedThreads: ThreadWithProject[] = 
-    !isProjectsLoading && !isThreadsLoading ? 
-    processThreadsWithProjects(threads, projects) : [];
+  const combinedThreads: ThreadWithProject[] =
+    !isProjectsLoading && !isThreadsLoading ?
+      processThreadsWithProjects(threads, projects) : [];
 
   const handleDeletionProgress = (completed: number, total: number) => {
     const percentage = (completed / total) * 100;
     setDeleteProgress(percentage);
   };
-  
+
   useEffect(() => {
     const handleProjectUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -103,10 +103,7 @@ export function NavAgents() {
       }
     };
 
-    // Add event listener
     window.addEventListener('project-updated', handleProjectUpdate as EventListener);
-
-    // Cleanup
     return () => {
       window.removeEventListener(
         'project-updated',
@@ -115,12 +112,10 @@ export function NavAgents() {
     };
   }, [queryClient]);
 
-  // Reset loading state when navigation completes (pathname changes)
   useEffect(() => {
     setLoadingThreadId(null);
   }, [pathname]);
 
-  // Add event handler for completed navigation
   useEffect(() => {
     const handleNavigationComplete = () => {
       console.log('NAVIGATION - Navigation event completed');
@@ -150,7 +145,7 @@ export function NavAgents() {
       e.preventDefault();
       return;
     }
-    
+
     e.preventDefault()
     setLoadingThreadId(threadId)
     router.push(url)
@@ -162,7 +157,7 @@ export function NavAgents() {
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     setSelectedThreads(prev => {
       const newSelection = new Set(prev);
       if (newSelection.has(threadId)) {
@@ -194,18 +189,18 @@ export function NavAgents() {
   // Function to handle multi-delete
   const handleMultiDelete = () => {
     if (selectedThreads.size === 0) return;
-    
+
     // Get thread names for confirmation dialog
     const threadsToDelete = combinedThreads.filter(t => selectedThreads.has(t.threadId));
     const threadNames = threadsToDelete.map(t => t.projectName).join(", ");
-    
-    setThreadToDelete({ 
-      id: "multiple", 
-      name: selectedThreads.size > 3 
-        ? `${selectedThreads.size} conversations` 
-        : threadNames 
+
+    setThreadToDelete({
+      id: "multiple",
+      name: selectedThreads.size > 3
+        ? `${selectedThreads.size} conversations`
+        : threadNames
     });
-    
+
     setTotalToDelete(selectedThreads.size);
     setDeleteProgress(0);
     setIsDeleteDialogOpen(true);
@@ -223,23 +218,23 @@ export function NavAgents() {
     // Check if it's a single thread or multiple threads
     if (threadToDelete.id !== "multiple") {
       // Single thread deletion
-    const threadId = threadToDelete.id;
-    const isActive = pathname?.includes(threadId);
+      const threadId = threadToDelete.id;
+      const isActive = pathname?.includes(threadId);
 
-    // Store threadToDelete in a local variable since it might be cleared
-    const deletedThread = { ...threadToDelete };
+      // Store threadToDelete in a local variable since it might be cleared
+      const deletedThread = { ...threadToDelete };
 
-    // Log operation start
-    console.log('DELETION - Starting thread deletion process', {
-      threadId: deletedThread.id,
-      isCurrentThread: isActive,
-    });
+      // Log operation start
+      console.log('DELETION - Starting thread deletion process', {
+        threadId: deletedThread.id,
+        isCurrentThread: isActive,
+      });
 
-    // Use the centralized deletion system with completion callback
-    await performDelete(
-      threadId,
-      isActive,
-      async () => {
+      // Use the centralized deletion system with completion callback
+      await performDelete(
+        threadId,
+        isActive,
+        async () => {
           // Delete the thread using the mutation
           deleteThreadMutation(
             { threadId },
@@ -247,7 +242,7 @@ export function NavAgents() {
               onSuccess: () => {
                 // Invalidate queries to refresh the list
                 queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
-        toast.success('Conversation deleted successfully');
+                toast.success('Conversation deleted successfully');
               },
               onSettled: () => {
                 setThreadToDelete(null);
@@ -255,21 +250,21 @@ export function NavAgents() {
               }
             }
           );
-      },
-      // Completion callback to reset local state
-      () => {
-        setThreadToDelete(null);
-        isPerformingActionRef.current = false;
-      },
-    );
+        },
+        // Completion callback to reset local state
+        () => {
+          setThreadToDelete(null);
+          isPerformingActionRef.current = false;
+        },
+      );
     } else {
       // Multi-thread deletion
       const threadIdsToDelete = Array.from(selectedThreads);
       const isActiveThreadIncluded = threadIdsToDelete.some(id => pathname?.includes(id));
-      
+
       // Show initial toast
       toast.info(`Deleting ${threadIdsToDelete.length} conversations...`);
-      
+
       try {
         // If the active thread is included, handle navigation first
         if (isActiveThreadIncluded) {
@@ -277,14 +272,14 @@ export function NavAgents() {
           isNavigatingRef.current = true;
           document.body.style.pointerEvents = 'none';
           router.push('/dashboard');
-          
+
           // Wait a moment for navigation to start
           await new Promise(resolve => setTimeout(resolve, 100));
         }
-        
+
         // Use the mutation for bulk deletion
         deleteMultipleThreadsMutation(
-          { 
+          {
             threadIds: threadIdsToDelete,
             onProgress: handleDeletionProgress
           },
@@ -292,15 +287,15 @@ export function NavAgents() {
             onSuccess: (data) => {
               // Invalidate queries to refresh the list
               queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
-              
+
               // Show success message
               toast.success(`Successfully deleted ${data.successful.length} conversations`);
-              
+
               // If some deletions failed, show warning
               if (data.failed.length > 0) {
                 toast.warning(`Failed to delete ${data.failed.length} conversations`);
               }
-              
+
               // Reset states
               setSelectedThreads(new Set());
               setDeleteProgress(0);
@@ -321,7 +316,7 @@ export function NavAgents() {
       } catch (err) {
         console.error('Error initiating bulk deletion:', err);
         toast.error('Error initiating deletion process');
-        
+
         // Reset states
         setSelectedThreads(new Set());
         setThreadToDelete(null);
@@ -335,7 +330,7 @@ export function NavAgents() {
   // Loading state or error handling
   const isLoading = isProjectsLoading || isThreadsLoading;
   const hasError = projectsError || threadsError;
-  
+
   if (hasError) {
     console.error('Error loading data:', { projectsError, threadsError });
   }
@@ -348,16 +343,16 @@ export function NavAgents() {
           <div className="flex items-center space-x-1">
             {selectedThreads.size > 0 ? (
               <>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="icon"
                   onClick={deselectAllThreads}
                   className="h-7 w-7"
                 >
                   <X className="h-4 w-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="icon"
                   onClick={selectAllThreads}
                   disabled={selectedThreads.size === combinedThreads.length}
@@ -365,8 +360,8 @@ export function NavAgents() {
                 >
                   <Check className="h-4 w-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="icon"
                   onClick={handleMultiDelete}
                   className="h-7 w-7 text-destructive"
@@ -375,20 +370,20 @@ export function NavAgents() {
                 </Button>
               </>
             ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <div>
-              <Link
-                href="/dashboard"
+                    <Link
+                      href="/dashboard"
                       className="text-muted-foreground hover:text-foreground h-7 w-7 flex items-center justify-center rounded-md"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="sr-only">New Agent</span>
-              </Link>
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span className="sr-only">New Agent</span>
+                    </Link>
                   </div>
-            </TooltipTrigger>
-            <TooltipContent>New Agent</TooltipContent>
-          </Tooltip>
+                </TooltipTrigger>
+                <TooltipContent>New Agent</TooltipContent>
+              </Tooltip>
             )}
           </div>
         ) : null}
@@ -400,12 +395,12 @@ export function NavAgents() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div>
-                <SidebarMenuButton asChild>
-                  <Link href="/dashboard" className="flex items-center">
-                    <Plus className="h-4 w-4" />
-                    <span>New Agent</span>
-                  </Link>
-                </SidebarMenuButton>
+                  <SidebarMenuButton asChild>
+                    <Link href="/dashboard" className="flex items-center">
+                      <Plus className="h-4 w-4" />
+                      <span>New Agent</span>
+                    </Link>
+                  </SidebarMenuButton>
                 </div>
               </TooltipTrigger>
               <TooltipContent>New Agent</TooltipContent>
@@ -438,78 +433,74 @@ export function NavAgents() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div>
-                        <SidebarMenuButton
-                          asChild
-                          className={
-                              isActive ? 'bg-accent text-accent-foreground' : 
-                              isSelected ? 'bg-primary/10' : ''
-                          }
-                        >
-                          <Link
-                            href={thread.url}
-                            onClick={(e) =>
-                              handleThreadClick(e, thread.threadId, thread.url)
+                          <SidebarMenuButton
+                            asChild
+                            className={
+                              isActive ? 'bg-accent text-accent-foreground' :
+                                isSelected ? 'bg-primary/10' : ''
                             }
                           >
-                            {isThreadLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <MessagesSquare className="h-4 w-4" />
-                            )}
-                            <span>{thread.projectName}</span>
-                          </Link>
-                        </SidebarMenuButton>
+                            <Link
+                              href={thread.url}
+                              onClick={(e) =>
+                                handleThreadClick(e, thread.threadId, thread.url)
+                              }
+                            >
+                              {isThreadLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <MessagesSquare className="h-4 w-4" />
+                              )}
+                              <span>{thread.projectName}</span>
+                            </Link>
+                          </SidebarMenuButton>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>{thread.projectName}</TooltipContent>
                     </Tooltip>
                   ) : (
                     <div className="relative">
-                    <SidebarMenuButton
-                      asChild
-                        className={`relative ${
-                        isActive
+                      <SidebarMenuButton
+                        asChild
+                        className={`relative ${isActive
                           ? 'bg-accent text-accent-foreground font-medium'
-                            : isSelected 
-                            ? 'bg-primary/10' 
-                          : ''
-                        }`}
-                    >
-                      <Link
-                        href={thread.url}
-                        onClick={(e) =>
-                          handleThreadClick(e, thread.threadId, thread.url)
-                        }
-                          className="flex items-center"
+                          : isSelected
+                            ? 'bg-primary/10'
+                            : ''
+                          }`}
                       >
+                        <Link
+                          href={thread.url}
+                          onClick={(e) =>
+                            handleThreadClick(e, thread.threadId, thread.url)
+                          }
+                          className="flex items-center"
+                        >
                           <div className="flex items-center group/icon relative">
                             {/* Show checkbox on hover or when selected, otherwise show MessagesSquare */}
-                        {isThreadLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
+                            {isThreadLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
                               <>
                                 {/* MessagesSquare icon - hidden on hover if not selected */}
-                                <MessagesSquare 
-                                  className={`h-4 w-4 transition-opacity duration-150 ${
-                                    isSelected ? 'opacity-0' : 'opacity-100 group-hover/icon:opacity-0'
-                                  }`} 
+                                <MessagesSquare
+                                  className={`h-4 w-4 transition-opacity duration-150 ${isSelected ? 'opacity-0' : 'opacity-100 group-hover/icon:opacity-0'
+                                    }`}
                                 />
-                                
+
                                 {/* Checkbox - appears on hover or when selected */}
-                                <div 
-                                  className={`absolute inset-0 flex items-center justify-center transition-opacity duration-150 ${
-                                    isSelected 
-                                      ? 'opacity-100' 
-                                      : 'opacity-0 group-hover/icon:opacity-100'
-                                  }`}
+                                <div
+                                  className={`absolute inset-0 flex items-center justify-center transition-opacity duration-150 ${isSelected
+                                    ? 'opacity-100'
+                                    : 'opacity-0 group-hover/icon:opacity-100'
+                                    }`}
                                   onClick={(e) => toggleThreadSelection(thread.threadId, e)}
                                 >
-                                  <div 
-                                    className={`h-4 w-4 border rounded cursor-pointer hover:bg-muted/50 transition-colors flex items-center justify-center ${
-                                      isSelected 
-                                        ? 'bg-primary border-primary' 
-                                        : 'border-muted-foreground/30 bg-background'
-                                    }`}
+                                  <div
+                                    className={`h-4 w-4 border rounded cursor-pointer hover:bg-muted/50 transition-colors flex items-center justify-center ${isSelected
+                                      ? 'bg-primary border-primary'
+                                      : 'border-muted-foreground/30 bg-background'
+                                      }`}
                                   >
                                     {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                                   </div>
@@ -518,14 +509,21 @@ export function NavAgents() {
                             )}
                           </div>
                           <span className="ml-2">{thread.projectName}</span>
-                      </Link>
-                    </SidebarMenuButton>
+                        </Link>
+                      </SidebarMenuButton>
                     </div>
                   )}
                   {state !== 'collapsed' && !isSelected && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <SidebarMenuAction showOnHover className="group-hover:opacity-100">
+                        <SidebarMenuAction
+                          showOnHover
+                          className="group-hover:opacity-100"
+                          onClick={() => {
+                            // Ensure pointer events are enabled when dropdown opens
+                            document.body.style.pointerEvents = 'auto';
+                          }}
+                        >
                           <MoreHorizontal />
                           <span className="sr-only">More</span>
                         </SidebarMenuAction>
@@ -580,21 +578,21 @@ export function NavAgents() {
           </SidebarMenuItem>
         )}
       </SidebarMenu>
-      
+
       {(isDeletingSingle || isDeletingMultiple) && totalToDelete > 0 && (
         <div className="mt-2 px-2">
           <div className="text-xs text-muted-foreground mb-1">
             Deleting {deleteProgress > 0 ? `(${Math.floor(deleteProgress)}%)` : '...'}
           </div>
           <div className="w-full bg-secondary h-1 rounded-full overflow-hidden">
-            <div 
-              className="bg-primary h-1 transition-all duration-300 ease-in-out" 
+            <div
+              className="bg-primary h-1 transition-all duration-300 ease-in-out"
               style={{ width: `${deleteProgress}%` }}
             />
           </div>
         </div>
       )}
-      
+
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}

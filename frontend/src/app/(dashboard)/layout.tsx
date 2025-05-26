@@ -84,11 +84,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <SidebarProvider>
         <SidebarLeft />
         <SidebarInset>
-          <div className="bg-[#0a0a1f]">{children}</div>
+          <div className="bg-background">{children}</div>
         </SidebarInset>
 
-        {/* <PricingAlert
-          open={showPricingAlert}
+        {/* <PricingAlert 
+          open={showPricingAlert} 
           onOpenChange={setShowPricingAlert}
           closeable={false}
           accountId={personalAccount?.account_id}
