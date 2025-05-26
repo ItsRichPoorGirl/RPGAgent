@@ -47,23 +47,7 @@ def initialize():
     socket_connect_timeout = float(os.getenv('REDIS_SOCKET_CONNECT_TIMEOUT', 5.0))
     health_check_interval = int(os.getenv('REDIS_HEALTH_CHECK_INTERVAL', 30))
 
-    # DEBUG: Log all environment variables that might affect Redis
-    logger.error(f"=== REDIS DEBUG START ===")
-    logger.error(f"REDIS_URL: {redis_url}")
-    
-    # Log all Redis-related environment variables
-    for env_var in ['REDIS_HOST', 'REDIS_PORT', 'REDIS_PASSWORD', 'REDIS_SSL', 'REDIS_SOCKET_TIMEOUT', 'REDIS_SOCKET_CONNECT_TIMEOUT', 'REDIS_HEALTH_CHECK_INTERVAL']:
-        env_val = os.getenv(env_var)
-        logger.error(f"{env_var}: {env_val} (type: {type(env_val)})")
-    
-    # Log any environment variables containing 'REDIS' or socket/TCP related
-    logger.error("=== ALL REDIS/SOCKET/TCP ENVIRONMENT VARIABLES ===")
-    for key, value in os.environ.items():
-        if any(keyword in key.upper() for keyword in ['REDIS', 'SOCKET', 'TCP', 'KEEPALIVE', 'TIMEOUT', 'CONNECTION']):
-            logger.error(f"{key}: {value} (type: {type(value)})")
-    logger.error("=== END ENVIRONMENT VARIABLES ===")
-
-    logger.error(f"Initializing Redis connection to {redis_host}:{redis_port}")
+    logger.info(f"Initializing Redis connection to {redis_host}:{redis_port}")
 
     # Create Redis client with basic configuration
     client = redis.Redis(
@@ -124,12 +108,6 @@ async def get_client():
 # Basic Redis operations
 async def set(key: str, value: str, ex: int = None):
     """Set a Redis key."""
-    # DEBUG: Log type and value of ex parameter to catch type issues
-    if ex is not None:
-        logger.debug(f"Redis SET debug - key: {key}, ex type: {type(ex)}, ex value: {ex}")
-        if not isinstance(ex, int):
-            logger.error(f"REDIS TYPE ERROR: set() ex parameter is not an integer! key={key}, ex type={type(ex)}, ex value={ex}")
-    
     redis_client = await get_client()
     return await redis_client.set(key, value, ex=ex)
 
@@ -155,17 +133,8 @@ async def publish(channel: str, message: str):
 
 async def create_pubsub():
     """Create a Redis pubsub object."""
-    try:
-        logger.error("CRITICAL DEBUG: Creating Redis pubsub connection...")
-        redis_client = await get_client()
-        logger.error(f"CRITICAL DEBUG: Got Redis client: {type(redis_client)}")
-        pubsub = redis_client.pubsub()
-        logger.error(f"CRITICAL DEBUG: Created pubsub object: {type(pubsub)}")
-        return pubsub
-    except Exception as e:
-        logger.error(f"CRITICAL DEBUG: Error creating Redis pubsub: {e}")
-        logger.error(f"CRITICAL DEBUG: Exception type: {type(e)}")
-        raise
+    redis_client = await get_client()
+    return redis_client.pubsub()
 
 
 async def create_streaming_pubsub():
@@ -182,30 +151,7 @@ async def create_streaming_pubsub():
     socket_connect_timeout = float(os.getenv('REDIS_STREAMING_SOCKET_CONNECT_TIMEOUT', 10.0))
     health_check_interval = int(os.getenv('REDIS_STREAMING_HEALTH_CHECK_INTERVAL', 30))
 
-    # DEBUG: Log all Redis streaming connection parameters and their types
-    logger.info(f"Redis streaming debug - host: {redis_host} (type: {type(redis_host)})")
-    logger.info(f"Redis streaming debug - port: {redis_port} (type: {type(redis_port)})")
-    logger.info(f"Redis streaming debug - password: {'***' if redis_password else 'None'} (type: {type(redis_password)})")
-    logger.info(f"Redis streaming debug - ssl: {redis_ssl} (type: {type(redis_ssl)})")
-    logger.info(f"Redis streaming debug - socket_timeout: {socket_timeout} (type: {type(socket_timeout)})")
-    logger.info(f"Redis streaming debug - socket_connect_timeout: {socket_connect_timeout} (type: {type(socket_connect_timeout)})")
-    logger.info(f"Redis streaming debug - TCP_KEEPINTVL: 1 (type: {type(1)})")
-    logger.info(f"Redis streaming debug - TCP_KEEPCNT: 3 (type: {type(3)})")
-    logger.info(f"Redis streaming debug - TCP_KEEPIDLE: 1 (type: {type(1)})")
-    logger.info(f"Redis streaming debug - health_check_interval: {health_check_interval} (type: {type(health_check_interval)})")
-
     # Create a dedicated Redis client for streaming with longer timeouts
-    # Ensure all keepalive options are explicitly integers to avoid type errors
-    keepalive_options = {
-        'TCP_KEEPINTVL': int(os.getenv('TCP_KEEPINTVL', 1)),  # Interval between keepalive probes
-        'TCP_KEEPCNT': int(os.getenv('TCP_KEEPCNT', 3)),    # Number of keepalive probes before timeout
-        'TCP_KEEPIDLE': int(os.getenv('TCP_KEEPIDLE', 1))    # Seconds before sending keepalive probes
-    }
-    
-    # DEBUG: Log keepalive options after potential environment override
-    for key, value in keepalive_options.items():
-        logger.info(f"Redis streaming debug - {key}: {value} (type: {type(value)})")
-    
     streaming_client = redis.Redis(
         host=redis_host,
         port=redis_port,
@@ -215,7 +161,6 @@ async def create_streaming_pubsub():
         socket_timeout=socket_timeout,  # 5 minutes timeout instead of 5 seconds
         socket_connect_timeout=socket_connect_timeout,  # 10 seconds to connect
         socket_keepalive=True,  # Enable TCP keepalive
-        socket_keepalive_options=keepalive_options,
         retry_on_timeout=True,
         health_check_interval=health_check_interval
     )
@@ -232,13 +177,6 @@ async def rpush(key: str, *values: Any):
 
 async def lrange(key: str, start: int, end: int) -> List[str]:
     """Get a range of elements from a list."""
-    # DEBUG: Log type and value of start/end parameters to catch type issues
-    logger.debug(f"Redis LRANGE debug - key: {key}, start type: {type(start)}, start value: {start}, end type: {type(end)}, end value: {end}")
-    if not isinstance(start, int):
-        logger.error(f"REDIS TYPE ERROR: lrange() start parameter is not an integer! key={key}, start type={type(start)}, start value={start}")
-    if not isinstance(end, int):
-        logger.error(f"REDIS TYPE ERROR: lrange() end parameter is not an integer! key={key}, end type={type(end)}, end value={end}")
-    
     redis_client = await get_client()
     return await redis_client.lrange(key, start, end)
 
@@ -252,11 +190,6 @@ async def llen(key: str) -> int:
 # Key management
 async def expire(key: str, time: int):
     """Set a key's time to live in seconds."""
-    # DEBUG: Log type and value of time parameter to catch type issues
-    logger.debug(f"Redis EXPIRE debug - key: {key}, time type: {type(time)}, time value: {time}")
-    if not isinstance(time, int):
-        logger.error(f"REDIS TYPE ERROR: expire() time parameter is not an integer! key={key}, time type={type(time)}, time value={time}")
-    
     redis_client = await get_client()
     return await redis_client.expire(key, time)
 

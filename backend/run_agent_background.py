@@ -102,15 +102,9 @@ async def run_agent_background(
     trace = langfuse.trace(name="agent_run", id=agent_run_id, session_id=thread_id, metadata={"project_id": project_id, "instance_id": instance_id})
     try:
         # Setup Pub/Sub listener for control signals
-        logger.error(f"CRITICAL DEBUG: About to create regular pubsub in run_agent_background")
         pubsub = await redis.create_pubsub()
-        logger.error(f"CRITICAL DEBUG: Successfully created pubsub in run_agent_background: {type(pubsub)}")
-        logger.error(f"CRITICAL DEBUG: About to subscribe to channels in run_agent_background")
-        logger.error(f"CRITICAL DEBUG: instance_control_channel = {instance_control_channel} (type: {type(instance_control_channel)})")
-        logger.error(f"CRITICAL DEBUG: global_control_channel = {global_control_channel} (type: {type(global_control_channel)})")
-        
         await pubsub.subscribe(instance_control_channel, global_control_channel)
-        logger.error(f"CRITICAL DEBUG: Successfully subscribed to channels in run_agent_background")
+        logger.debug(f"Subscribed to control channels: {instance_control_channel}, {global_control_channel}")
         stop_checker = asyncio.create_task(check_for_stop_signal())
 
         # Ensure active run key exists and has TTL

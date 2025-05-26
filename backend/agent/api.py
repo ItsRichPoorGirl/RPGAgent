@@ -755,23 +755,15 @@ async def run_agent_background(
 
     try:
         # Setup Pub/Sub listener for control signals
-        logger.error(f"CRITICAL DEBUG: About to create streaming pubsub")
         pubsub = await redis.create_streaming_pubsub()
-        logger.error(f"CRITICAL DEBUG: Successfully created pubsub: {type(pubsub)}")
         
         # Ensure Redis connection is properly configured
         if not hasattr(redis, 'REDIS_KEY_TTL'):
             redis.REDIS_KEY_TTL = 3600  # Default TTL of 1 hour if not set
         
         # Subscribe to channels one at a time to avoid connection issues
-        logger.error(f"CRITICAL DEBUG: About to subscribe to channels")
-        logger.error(f"CRITICAL DEBUG: instance_control_channel = {instance_control_channel} (type: {type(instance_control_channel)})")
-        logger.error(f"CRITICAL DEBUG: global_control_channel = {global_control_channel} (type: {type(global_control_channel)})")
-        logger.error(f"CRITICAL DEBUG: pubsub type = {type(pubsub)}")
-        
         await pubsub.subscribe(instance_control_channel)
         await pubsub.subscribe(global_control_channel)
-        logger.debug(f"Subscribed to control channels: {instance_control_channel}, {global_control_channel}")
         stop_checker = asyncio.create_task(check_for_stop_signal())
 
         # Ensure active run key exists and has TTL
