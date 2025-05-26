@@ -20,6 +20,7 @@ stripe.api_key = config.STRIPE_SECRET_KEY
 # Initialize router
 router = APIRouter(prefix="/billing", tags=["billing"])
 
+
 SUBSCRIPTION_TIERS = {
     config.STRIPE_FREE_TIER_ID: {'name': 'free', 'minutes': 60},
     config.STRIPE_TIER_2_20_ID: {'name': 'tier_2_20', 'minutes': 120},  # 2 hours
@@ -36,7 +37,6 @@ class CreateCheckoutSessionRequest(BaseModel):
     price_id: str
     success_url: str
     cancel_url: str
-    coupon_code: Optional[str] = None  # Add optional coupon code field
 
 class CreatePortalSessionRequest(BaseModel):
     return_url: str
@@ -202,26 +202,26 @@ async def calculate_monthly_usage(client, user_id: str) -> float:
 async def get_allowed_models_for_user(client, user_id: str):
     """
     Get the list of models allowed for a user based on their subscription tier.
-
+    
     Returns:
         List of model names allowed for the user's subscription tier.
     """
 
     subscription = await get_user_subscription(user_id)
     tier_name = 'free'
-
+    
     if subscription:
         price_id = None
         if subscription.get('items') and subscription['items'].get('data') and len(subscription['items']['data']) > 0:
             price_id = subscription['items']['data'][0]['price']['id']
         else:
             price_id = subscription.get('price_id', config.STRIPE_FREE_TIER_ID)
-
+        
         # Get tier info for this price_id
         tier_info = SUBSCRIPTION_TIERS.get(price_id)
         if tier_info:
             tier_name = tier_info['name']
-
+    
     # Return allowed models for this tier
     return MODEL_ACCESS_TIERS.get(tier_name, MODEL_ACCESS_TIERS['free'])  # Default to free tier if unknown
 
@@ -234,12 +234,12 @@ async def can_use_model(client, user_id: str, model_name: str):
             "plan_name": "Local Development",
             "minutes_limit": "no limit"
         }
-
+        
     allowed_models = await get_allowed_models_for_user(client, user_id)
     resolved_model = MODEL_NAME_ALIASES.get(model_name, model_name)
     if resolved_model in allowed_models:
         return True, "Model access allowed", allowed_models
-
+    
     return False, f"Your current subscription plan does not include access to {model_name}. Please upgrade your subscription or choose from your available models: {', '.join(allowed_models)}", allowed_models
 
 async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optional[Dict]]:
@@ -257,21 +257,6 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
             "minutes_limit": "no limit"
         }
     
-    # Check if user is an admin
-    admin_check = await client.schema('basejump').from_('account_user') \
-        .select('account_role') \
-        .eq('user_id', user_id) \
-        .eq('account_role', 'admin') \
-        .execute()
-
-    if admin_check.data and len(admin_check.data) > 0:
-        logger.info(f"User {user_id} is an admin - billing checks are disabled")
-        return True, "Admin access - billing disabled", {
-            "price_id": "admin",
-            "plan_name": "Admin",
-            "minutes_limit": "no limit"
-        }
-
     # Get current subscription
     subscription = await get_user_subscription(user_id)
     # print("Current subscription:", subscription)
@@ -337,22 +322,9 @@ async def create_checkout_session(
         if product_id != config.STRIPE_PRODUCT_ID:
             raise HTTPException(status_code=400, detail="Price ID does not belong to the correct product.")
             
-        # Validate coupon if provided
-        coupon = None
-        if request.coupon_code:
-            try:
-                coupon = stripe.Coupon.retrieve(request.coupon_code)
-                # Check if coupon is valid
-                if not coupon.valid:
-                    raise HTTPException(status_code=400, detail="Invalid or expired coupon code")
-                # Check if coupon has been redeemed too many times
-                if coupon.max_redemptions and coupon.times_redeemed >= coupon.max_redemptions:
-                    raise HTTPException(status_code=400, detail="Coupon has reached maximum redemptions")
-            except stripe.error.InvalidRequestError:
-                raise HTTPException(status_code=400, detail="Invalid coupon code")
-
         # Check for existing subscription for our product
         existing_subscription = await get_user_subscription(current_user_id)
+        # print("Existing subscription for product:", existing_subscription)
         
         if existing_subscription:
             # --- Handle Subscription Change (Upgrade or Downgrade) ---
@@ -382,22 +354,14 @@ async def create_checkout_session(
 
                 if is_upgrade:
                     # --- Handle Upgrade --- Immediate modification
-                    update_params = {
-                        'items': [{
+                    updated_subscription = stripe.Subscription.modify(
+                        subscription_id,
+                        items=[{
                             'id': subscription_item['id'],
                             'price': request.price_id,
                         }],
-                        'proration_behavior': 'always_invoice', # Prorate and charge immediately
-                        'billing_cycle_anchor': 'now' # Reset billing cycle
-                    }
-
-                    # Add coupon if provided
-                    if coupon:
-                        update_params['coupon'] = request.coupon_code
-
-                    updated_subscription = stripe.Subscription.modify(
-                        subscription_id,
-                        **update_params
+                        proration_behavior='always_invoice', # Prorate and charge immediately
+                        billing_cycle_anchor='now' # Reset billing cycle
                     )
                     
                     # Update active status in database to true (customer has active subscription)
@@ -419,8 +383,6 @@ async def create_checkout_session(
                             "effective_date": "immediate",
                             "current_price": round(current_price['unit_amount'] / 100, 2) if current_price.get('unit_amount') else 0,
                             "new_price": round(new_price['unit_amount'] / 100, 2) if new_price.get('unit_amount') else 0,
-                            "coupon_applied": bool(coupon),
-                            "coupon_discount": coupon.percent_off if coupon and coupon.percent_off else (coupon.amount_off / 100 if coupon and coupon.amount_off else 0),
                             "invoice": {
                                 "id": latest_invoice['id'] if latest_invoice else None,
                                 "status": latest_invoice['status'] if latest_invoice else None,
@@ -435,32 +397,39 @@ async def create_checkout_session(
                         current_period_end_ts = subscription_item['current_period_end']
                         
                         # Retrieve the subscription again to get the schedule ID if it exists
+                        # This ensures we have the latest state before creating/modifying schedule
                         sub_with_schedule = stripe.Subscription.retrieve(subscription_id)
                         schedule_id = sub_with_schedule.get('schedule')
 
                         # Get the current phase configuration from the schedule or subscription
                         if schedule_id:
                             schedule = stripe.SubscriptionSchedule.retrieve(schedule_id)
+                            # Find the current phase in the schedule
+                            # This logic assumes simple schedules; might need refinement for complex ones
                             current_phase = None
                             for phase in reversed(schedule['phases']):
                                 if phase['start_date'] <= datetime.now(timezone.utc).timestamp():
                                     current_phase = phase
                                     break
-                            if not current_phase:
+                            if not current_phase: # Fallback if logic fails
                                 current_phase = schedule['phases'][-1]
                         else:
+                             # If no schedule, the current subscription state defines the current phase
                             current_phase = {
-                                'items': existing_subscription['items']['data'],
-                                'start_date': existing_subscription['current_period_start'],
+                                'items': existing_subscription['items']['data'], # Use original items data
+                                'start_date': existing_subscription['current_period_start'], # Use sub start if no schedule
+                                # Add other relevant fields if needed for create/modify
                             }
 
                         # Prepare the current phase data for the update/create
+                        # Ensure items is formatted correctly for the API
                         current_phase_items_for_api = []
                         for item in current_phase.get('items', []):
                             price_data = item.get('price')
                             quantity = item.get('quantity')
                             price_id = None
                             
+                            # Safely extract price ID whether it's an object or just the ID string
                             if isinstance(price_data, dict):
                                 price_id = price_data.get('id')
                             elif isinstance(price_data, str):
@@ -476,93 +445,135 @@ async def create_checkout_session(
 
                         current_phase_update_data = {
                             'items': current_phase_items_for_api,
-                            'start_date': current_phase['start_date'],
-                            'end_date': current_period_end_ts,
+                            'start_date': current_phase['start_date'], # Preserve original start date
+                            'end_date': current_period_end_ts, # End this phase at period end
                             'proration_behavior': 'none'
+                            # Include other necessary fields from current_phase if modifying?
+                            # e.g., 'billing_cycle_anchor', 'collection_method'? Usually inherited.
                         }
                         
-                        # Define the new (downgrade) phase with coupon if provided
+                        # Define the new (downgrade) phase
                         new_downgrade_phase_data = {
                             'items': [{'price': request.price_id, 'quantity': 1}],
-                            'start_date': current_period_end_ts,
+                            'start_date': current_period_end_ts, # Start immediately after current phase ends
                             'proration_behavior': 'none'
+                            # iterations defaults to 1, meaning it runs for one billing cycle
+                            # then schedule ends based on end_behavior
                         }
                         
-                        if coupon:
-                            new_downgrade_phase_data['coupon'] = request.coupon_code
-
                         # Update or Create Schedule
                         if schedule_id:
+                             # Update existing schedule, replacing all future phases
+                            # print(f"Updating existing schedule {schedule_id}")
+                            logger.info(f"Updating existing schedule {schedule_id} for subscription {subscription_id}")
+                            logger.debug(f"Current phase data: {current_phase_update_data}")
+                            logger.debug(f"New phase data: {new_downgrade_phase_data}")
                             updated_schedule = stripe.SubscriptionSchedule.modify(
                                 schedule_id,
                                 phases=[current_phase_update_data, new_downgrade_phase_data],
-                                end_behavior='release'
+                                end_behavior='release' 
                             )
                             logger.info(f"Successfully updated schedule {updated_schedule['id']}")
                         else:
-                            updated_schedule = stripe.SubscriptionSchedule.create(
-                                from_subscription=subscription_id,
-                                phases=[current_phase_update_data, new_downgrade_phase_data],
-                                end_behavior='release'
-                            )
-                            logger.info(f"Successfully created schedule {updated_schedule['id']}")
+                             # Create a new schedule using the defined phases
+                            print(f"Creating new schedule for subscription {subscription_id}")
+                            logger.info(f"Creating new schedule for subscription {subscription_id}")
+                            # Deep debug logging - write subscription details to help diagnose issues
+                            logger.debug(f"Subscription details: {subscription_id}, current_period_end_ts: {current_period_end_ts}")
+                            logger.debug(f"Current price: {current_price_id}, New price: {request.price_id}")
+                            
+                            try:
+                                updated_schedule = stripe.SubscriptionSchedule.create(
+                                    from_subscription=subscription_id,
+                                    phases=[
+                                        {
+                                            'start_date': current_phase['start_date'],
+                                            'end_date': current_period_end_ts,
+                                            'proration_behavior': 'none',
+                                            'items': [
+                                                {
+                                                    'price': current_price_id,
+                                                    'quantity': 1
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            'start_date': current_period_end_ts,
+                                            'proration_behavior': 'none',
+                                            'items': [
+                                                {
+                                                    'price': request.price_id,
+                                                    'quantity': 1
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    end_behavior='release'
+                                )
+                                # Don't try to link the schedule - that's handled by from_subscription
+                                logger.info(f"Created new schedule {updated_schedule['id']} from subscription {subscription_id}")
+                                # print(f"Created new schedule {updated_schedule['id']} from subscription {subscription_id}")
+                                
+                                # Verify the schedule was created correctly
+                                fetched_schedule = stripe.SubscriptionSchedule.retrieve(updated_schedule['id'])
+                                logger.info(f"Schedule verification - Status: {fetched_schedule.get('status')}, Phase Count: {len(fetched_schedule.get('phases', []))}")
+                                logger.debug(f"Schedule details: {fetched_schedule}")
+                            except Exception as schedule_error:
+                                logger.exception(f"Failed to create schedule: {str(schedule_error)}")
+                                raise schedule_error  # Re-raise to be caught by the outer try-except
                         
                         return {
                             "subscription_id": subscription_id,
+                            "schedule_id": updated_schedule['id'],
                             "status": "scheduled",
-                            "message": "Subscription downgrade scheduled for end of current period",
+                            "message": "Subscription downgrade scheduled",
                             "details": {
                                 "is_upgrade": False,
-                                "effective_date": datetime.fromtimestamp(current_period_end_ts, timezone.utc).isoformat(),
+                                "effective_date": "end_of_period",
                                 "current_price": round(current_price['unit_amount'] / 100, 2) if current_price.get('unit_amount') else 0,
                                 "new_price": round(new_price['unit_amount'] / 100, 2) if new_price.get('unit_amount') else 0,
-                                "coupon_applied": bool(coupon),
-                                "coupon_discount": coupon.percent_off if coupon and coupon.percent_off else (coupon.amount_off / 100 if coupon and coupon.amount_off else 0)
+                                "effective_at": datetime.fromtimestamp(current_period_end_ts, tz=timezone.utc).isoformat()
                             }
                         }
                     except Exception as e:
-                        logger.error(f"Error scheduling subscription change: {str(e)}")
-                        raise HTTPException(status_code=500, detail=f"Error scheduling subscription change: {str(e)}")
+                         logger.exception(f"Error handling subscription schedule for sub {subscription_id}: {str(e)}")
+                         raise HTTPException(status_code=500, detail=f"Error handling subscription schedule: {str(e)}")
             except Exception as e:
-                logger.error(f"Error modifying subscription: {str(e)}")
-                raise HTTPException(status_code=500, detail=f"Error modifying subscription: {str(e)}")
+                logger.exception(f"Error updating subscription {existing_subscription.get('id') if existing_subscription else 'N/A'}: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Error updating subscription: {str(e)}")
         else:
-            # --- Handle New Subscription ---
-            # Create checkout session for new subscription
-            session_params = {
-                'customer': customer_id,
-                'success_url': request.success_url,
-                'cancel_url': request.cancel_url,
-                'mode': 'subscription',
-                'line_items': [{
-                    'price': request.price_id,
-                    'quantity': 1
-                }],
-                'allow_promotion_codes': True  # Enable promotion codes in checkout
-            }
-
-            # Add coupon if provided
-            if coupon:
-                session_params['discounts'] = [{
-                    'coupon': request.coupon_code
-                }]
-
-            session = stripe.checkout.Session.create(**session_params)
-
-            return {
-                "session_id": session.id,
-                "status": "new",
-                "message": "New subscription checkout session created",
-                "details": {
-                    "checkout_url": session.url,
-                    "coupon_applied": bool(coupon),
-                    "coupon_discount": coupon.percent_off if coupon and coupon.percent_off else (coupon.amount_off / 100 if coupon and coupon.amount_off else 0)
-                }
-            }
-
+            # --- Create New Subscription via Checkout Session ---
+            session = stripe.checkout.Session.create(
+                customer=customer_id,
+                payment_method_types=['card'],
+                    line_items=[{'price': request.price_id, 'quantity': 1}],
+                mode='subscription',
+                success_url=request.success_url,
+                cancel_url=request.cancel_url,
+                metadata={
+                        'user_id': current_user_id,
+                        'product_id': product_id
+                },
+                allow_promotion_codes=True
+            )
+            
+            # Update customer status to potentially active (will be confirmed by webhook)
+            # This ensures customer is marked as active once payment is completed
+            await client.schema('basejump').from_('billing_customers').update(
+                {'active': True}
+            ).eq('id', customer_id).execute()
+            logger.info(f"Updated customer {customer_id} active status to TRUE after creating checkout session")
+            
+            return {"session_id": session['id'], "url": session['url'], "status": "new"}
+        
     except Exception as e:
-        logger.error(f"Error in create_checkout_session: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception(f"Error creating checkout session: {str(e)}")
+        # Check if it's a Stripe error with more details
+        if hasattr(e, 'json_body') and e.json_body and 'error' in e.json_body:
+            error_detail = e.json_body['error'].get('message', str(e))
+        else:
+            error_detail = str(e)
+        raise HTTPException(status_code=500, detail=f"Error creating checkout session: {error_detail}")
 
 @router.post("/create-portal-session")
 async def create_portal_session(
@@ -860,82 +871,46 @@ async def get_available_models(
         # Get Supabase client
         db = DBConnection()
         client = await db.client
-
+        
         # Check if we're in local development mode
         if config.ENV_MODE == EnvMode.LOCAL:
             logger.info("Running in local development mode - billing checks are disabled")
-
-            # Get all unique models from all tiers (since local dev has access to everything)
-            all_models = set()
-            for tier_models in MODEL_ACCESS_TIERS.values():
-                all_models.update(tier_models)
             
-            # Convert to list of Model objects with proper short_name mapping
-            models = []
-            for model_id in all_models:
-                # Create short name mapping based on MODEL_NAME_ALIASES
-                short_name = None
-                for alias, full_name in MODEL_NAME_ALIASES.items():
-                    if full_name == model_id:
-                        short_name = alias
-                        break
+            # In local mode, return all models from MODEL_NAME_ALIASES
+            model_info = []
+            for short_name, full_name in MODEL_NAME_ALIASES.items():
+                # Skip entries where the key is a full name to avoid duplicates
+                # if short_name == full_name or '/' in short_name:
+                #     continue
                 
-                # Default short name logic if not in aliases
-                if not short_name:
-                    if "claude-sonnet-4" in model_id:
-                        short_name = "claude-sonnet-4"
-                    elif "claude-3-7-sonnet" in model_id:
-                        short_name = "sonnet-3.7"
-                    elif "deepseek-chat" in model_id:
-                        short_name = "deepseek"
-                    elif "gpt-4o" in model_id:
-                        short_name = "gpt-4o"
-                    elif "qwen3" in model_id:
-                        short_name = "qwen3"
-                    else:
-                        short_name = model_id.split("/")[-1]
-                
-                # Create display name
-                if "claude-sonnet-4" in model_id:
-                    display_name = "Claude Sonnet 4"
-                elif "claude-3-7-sonnet" in model_id:
-                    display_name = "Claude Sonnet 3.7"
-                elif "deepseek-chat" in model_id:
-                    display_name = "Deepseek Chat V3"
-                elif "gpt-4o" in model_id:
-                    display_name = "GPT-4o"
-                elif "qwen3" in model_id:
-                    display_name = "Qwen 3"
-                else:
-                    display_name = model_id.split("/")[-1].replace("-", " ").title()
-
-                models.append({
-                    "id": model_id,
-                    "display_name": display_name,
+                model_info.append({
+                    "id": full_name,
+                    "display_name": short_name,
                     "short_name": short_name,
-                    "requires_subscription": model_id not in MODEL_ACCESS_TIERS.get("free", [])
+                    "requires_subscription": False  # Always false in local dev mode
                 })
-
-            return models
-
-        # For production: Get all models from MODEL_ACCESS_TIERS and mark accessibility
-        all_models = set()
-        for tier_models in MODEL_ACCESS_TIERS.values():
-            all_models.update(tier_models)
+            
+            return {
+                "models": model_info,
+                "subscription_tier": "Local Development",
+                "total_models": len(model_info)
+            }
         
-        # Get user's allowed models
+        # For non-local mode, get list of allowed models for this user
         allowed_models = await get_allowed_models_for_user(client, current_user_id)
         free_tier_models = MODEL_ACCESS_TIERS.get('free', [])
         
-        # Convert to Model objects
-        models = []
-        for model_id in all_models:
-            # Create short name mapping
-            short_name = None
-            for alias, full_name in MODEL_NAME_ALIASES.items():
-                if full_name == model_id:
-                    short_name = alias
-                    break
+        # Get subscription info for context
+        subscription = await get_user_subscription(current_user_id)
+        
+        # Determine tier name from subscription
+        tier_name = 'free'
+        if subscription:
+            price_id = None
+            if subscription.get('items') and subscription['items'].get('data') and len(subscription['items']['data']) > 0:
+                price_id = subscription['items']['data'][0]['price']['id']
+            else:
+                price_id = subscription.get('price_id', config.STRIPE_FREE_TIER_ID)
             
             # Get tier info for this price_id
             tier_info = SUBSCRIPTION_TIERS.get(price_id)
@@ -973,9 +948,13 @@ async def get_available_models(
                 "requires_subscription": requires_sub,
                 "is_available": is_available
             })
-
-        return models
-
+        
+        return {
+            "models": model_info,
+            "subscription_tier": tier_name,
+            "total_models": len(model_info)
+        }
+        
     except Exception as e:
         logger.error(f"Error getting available models: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=f"Error getting available models: {str(e)}")
