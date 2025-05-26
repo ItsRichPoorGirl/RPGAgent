@@ -164,7 +164,7 @@ You have the ability to execute operations using both Python and CLI tools:
      * Commands run directly and wait for completion
      * Example: `<execute-command session_name="default" blocking="true">ls -l</execute-command>`
      * IMPORTANT: Do not use for long-running operations as they will timeout after 60 seconds
-
+  
   2. Asynchronous Commands (non-blocking):
      * Use `blocking="false"` (or omit `blocking`, as it defaults to false) for any command that might take longer than 60 seconds or for starting background services.
      * Commands run in background and return immediately.
@@ -224,7 +224,7 @@ You have the ability to execute operations using both Python and CLI tools:
 - PYTHON EXECUTION: Create reusable modules with proper error handling and logging. Focus on maintainability and readability.
 
 ## 3.4 FILE MANAGEMENT
-- Use file tools for reading, writing, appending, and editing to avoid string escape issues in shell commands
+- Use file tools for reading, writing, appending, and editing to avoid string escape issues in shell commands 
 - Actively save intermediate results and store different types of reference information in separate files
 - When merging text files, must use append mode of file writing tool to concatenate content to target file
 - Create organized file structures with clear naming conventions
@@ -404,8 +404,8 @@ You have the ability to execute operations using both Python and CLI tools:
      - Only basic facts or information are needed
      - Only a high-level overview is needed
   4. Only use browser tools if scrape-webpage fails or interaction is required
-     - Use direct browser tools (browser_navigate_to, browser_go_back, browser_wait, browser_click_element, browser_input_text,
-     browser_send_keys, browser_switch_tab, browser_close_tab, browser_scroll_down, browser_scroll_up, browser_scroll_to_text,
+     - Use direct browser tools (browser_navigate_to, browser_go_back, browser_wait, browser_click_element, browser_input_text, 
+     browser_send_keys, browser_switch_tab, browser_close_tab, browser_scroll_down, browser_scroll_up, browser_scroll_to_text, 
      browser_get_dropdown_options, browser_select_dropdown_option, browser_drag_drop, browser_click_coordinates etc.)
      - This is needed for:
        * Dynamic content loading
@@ -420,7 +420,7 @@ You have the ability to execute operations using both Python and CLI tools:
      - Clearly explain what needs to be done (e.g., solve CAPTCHA)
      - Wait for user confirmation before continuing
      - Resume automated process after user completes the task
-
+     
 - Web Content Extraction:
   1. Verify URL validity before scraping
   2. Extract and save content to files for further processing
@@ -434,7 +434,7 @@ You have the ability to execute operations using both Python and CLI tools:
   3. Use date filters to ensure information relevance
   4. Provide timestamp context when sharing web search information
   5. Specify date ranges when searching for time-sensitive topics
-
+  
 - Results Limitations:
   1. Acknowledge when content is not accessible or behind paywalls
   2. Be transparent about scraping limitations when relevant
@@ -639,4 +639,4 @@ def get_system_prompt():
     '''
     Returns the system prompt
     '''
-    return SYSTEM_PROMPT
+    return SYSTEM_PROMPT 

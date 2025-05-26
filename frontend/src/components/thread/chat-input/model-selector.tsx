@@ -552,10 +552,10 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                   )
                   .map((model, index) => (
                     <TooltipProvider key={model.uniqueKey || `model-${model.id}-${index}`}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                           <div className='w-full'>
-                            <DropdownMenuItem
+                    <DropdownMenuItem
                               className={cn(
                                 "text-sm mx-2 my-0.5 px-3 py-2 flex items-center justify-between cursor-pointer",
                                 selectedModel === model.id && "bg-accent"
@@ -566,7 +566,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                               <div className="flex items-center">
                                 <span className="font-medium">{model.label}</span>
                               </div>
-                              <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
                                 {/* Show capabilities */}
                                 {(MODELS[model.id]?.lowQuality || false) && (
                                   <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
@@ -658,7 +658,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                             >
                               Upgrade now
                             </Button>
-                          </div>
+                        </div>
                         </div>
                       </div>
                     </div>
@@ -685,10 +685,10 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                           >
                             <Plus className="h-3.5 w-3.5" />
                           </Button>
-                        </TooltipTrigger>
+                  </TooltipTrigger>
                         <TooltipContent side="bottom" className="text-xs">
                           Add a custom model
-                        </TooltipContent>
+                    </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   )}
@@ -764,8 +764,8 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
           description={
             lockedModel
               ? `Subscribe to access ${modelOptions.find(
-                (m) => m.id === lockedModel
-              )?.label}`
+                  (m) => m.id === lockedModel
+                )?.label}`
               : 'Subscribe to access premium models with enhanced capabilities'
           }
           ctaText="Subscribe Now"

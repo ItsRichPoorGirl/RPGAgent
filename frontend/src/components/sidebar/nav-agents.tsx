@@ -223,23 +223,23 @@ export function NavAgents() {
     // Check if it's a single thread or multiple threads
     if (threadToDelete.id !== "multiple") {
       // Single thread deletion
-      const threadId = threadToDelete.id;
-      const isActive = pathname?.includes(threadId);
+    const threadId = threadToDelete.id;
+    const isActive = pathname?.includes(threadId);
 
-      // Store threadToDelete in a local variable since it might be cleared
-      const deletedThread = { ...threadToDelete };
+    // Store threadToDelete in a local variable since it might be cleared
+    const deletedThread = { ...threadToDelete };
 
-      // Log operation start
-      console.log('DELETION - Starting thread deletion process', {
-        threadId: deletedThread.id,
-        isCurrentThread: isActive,
-      });
+    // Log operation start
+    console.log('DELETION - Starting thread deletion process', {
+      threadId: deletedThread.id,
+      isCurrentThread: isActive,
+    });
 
-      // Use the centralized deletion system with completion callback
-      await performDelete(
-        threadId,
-        isActive,
-        async () => {
+    // Use the centralized deletion system with completion callback
+    await performDelete(
+      threadId,
+      isActive,
+      async () => {
           // Delete the thread using the mutation
           deleteThreadMutation(
             { threadId },
@@ -247,7 +247,7 @@ export function NavAgents() {
               onSuccess: () => {
                 // Invalidate queries to refresh the list
                 queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
-                toast.success('Conversation deleted successfully');
+        toast.success('Conversation deleted successfully');
               },
               onSettled: () => {
                 setThreadToDelete(null);
@@ -255,13 +255,13 @@ export function NavAgents() {
               }
             }
           );
-        },
-        // Completion callback to reset local state
-        () => {
-          setThreadToDelete(null);
-          isPerformingActionRef.current = false;
-        },
-      );
+      },
+      // Completion callback to reset local state
+      () => {
+        setThreadToDelete(null);
+        isPerformingActionRef.current = false;
+      },
+    );
     } else {
       // Multi-thread deletion
       const threadIdsToDelete = Array.from(selectedThreads);
@@ -375,20 +375,20 @@ export function NavAgents() {
                 </Button>
               </>
             ) : (
-              <Tooltip>
-                <TooltipTrigger asChild>
+          <Tooltip>
+            <TooltipTrigger asChild>
                   <div>
-                    <Link
-                      href="/dashboard"
+              <Link
+                href="/dashboard"
                       className="text-muted-foreground hover:text-foreground h-7 w-7 flex items-center justify-center rounded-md"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span className="sr-only">New Agent</span>
-                    </Link>
+              >
+                <Plus className="h-4 w-4" />
+                <span className="sr-only">New Agent</span>
+              </Link>
                   </div>
-                </TooltipTrigger>
-                <TooltipContent>New Agent</TooltipContent>
-              </Tooltip>
+            </TooltipTrigger>
+            <TooltipContent>New Agent</TooltipContent>
+          </Tooltip>
             )}
           </div>
         ) : null}
@@ -400,12 +400,12 @@ export function NavAgents() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div>
-                  <SidebarMenuButton asChild>
-                    <Link href="/dashboard" className="flex items-center">
-                      <Plus className="h-4 w-4" />
-                      <span>New Agent</span>
-                    </Link>
-                  </SidebarMenuButton>
+                <SidebarMenuButton asChild>
+                  <Link href="/dashboard" className="flex items-center">
+                    <Plus className="h-4 w-4" />
+                    <span>New Agent</span>
+                  </Link>
+                </SidebarMenuButton>
                 </div>
               </TooltipTrigger>
               <TooltipContent>New Agent</TooltipContent>
@@ -438,55 +438,55 @@ export function NavAgents() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div>
-                          <SidebarMenuButton
-                            asChild
-                            className={
+                        <SidebarMenuButton
+                          asChild
+                          className={
                               isActive ? 'bg-accent text-accent-foreground' : 
                               isSelected ? 'bg-primary/10' : ''
+                          }
+                        >
+                          <Link
+                            href={thread.url}
+                            onClick={(e) =>
+                              handleThreadClick(e, thread.threadId, thread.url)
                             }
                           >
-                            <Link
-                              href={thread.url}
-                              onClick={(e) =>
-                                handleThreadClick(e, thread.threadId, thread.url)
-                              }
-                            >
-                              {isThreadLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <MessagesSquare className="h-4 w-4" />
-                              )}
-                              <span>{thread.projectName}</span>
-                            </Link>
-                          </SidebarMenuButton>
+                            {isThreadLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <MessagesSquare className="h-4 w-4" />
+                            )}
+                            <span>{thread.projectName}</span>
+                          </Link>
+                        </SidebarMenuButton>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>{thread.projectName}</TooltipContent>
                     </Tooltip>
                   ) : (
                     <div className="relative">
-                      <SidebarMenuButton
-                        asChild
+                    <SidebarMenuButton
+                      asChild
                         className={`relative ${
-                          isActive
-                            ? 'bg-accent text-accent-foreground font-medium' 
+                        isActive
+                          ? 'bg-accent text-accent-foreground font-medium'
                             : isSelected 
                             ? 'bg-primary/10' 
-                            : ''
+                          : ''
                         }`}
-                      >
-                        <Link
-                          href={thread.url}
-                          onClick={(e) =>
-                            handleThreadClick(e, thread.threadId, thread.url)
-                          }
+                    >
+                      <Link
+                        href={thread.url}
+                        onClick={(e) =>
+                          handleThreadClick(e, thread.threadId, thread.url)
+                        }
                           className="flex items-center"
-                        >
+                      >
                           <div className="flex items-center group/icon relative">
                             {/* Show checkbox on hover or when selected, otherwise show MessagesSquare */}
-                            {isThreadLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
+                        {isThreadLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
                               <>
                                 {/* MessagesSquare icon - hidden on hover if not selected */}
                                 <MessagesSquare 
@@ -518,8 +518,8 @@ export function NavAgents() {
                             )}
                           </div>
                           <span className="ml-2">{thread.projectName}</span>
-                        </Link>
-                      </SidebarMenuButton>
+                      </Link>
+                    </SidebarMenuButton>
                     </div>
                   )}
                   {state !== 'collapsed' && !isSelected && (
