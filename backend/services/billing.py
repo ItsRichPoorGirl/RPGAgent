@@ -206,6 +206,12 @@ async def get_allowed_models_for_user(client, user_id: str):
     Returns:
         List of model names allowed for the user's subscription tier.
     """
+    
+    # Check if user is an admin with unlimited access
+    if user_id in config.ADMIN_USER_LIST:
+        # Return all available models for admin users
+        from utils.constants import MODEL_NAME_ALIASES
+        return list(set(MODEL_NAME_ALIASES.values()))
 
     subscription = await get_user_subscription(user_id)
     tier_name = 'free'
@@ -234,6 +240,15 @@ async def can_use_model(client, user_id: str, model_name: str):
             "plan_name": "Local Development",
             "minutes_limit": "no limit"
         }
+    
+    # Check if user is an admin with unlimited access
+    if user_id in config.ADMIN_USER_LIST:
+        logger.info(f"Admin user {user_id} has unlimited model access")
+        return True, "Admin user - unlimited model access", {
+            "price_id": "admin_unlimited",
+            "plan_name": "Admin Unlimited",
+            "minutes_limit": "unlimited"
+        }
         
     allowed_models = await get_allowed_models_for_user(client, user_id)
     resolved_model = MODEL_NAME_ALIASES.get(model_name, model_name)
@@ -255,6 +270,15 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
             "price_id": "local_dev",
             "plan_name": "Local Development",
             "minutes_limit": "no limit"
+        }
+    
+    # Check if user is an admin with unlimited access
+    if user_id in config.ADMIN_USER_LIST:
+        logger.info(f"Admin user {user_id} has unlimited access - billing checks bypassed")
+        return True, "Admin user - unlimited access", {
+            "price_id": "admin_unlimited",
+            "plan_name": "Admin Unlimited",
+            "minutes_limit": "unlimited"
         }
     
     # Get current subscription

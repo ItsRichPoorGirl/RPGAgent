@@ -163,6 +163,16 @@ class Configuration:
     LANGFUSE_SECRET_KEY: Optional[str] = None
     LANGFUSE_HOST: str = "https://cloud.langfuse.com"
 
+    # Admin configuration - users with unlimited access
+    ADMIN_USER_IDS: Optional[str] = None  # Comma-separated list of admin user IDs
+    
+    @property
+    def ADMIN_USER_LIST(self) -> list:
+        """Get list of admin user IDs with unlimited access."""
+        if not self.ADMIN_USER_IDS:
+            return []
+        return [uid.strip() for uid in self.ADMIN_USER_IDS.split(',') if uid.strip()]
+
     @property
     def STRIPE_PRODUCT_ID(self) -> str:
         if self.ENV_MODE == EnvMode.STAGING:
