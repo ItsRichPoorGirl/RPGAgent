@@ -208,10 +208,18 @@ async def get_allowed_models_for_user(client, user_id: str):
     """
     
     # Check if user is an admin with unlimited access
+    logger.info(f"DEBUG: Checking admin access for user {user_id}")
+    logger.info(f"DEBUG: ADMIN_USER_IDS config: {config.ADMIN_USER_IDS}")
+    logger.info(f"DEBUG: ADMIN_USER_LIST: {config.ADMIN_USER_LIST}")
+    logger.info(f"DEBUG: Is user in admin list? {user_id in config.ADMIN_USER_LIST}")
+    
     if user_id in config.ADMIN_USER_LIST:
-        # Return all available models for admin users
-        from utils.constants import MODEL_NAME_ALIASES
-        return list(set(MODEL_NAME_ALIASES.values()))
+        logger.info(f"Admin user {user_id} has unlimited access - billing checks bypassed")
+        return True, "Admin user - unlimited access", {
+            "price_id": "admin_unlimited",
+            "plan_name": "Admin Unlimited",
+            "minutes_limit": "unlimited"
+        }
 
     subscription = await get_user_subscription(user_id)
     tier_name = 'free'
@@ -243,7 +251,7 @@ async def can_use_model(client, user_id: str, model_name: str):
     
     # Check if user is an admin with unlimited access
     if user_id in config.ADMIN_USER_LIST:
-        logger.info(f"Admin user {user_id} has unlimited model access")
+        logger.info(f"Admin user {user_id} has unlimited access")
         return True, "Admin user - unlimited model access", {
             "price_id": "admin_unlimited",
             "plan_name": "Admin Unlimited",
