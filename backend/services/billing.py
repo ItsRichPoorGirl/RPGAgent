@@ -264,6 +264,8 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
     Returns:
         Tuple[bool, str, Optional[Dict]]: (can_run, message, subscription_info)
     """
+    logger.info(f"Checking billing status for user: {user_id}")
+    
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
         return True, "Local development mode - billing disabled", {
@@ -273,6 +275,9 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
         }
     
     # Check if user is an admin with unlimited access
+    logger.info(f"Admin user list: {config.ADMIN_USER_LIST}")
+    logger.info(f"Is user {user_id} in admin list? {user_id in config.ADMIN_USER_LIST}")
+    
     if user_id in config.ADMIN_USER_LIST:
         logger.info(f"Admin user {user_id} has unlimited access - billing checks bypassed")
         return True, "Admin user - unlimited access", {
@@ -280,6 +285,8 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
             "plan_name": "Admin Unlimited",
             "minutes_limit": "unlimited"
         }
+    
+    logger.info(f"User {user_id} is not an admin, proceeding with normal billing checks")
     
     # Get current subscription
     subscription = await get_user_subscription(user_id)
