@@ -145,6 +145,23 @@ async def health_check():
         "instance_id": instance_id
     }
 
+@app.get("/api/debug-admin")
+async def debug_admin():
+    """Debug admin configuration."""
+    import os
+    test_user_id = "42b78f2d-abc6-45ed-bea1-1b58553bb713"
+    admin_ids = os.getenv("ADMIN_USER_IDS", "")
+    admin_list = [uid.strip() for uid in admin_ids.split(',') if uid.strip()] if admin_ids else []
+    is_admin = test_user_id in admin_list
+    
+    return {
+        "admin_user_ids_env": admin_ids,
+        "admin_list": admin_list,
+        "test_user_id": test_user_id,
+        "is_admin": is_admin,
+        "env_mode": config.ENV_MODE.value
+    }
+
 if __name__ == "__main__":
     import uvicorn
     
