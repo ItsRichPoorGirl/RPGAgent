@@ -17,7 +17,6 @@ from collections import OrderedDict
 from agent import api as agent_api
 from sandbox import api as sandbox_api
 from services import billing as billing_api
-from test_railway_admin import test_router
 
 # Load environment variables (these will be available through config)
 load_dotenv()
@@ -116,7 +115,7 @@ allow_origin_regex = None
 
 # Add staging-specific origins
 if config.ENV_MODE == EnvMode.STAGING:
-    allowed_origins.append("https://staging.luciq.ai")
+
     allow_origin_regex = r"https://luciq-.*-projects\.vercel\.app"
 
 app.add_middleware(
