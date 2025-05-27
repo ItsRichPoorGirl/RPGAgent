@@ -111,6 +111,9 @@ export const getToolIcon = (toolName: string): ElementType => {
     case 'terminate-command':
     case 'terminate_command':
       return Terminal;
+    case 'list-commands':
+    case 'list_commands':
+      return Terminal;
 
     // Web operations
     case 'web-search':
@@ -143,19 +146,45 @@ export const getToolIcon = (toolName: string): ElementType => {
     case 'deploy-site':
     case 'deploy_site':
       return CloudUpload;
+    case 'deploy':
+      return CloudUpload;
+    case 'expose-port':
+    case 'expose_port':
+      return Network;
 
     // Tools and utilities
     case 'execute-code':
     case 'execute_code':
       return Code;
 
+    // Vision and media
+    case 'see-image':
+    case 'see_image':
+      return FileText;
+
     // User interaction
     case 'ask':
       return MessageCircleQuestion;
+    case 'web-browser-takeover':
+    case 'web_browser_takeover':
+      return Globe;
 
     // Task completion
     case 'complete':
       return CheckCircle2;
+
+    // Computer use tools
+    case 'move_to':
+    case 'click':
+    case 'scroll':
+    case 'typing':
+    case 'press':
+    case 'wait':
+    case 'mouse_down':
+    case 'mouse_up':
+    case 'drag_to':
+    case 'hotkey':
+      return Code;
 
     // Default case
     default:
