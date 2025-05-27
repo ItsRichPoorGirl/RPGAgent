@@ -21,7 +21,7 @@ from services.billing import check_billing_status
 from utils.config import config
 from sandbox.sandbox import create_sandbox, get_or_start_sandbox
 from services.llm import make_llm_api_call
-from run_agent_background import run_agent_background, _cleanup_redis_response_list, update_agent_run_status
+# run_agent_background function is defined in this file
 from utils.constants import MODEL_NAME_ALIASES
 
 # Initialize shared resources
@@ -769,7 +769,7 @@ async def run_agent_background(
         # Initialize agent generator
         agent_gen = run_agent(
             thread_id=thread_id, project_id=project_id, stream=stream,
-            thread_manager=thread_manager, model_name=model_name,
+            thread_manager=None, model_name=model_name,
             enable_thinking=enable_thinking, reasoning_effort=reasoning_effort,
             enable_context_manager=enable_context_manager
         )
