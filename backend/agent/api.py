@@ -501,18 +501,28 @@ async def stream_agent_run(
     request: Request = None
 ):
     """Stream the responses of an agent run using Redis Lists and Pub/Sub."""
-    logger.info(f"Starting stream for agent run: {agent_run_id}")
+    logger.info(f"[STREAM] Starting stream endpoint for agent run: {agent_run_id}")
     client = await db.client
 
-    user_id = await get_user_id_from_stream_auth(request, token)
-    agent_run_data = await get_agent_run_with_access_check(client, agent_run_id, user_id)
+    try:
+        user_id = await get_user_id_from_stream_auth(request, token)
+        logger.info(f"[STREAM] User authenticated: {user_id}")
+        
+        agent_run_data = await get_agent_run_with_access_check(client, agent_run_id, user_id)
+        logger.info(f"[STREAM] Agent run data retrieved: status={agent_run_data.get('status')}")
 
-    response_list_key = f"agent_run:{agent_run_id}:responses"
-    response_channel = f"agent_run:{agent_run_id}:new_response"
-    control_channel = f"agent_run:{agent_run_id}:control" # Global control channel
+        response_list_key = f"agent_run:{agent_run_id}:responses"
+        response_channel = f"agent_run:{agent_run_id}:new_response"
+        control_channel = f"agent_run:{agent_run_id}:control" # Global control channel
+        
+        logger.info(f"[STREAM] Redis keys: list={response_list_key}, channel={response_channel}")
+    except Exception as e:
+        logger.error(f"[STREAM] Error in stream setup for {agent_run_id}: {str(e)}", exc_info=True)
+        raise
 
     async def stream_generator():
-        logger.debug(f"Streaming responses for {agent_run_id} using Redis list {response_list_key} and channel {response_channel}")
+        logger.info(f"[STREAM] Stream generator started for {agent_run_id}")
+        logger.info(f"[STREAM] Using Redis list {response_list_key} and channel {response_channel}")
         last_processed_index = -1
         pubsub_response = None
         pubsub_control = None
@@ -699,6 +709,7 @@ async def stream_agent_run(
             await asyncio.sleep(0.1)
             logger.debug(f"Streaming cleanup complete for agent run: {agent_run_id}")
 
+    logger.info(f"[STREAM] Creating StreamingResponse for {agent_run_id}")
     return StreamingResponse(stream_generator(), media_type="text/event-stream", headers={
         "Cache-Control": "no-cache, no-transform", "Connection": "keep-alive",
         "X-Accel-Buffering": "no", "Content-Type": "text/event-stream",
