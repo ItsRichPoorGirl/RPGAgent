@@ -846,11 +846,16 @@ export const streamAgent = (
       eventSource.onmessage = (event) => {
         try {
           const rawData = event.data;
-          if (rawData.includes('"type":"ping"')) return;
+          console.log(`[STREAM] Raw message received for ${agentRunId}:`, rawData);
+          
+          if (rawData.includes('"type":"ping"')) {
+            console.log(`[STREAM] Ping message received, skipping`);
+            return;
+          }
 
           // Log raw data for debugging (truncated for readability)
           console.log(
-            `[STREAM] Received data for ${agentRunId}: ${rawData.substring(0, 100)}${rawData.length > 100 ? '...' : ''}`,
+            `[STREAM] Processing data for ${agentRunId}: ${rawData.substring(0, 100)}${rawData.length > 100 ? '...' : ''}`,
           );
 
           // Skip empty messages
