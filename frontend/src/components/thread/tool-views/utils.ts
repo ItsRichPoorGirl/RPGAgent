@@ -476,7 +476,8 @@ function processFileContent(content: string): string {
     .replace(/\\r/g, '') // Remove \r
     .replace(/\\\\/g, '\\') // Replace \\ with \
     .replace(/\\"/g, '"') // Replace \" with "
-    .replace(/\\'/g, "'"); // Replace \' with '
+    .replace(/\\'/g, "'") // Replace \' with '
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_, code) => String.fromCharCode(parseInt(code, 16))); // Handle Unicode escapes
 }
 
 // Helper to determine file type (for syntax highlighting)
@@ -1264,24 +1265,21 @@ export function extractStreamingFileContent(
   // Fallback to string-based extraction
   // Look for the opening tag
   const openTagMatch = contentStr.match(new RegExp(`<${tagName}[^>]*>`, 'i'));
-  if (openTagMatch) {
-    // Find where the tag ends
-    const tagEndIndex = contentStr.indexOf(openTagMatch[0]) + openTagMatch[0].length;
-    // Extract everything after the opening tag
-    const afterTag = contentStr.substring(tagEndIndex);
-    
-    // Check if there's a closing tag
-    const closeTagMatch = afterTag.match(new RegExp(`<\\/${tagName}>`, 'i'));
-    if (closeTagMatch) {
-      // Return content between tags
-      return processFileContent(afterTag.substring(0, closeTagMatch.index));
-    } else {
-      // No closing tag yet (streaming), return what we have
-      return processFileContent(afterTag);
-    }
-  }
+  if (!openTagMatch) return null;
 
-  return null;
+  // Find where the tag ends
+  const tagEndIndex = contentStr.indexOf(openTagMatch[0]) + openTagMatch[0].length;
+  const afterTag = contentStr.substring(tagEndIndex);
+
+  // Check if there's a closing tag
+  const closeTagMatch = afterTag.match(new RegExp(`<\\/${tagName}>`, 'i'));
+  if (closeTagMatch) {
+    // Return content between tags
+    return processFileContent(afterTag.substring(0, closeTagMatch.index));
+  } else {
+    // No closing tag yet (streaming), return what we have
+    return processFileContent(afterTag);
+  }
 }
 
 export const getFileIconAndColor = (filename: string) => {
