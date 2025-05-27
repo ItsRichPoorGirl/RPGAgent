@@ -499,7 +499,47 @@ export default function ThreadPage({
             return timeA - timeB;
           });
 
-          setToolCalls(historicalToolPairs);
+          // Merge streaming tool calls with completed ones instead of replacing them
+          setToolCalls(prevToolCalls => {
+            // Find any streaming tool calls that should be replaced with completed ones
+            const updatedToolCalls = [...prevToolCalls];
+            
+            // Replace streaming tool calls with their completed versions
+            historicalToolPairs.forEach(completedToolCall => {
+              const streamingIndex = updatedToolCalls.findIndex(tc => 
+                tc.toolResult?.content === 'STREAMING' && 
+                tc.assistantCall.name === completedToolCall.assistantCall.name
+              );
+              
+              if (streamingIndex !== -1) {
+                // Replace the streaming tool call with the completed one
+                updatedToolCalls[streamingIndex] = completedToolCall;
+              } else {
+                // Check if this completed tool call already exists (avoid duplicates)
+                const existingIndex = updatedToolCalls.findIndex(tc =>
+                  tc.assistantCall.content === completedToolCall.assistantCall.content &&
+                  tc.toolResult?.content === completedToolCall.toolResult?.content
+                );
+                
+                if (existingIndex === -1) {
+                  // Add new completed tool call if it doesn't exist
+                  updatedToolCalls.push(completedToolCall);
+                }
+              }
+            });
+            
+            // If no historical tool pairs exist, just return the current streaming ones
+            if (historicalToolPairs.length === 0) {
+              return prevToolCalls;
+            }
+            
+            // If we have historical pairs but no previous tool calls, use historical ones
+            if (prevToolCalls.length === 0) {
+              return historicalToolPairs;
+            }
+            
+            return updatedToolCalls;
+          });
 
           // When loading is complete, prepare for playback
           initialLoadCompleted.current = true;
