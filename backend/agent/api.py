@@ -494,6 +494,12 @@ async def get_agent_run(agent_run_id: str, user_id: str = Depends(get_current_us
         "error": agent_run_data['error']
     }
 
+@router.get("/agent-run/{agent_run_id}/test")
+async def test_stream_endpoint(agent_run_id: str):
+    """Test endpoint to verify routing is working."""
+    logger.info(f"[TEST] Test endpoint called for agent run: {agent_run_id}")
+    return {"message": f"Test endpoint working for {agent_run_id}"}
+
 @router.get("/agent-run/{agent_run_id}/stream")
 async def stream_agent_run(
     agent_run_id: str,
@@ -501,10 +507,10 @@ async def stream_agent_run(
     request: Request = None
 ):
     """Stream the responses of an agent run using Redis Lists and Pub/Sub."""
-    logger.info(f"[STREAM] Starting stream endpoint for agent run: {agent_run_id}")
-    client = await db.client
-
     try:
+        logger.info(f"[STREAM] Starting stream endpoint for agent run: {agent_run_id}")
+        client = await db.client
+
         user_id = await get_user_id_from_stream_auth(request, token)
         logger.info(f"[STREAM] User authenticated: {user_id}")
         
@@ -517,8 +523,10 @@ async def stream_agent_run(
         
         logger.info(f"[STREAM] Redis keys: list={response_list_key}, channel={response_channel}")
     except Exception as e:
-        logger.error(f"[STREAM] Error in stream setup for {agent_run_id}: {str(e)}", exc_info=True)
-        raise
+        logger.error(f"[STREAM] CRITICAL ERROR in stream endpoint for {agent_run_id}: {str(e)}", exc_info=True)
+        # Return a simple error response instead of raising
+        from fastapi.responses import PlainTextResponse
+        return PlainTextResponse(f"Stream error: {str(e)}", status_code=500)
 
     async def stream_generator():
         logger.info(f"[STREAM] Stream generator started for {agent_run_id}")
