@@ -17,8 +17,6 @@ from collections import OrderedDict
 from agent import api as agent_api
 from sandbox import api as sandbox_api
 from services import billing as billing_api
-from test_railway_admin import test_router
-
 # Load environment variables (these will be available through config)
 load_dotenv()
 
