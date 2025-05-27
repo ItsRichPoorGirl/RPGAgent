@@ -194,6 +194,13 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
     project,
     debugMode = false
 }) => {
+    console.log('[ThreadContent] Props:', { 
+        streamingTextContent, 
+        streamingToolCall, 
+        agentStatus, 
+        streamHookStatus,
+        messagesLength: messages.length 
+    });
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const latestMessageRef = useRef<HTMLDivElement>(null);
@@ -514,14 +521,19 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                             let detectedTag: string | null = null;
                                                                             let tagStartIndex = -1;
                                                                             if (streamingTextContent) {
+                                                                                console.log('[ThreadContent] Checking streamingTextContent for tags:', streamingTextContent);
                                                                                 for (const tag of HIDE_STREAMING_XML_TAGS) {
                                                                                     const openingTagPattern = `<${tag}`;
                                                                                     const index = streamingTextContent.indexOf(openingTagPattern);
                                                                                     if (index !== -1) {
                                                                                         detectedTag = tag;
                                                                                         tagStartIndex = index;
+                                                                                        console.log('[ThreadContent] Detected tag:', tag, 'at index:', index);
                                                                                         break;
                                                                                     }
+                                                                                }
+                                                                                if (!detectedTag) {
+                                                                                    console.log('[ThreadContent] No tags detected in streamingTextContent');
                                                                                 }
                                                                             }
 
@@ -554,6 +566,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                                     {streamingToolCall && !detectedTag && (
                                                                                         <div className="mt-2 mb-1">
                                                                                             {(() => {
+                                                                                                console.log('[ThreadContent] Rendering streamingToolCall:', streamingToolCall);
                                                                                                 const toolName = streamingToolCall.name || streamingToolCall.xml_tag_name || 'Tool';
                                                                                                 const IconComponent = getToolIcon(toolName);
                                                                                                 const paramDisplay = extractPrimaryParam(toolName, streamingToolCall.arguments || '');
