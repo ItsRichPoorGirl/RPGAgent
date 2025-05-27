@@ -526,18 +526,23 @@ async def stream_agent_run(
             initial_responses = []
             if initial_responses_json:
                 initial_responses = [json.loads(r) for r in initial_responses_json]
-                logger.debug(f"Sending {len(initial_responses)} initial responses for {agent_run_id}")
-                for response in initial_responses:
+                logger.info(f"[STREAM] Sending {len(initial_responses)} initial responses for {agent_run_id}")
+                for i, response in enumerate(initial_responses):
+                    logger.debug(f"[STREAM] Initial response {i}: {json.dumps(response)[:100]}...")
                     yield f"data: {json.dumps(response)}\n\n"
                 last_processed_index = len(initial_responses) - 1
+            else:
+                logger.info(f"[STREAM] No initial responses found in Redis for {agent_run_id}")
+                last_processed_index = -1
             initial_yield_complete = True
 
             # 2. Check run status *after* yielding initial data
             run_status = await client.table('agent_runs').select('status').eq("id", agent_run_id).maybe_single().execute()
             current_status = run_status.data.get('status') if run_status.data else None
+            logger.info(f"[STREAM] Agent run {agent_run_id} status check: {current_status}")
 
             if current_status != 'running':
-                logger.info(f"Agent run {agent_run_id} is not running (status: {current_status}). Ending stream.")
+                logger.info(f"[STREAM] Agent run {agent_run_id} is not running (status: {current_status}). Ending stream.")
                 yield f"data: {json.dumps({'type': 'status', 'status': 'completed'})}\n\n"
                 return
 
@@ -571,9 +576,10 @@ async def stream_agent_run(
                                 if isinstance(data, bytes): data = data.decode('utf-8')
 
                                 if channel == response_channel and data == "new":
+                                    logger.debug(f"[STREAM] Received 'new' signal on response channel for {agent_run_id}")
                                     await message_queue.put({"type": "new_response"})
                                 elif channel == control_channel and data in ["STOP", "END_STREAM", "ERROR"]:
-                                    logger.info(f"Received control signal '{data}' for {agent_run_id}")
+                                    logger.info(f"[STREAM] Received control signal '{data}' for {agent_run_id}")
                                     await message_queue.put({"type": "control", "data": data})
                                     return # Stop listening on control signal
 
@@ -632,15 +638,18 @@ async def stream_agent_run(
                         if new_responses_json:
                             new_responses = [json.loads(r) for r in new_responses_json]
                             num_new = len(new_responses)
-                            # logger.debug(f"Received {num_new} new responses for {agent_run_id} (index {new_start_index} onwards)")
+                            logger.info(f"[STREAM] Received {num_new} new responses for {agent_run_id} (index {new_start_index} onwards)")
                             for response in new_responses:
+                                logger.debug(f"[STREAM] Yielding new response: {json.dumps(response)[:100]}...")
                                 yield f"data: {json.dumps(response)}\n\n"
                                 # Check if this response signals completion
                                 if response.get('type') == 'status' and response.get('status') in ['completed', 'failed', 'stopped']:
-                                    logger.info(f"Detected run completion via status message in stream: {response.get('status')}")
+                                    logger.info(f"[STREAM] Detected run completion via status message in stream: {response.get('status')}")
                                     terminate_stream = True
                                     break # Stop processing further new responses
                             last_processed_index += num_new
+                        else:
+                            logger.debug(f"[STREAM] No new responses found for {agent_run_id} at index {new_start_index}")
                         if terminate_stream: break
 
                     elif queue_item["type"] == "control":
