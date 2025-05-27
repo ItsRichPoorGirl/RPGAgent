@@ -33,25 +33,36 @@ export function getToolTitle(toolName: string): string {
   // Map of tool names to their display titles
   const toolTitles: Record<string, string> = {
     'execute-command': 'Execute Command',
+    'execute_command': 'Execute Command',
     'check-command-output': 'Check Command Output',
+    'check_command_output': 'Check Command Output',
     'str-replace': 'String Replace',
+    'str_replace': 'String Replace',
     'create-file': 'Create File',
+    'create_file': 'Create File',
     'full-file-rewrite': 'Rewrite File',
+    'full_file_rewrite': 'Rewrite File',
     'delete-file': 'Delete File',
+    'delete_file': 'Delete File',
     'web-search': 'Web Search',
+    'web_search': 'Web Search',
     'crawl-webpage': 'Web Crawl',
+    'crawl_webpage': 'Web Crawl',
     'scrape-webpage': 'Web Scrape',
+    'scrape_webpage': 'Web Scrape',
     'browser-navigate': 'Browser Navigate',
     'browser-click': 'Browser Click',
     'browser-extract': 'Browser Extract',
     'browser-fill': 'Browser Fill',
     'browser-wait': 'Browser Wait',
     'see-image': 'View Image',
+    'see_image': 'View Image',
     'ask': 'Ask',
     'complete': 'Task Complete',
     'execute-data-provider-call': 'Data Provider Call',
+    'execute_data_provider_call': 'Data Provider Call',
     'get-data-provider-endpoints': 'Data Endpoints',
-
+    'get_data_provider_endpoints': 'Data Endpoints',
 
     'generic-tool': 'Tool',
     'default': 'Tool',
@@ -1097,30 +1108,41 @@ export function getToolComponent(toolName: string): string {
 
     // Command execution
     case 'execute-command':
+    case 'execute_command':
       return 'CommandToolView';
 
     // File operations
     case 'create-file':
+    case 'create_file':
     case 'delete-file':
+    case 'delete_file':
     case 'full-file-rewrite':
+    case 'full_file_rewrite':
     case 'read-file':
+    case 'read_file':
       return 'FileOperationToolView';
 
     // String operations
     case 'str-replace':
+    case 'str_replace':
       return 'StrReplaceToolView';
 
     // Web operations
     case 'web-search':
+    case 'web_search':
       return 'WebSearchToolView';
     case 'crawl-webpage':
+    case 'crawl_webpage':
       return 'WebCrawlToolView';
     case 'scrape-webpage':
+    case 'scrape_webpage':
       return 'WebScrapeToolView';
 
     // Data provider operations
     case 'execute-data-provider-call':
+    case 'execute_data_provider_call':
     case 'get-data-provider-endpoints':
+    case 'get_data_provider_endpoints':
       return 'DataProviderToolView';
 
     // Default

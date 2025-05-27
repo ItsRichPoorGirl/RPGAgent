@@ -87,50 +87,66 @@ export const getToolIcon = (toolName: string): ElementType => {
     return Globe;
   }
   switch (normalizedName) {
-    // File operations
+    // File operations (both function names and XML tag names)
     case 'create-file':
+    case 'create_file':
       return FileEdit;
     case 'str-replace':
+    case 'str_replace':
       return FileSearch;
     case 'full-file-rewrite':
+    case 'full_file_rewrite':
       return FilePlus;
     case 'read-file':
+    case 'read_file':
       return FileText;
 
     // Shell commands
     case 'execute-command':
+    case 'execute_command':
       return Terminal;
     case 'check-command-output':
+    case 'check_command_output':
       return Terminal;
     case 'terminate-command':
+    case 'terminate_command':
       return Terminal;
 
     // Web operations
     case 'web-search':
+    case 'web_search':
       return Search;
     case 'crawl-webpage':
+    case 'crawl_webpage':
       return Globe;
     case 'scrape-webpage':
+    case 'scrape_webpage':
         return Globe;
 
     // API and data operations
     case 'call-data-provider':
+    case 'call_data_provider':
       return ExternalLink;
     case 'get-data-provider-endpoints':
+    case 'get_data_provider_endpoints':
       return Network;
     case 'execute-data-provider-call':
+    case 'execute_data_provider_call':
       return Network;
 
     // Code operations
     case 'delete-file':
+    case 'delete_file':
       return FileX;
 
     // Deployment
     case 'deploy-site':
+    case 'deploy_site':
       return CloudUpload;
 
     // Tools and utilities
     case 'execute-code':
+    case 'execute_code':
       return Code;
 
     // User interaction
@@ -255,13 +271,20 @@ export const extractPrimaryParam = (
 
 const TOOL_DISPLAY_NAMES = new Map([
   ['execute-command', 'Executing Command'],
+  ['execute_command', 'Executing Command'],
   ['check-command-output', 'Checking Command Output'],
+  ['check_command_output', 'Checking Command Output'],
   ['terminate-command', 'Terminating Command'],
+  ['terminate_command', 'Terminating Command'],
   ['list-commands', 'Listing Commands'],
+  ['list_commands', 'Listing Commands'],
   
   ['create-file', 'Creating File'],
+  ['create_file', 'Creating File'],
   ['delete-file', 'Deleting File'],
+  ['delete_file', 'Deleting File'],
   ['full-file-rewrite', 'Rewriting File'],
+  ['full_file_rewrite', 'Rewriting File'],
   ['str-replace', 'Editing Text'],
   ['str_replace', 'Editing Text'],
   
@@ -284,15 +307,21 @@ const TOOL_DISPLAY_NAMES = new Map([
   ['execute-data-provider-call', 'Calling data provider'],
   ['execute_data_provider_call', 'Calling data provider'],
   ['get-data-provider-endpoints', 'Getting endpoints'],
+  ['get_data_provider_endpoints', 'Getting endpoints'],
   
   ['deploy', 'Deploying'],
   ['ask', 'Ask'],
   ['complete', 'Completing Task'],
   ['crawl-webpage', 'Crawling Website'],
+  ['crawl_webpage', 'Crawling Website'],
   ['expose-port', 'Exposing Port'],
+  ['expose_port', 'Exposing Port'],
   ['scrape-webpage', 'Scraping Website'],
+  ['scrape_webpage', 'Scraping Website'],
   ['web-search', 'Searching Web'],
-  ['see-image', 'Viewing Image']
+  ['web_search', 'Searching Web'],
+  ['see-image', 'Viewing Image'],
+  ['see_image', 'Viewing Image']
 ]);
 
 export function getUserFriendlyToolName(toolName: string): string {

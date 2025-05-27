@@ -38,27 +38,43 @@ const defaultRegistry: ToolViewRegistryType = {
   'browser-click-coordinates': BrowserToolView,
 
   'execute-command': CommandToolView,
+  'execute_command': CommandToolView,
   'check-command-output': CommandToolView,
+  'check_command_output': CommandToolView,
   'terminate-command': TerminateCommandToolView,
+  'terminate_command': TerminateCommandToolView,
   'list-commands': CommandToolView,
+  'list_commands': CommandToolView,
 
   'create-file': FileOperationToolView,
+  'create_file': FileOperationToolView,
   'delete-file': FileOperationToolView,
+  'delete_file': FileOperationToolView,
   'full-file-rewrite': FileOperationToolView,
+  'full_file_rewrite': FileOperationToolView,
   'read-file': FileOperationToolView,
+  'read_file': FileOperationToolView,
 
   'str-replace': StrReplaceToolView,
+  'str_replace': StrReplaceToolView,
 
   'web-search': WebSearchToolView,
+  'web_search': WebSearchToolView,
   'crawl-webpage': WebCrawlToolView,
+  'crawl_webpage': WebCrawlToolView,
   'scrape-webpage': WebScrapeToolView,
+  'scrape_webpage': WebScrapeToolView,
 
   'execute-data-provider-call': ExecuteDataProviderCallToolView,
+  'execute_data_provider_call': ExecuteDataProviderCallToolView,
   'get-data-provider-endpoints': DataProviderEndpointsToolView,
+  'get_data_provider_endpoints': DataProviderEndpointsToolView,
 
   'expose-port': ExposePortToolView,
+  'expose_port': ExposePortToolView,
 
   'see-image': SeeImageToolView,
+  'see_image': SeeImageToolView,
 
   'ask': AskToolView,
   'complete': CompleteToolView,
