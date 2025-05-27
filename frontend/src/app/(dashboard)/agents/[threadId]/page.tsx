@@ -171,6 +171,100 @@ export default function ThreadPage({
 
   const userClosedPanelRef = useRef(false);
 
+  // Add callback functions for useAgentStream
+  const handleNewMessageFromStream = useCallback((message: UnifiedMessage) => {
+    console.log(
+      `[STREAM HANDLER] Received message: ID=${message.message_id}, Type=${message.type}`,
+    );
+
+    if (!message.message_id) {
+      console.warn(
+        `[STREAM HANDLER] Received message is missing ID: Type=${message.type}, Content=${message.content?.substring(0, 50)}...`,
+      );
+    }
+
+    setMessages((prev) => {
+      const messageExists = prev.some(
+        (m) => m.message_id === message.message_id,
+      );
+      if (messageExists) {
+        return prev.map((m) =>
+          m.message_id === message.message_id ? message : m,
+        );
+      } else {
+        return [...prev, message];
+      }
+    });
+
+    if (message.type === 'tool') {
+      setAutoOpenedPanel(false);
+    }
+  }, []);
+
+  const handleStreamStatusChange = useCallback((hookStatus: string) => {
+    console.log(`[PAGE] Hook status changed: ${hookStatus}`);
+    switch (hookStatus) {
+      case 'idle':
+      case 'completed':
+      case 'stopped':
+      case 'agent_not_running':
+      case 'error':
+      case 'failed':
+        setAgentStatus('idle');
+        setAgentRunId(null);
+        setAutoOpenedPanel(false);
+        break;
+      case 'streaming':
+      case 'connecting':
+        setAgentStatus('running');
+        break;
+    }
+  }, []);
+
+  const handleStreamError = useCallback((errorMessage: string) => {
+    console.error(`[PAGE] Stream hook error: ${errorMessage}`);
+    if (
+      !errorMessage.toLowerCase().includes('not found') &&
+      !errorMessage.toLowerCase().includes('agent run is not running')
+    ) {
+      toast.error(`Stream Error: ${errorMessage}`);
+    }
+  }, []);
+
+  const handleStreamClose = useCallback(() => {
+    console.log(`[PAGE] Stream hook closed with final status: ${agentStatus}`);
+  }, [agentStatus]);
+
+  // Use the useAgentStream hook for real-time streaming
+  const {
+    status: streamHookStatus,
+    textContent: streamingTextContent,
+    toolCall: streamingToolCall,
+    error: streamError,
+    agentRunId: currentHookRunId,
+    startStreaming,
+    stopStreaming,
+  } = useAgentStream(
+    {
+      onMessage: handleNewMessageFromStream,
+      onStatusChange: handleStreamStatusChange,
+      onError: handleStreamError,
+      onClose: handleStreamClose,
+    },
+    threadId,
+    setMessages,
+  );
+
+  // Start streaming when agentRunId changes
+  useEffect(() => {
+    if (agentRunId && agentRunId !== currentHookRunId) {
+      console.log(
+        `[PAGE] Target agentRunId set to ${agentRunId}, initiating stream...`,
+      );
+      startStreaming(agentRunId);
+    }
+  }, [agentRunId, startStreaming, currentHookRunId]);
+
   // Replace both useEffect hooks with a single one that respects user closing
   useEffect(() => {
     if (initialLoadCompleted.current && !initialPanelOpenAttempted) {
@@ -249,116 +343,6 @@ export default function ThreadPage({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleSidePanel, isSidePanelOpen, leftSidebarState, setLeftSidebarOpen]);
-
-  const handleNewMessageFromStream = useCallback((message: UnifiedMessage) => {
-    // Log the ID of the message received from the stream
-    console.log(
-      `[STREAM HANDLER] Received message: ID=${message.message_id}, Type=${message.type}`,
-    );
-
-    if (!message.message_id) {
-      console.warn(
-        `[STREAM HANDLER] Received message is missing ID: Type=${message.type}, Content=${message.content?.substring(0, 50)}...`,
-      );
-    }
-
-    setMessages((prev) => {
-      const messageExists = prev.some(
-        (m) => m.message_id === message.message_id,
-      );
-      if (messageExists) {
-        return prev.map((m) =>
-          m.message_id === message.message_id ? message : m,
-        );
-      } else {
-        return [...prev, message];
-      }
-    });
-
-    // If we received a tool message, refresh the tool panel
-    if (message.type === 'tool') {
-      setAutoOpenedPanel(false);
-    }
-  }, []);
-
-  const handleStreamStatusChange = useCallback((hookStatus: string) => {
-    console.log(`[PAGE] Hook status changed: ${hookStatus}`);
-    switch (hookStatus) {
-      case 'idle':
-      case 'completed':
-      case 'stopped':
-      case 'agent_not_running':
-      case 'error':
-      case 'failed':
-        setAgentStatus('idle');
-        setAgentRunId(null);
-        // Reset auto-opened state when agent completes to trigger tool detection
-        setAutoOpenedPanel(false);
-
-        // After terminal states, we should scroll to bottom to show latest messages
-        // The hook will already have refetched messages by this point
-        if (
-          [
-            'completed',
-            'stopped',
-            'agent_not_running',
-            'error',
-            'failed',
-          ].includes(hookStatus)
-        ) {
-          scrollToBottom('smooth');
-        }
-        break;
-      case 'connecting':
-        setAgentStatus('connecting');
-        break;
-      case 'streaming':
-        setAgentStatus('running');
-        break;
-    }
-  }, []);
-
-  const handleStreamError = useCallback((errorMessage: string) => {
-    console.error(`[PAGE] Stream hook error: ${errorMessage}`);
-    if (
-      !errorMessage.toLowerCase().includes('not found') &&
-      !errorMessage.toLowerCase().includes('agent run is not running')
-    ) {
-      toast.error(`Stream Error: ${errorMessage}`);
-    }
-  }, []);
-
-  const handleStreamClose = useCallback(() => {
-    console.log(`[PAGE] Stream hook closed with final status: ${agentStatus}`);
-  }, [agentStatus]);
-
-  const {
-    status: streamHookStatus,
-    textContent: streamingTextContent,
-    toolCall: streamingToolCall,
-    error: streamError,
-    agentRunId: currentHookRunId,
-    startStreaming,
-    stopStreaming,
-  } = useAgentStream(
-    {
-      onMessage: handleNewMessageFromStream,
-      onStatusChange: handleStreamStatusChange,
-      onError: handleStreamError,
-      onClose: handleStreamClose,
-    },
-    threadId,
-    setMessages,
-  );
-
-  useEffect(() => {
-    if (agentRunId && agentRunId !== currentHookRunId) {
-      console.log(
-        `[PAGE] Target agentRunId set to ${agentRunId}, initiating stream...`,
-      );
-      startStreaming(agentRunId);
-    }
-  }, [agentRunId, startStreaming, currentHookRunId]);
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && isSidePanelOpen) {
@@ -796,42 +780,82 @@ export default function ThreadPage({
 
     // Merge streaming tool calls with completed ones instead of replacing them
     setToolCalls(prevToolCalls => {
-      // Find any streaming tool calls that should be replaced with completed ones
-      const updatedToolCalls = [...prevToolCalls];
+      // If no previous tool calls exist, just use the historical ones
+      if (prevToolCalls.length === 0) {
+        return historicalToolPairs;
+      }
       
-      // Replace streaming tool calls with their completed versions
-      historicalToolPairs.forEach(completedToolCall => {
-        const streamingIndex = updatedToolCalls.findIndex(tc => 
-          tc.toolResult?.content === 'STREAMING' && 
-          tc.assistantCall.name === completedToolCall.assistantCall.name
-        );
-        
-        if (streamingIndex !== -1) {
-          // Replace the streaming tool call with the completed one
-          updatedToolCalls[streamingIndex] = completedToolCall;
-        } else {
-          // Check if this completed tool call already exists (avoid duplicates)
-          const existingIndex = updatedToolCalls.findIndex(tc =>
-            tc.assistantCall.content === completedToolCall.assistantCall.content &&
-            tc.toolResult?.content === completedToolCall.toolResult?.content
-          );
-          
-          if (existingIndex === -1) {
-            // Add new completed tool call if it doesn't exist
-            updatedToolCalls.push(completedToolCall);
-          }
-        }
-      });
-      
-      // If no historical tool pairs exist, just return the current streaming ones
+      // If no historical tool pairs exist, keep the current streaming ones
       if (historicalToolPairs.length === 0) {
         return prevToolCalls;
       }
       
-      // If we have historical pairs but no previous tool calls, use historical ones
-      if (prevToolCalls.length === 0) {
-        return historicalToolPairs;
-      }
+      // Create a map of completed tool calls by assistant message ID for efficient lookup
+      const completedToolCallsMap = new Map();
+      historicalToolPairs.forEach(completedToolCall => {
+        // Extract assistant message ID from the completed tool call's assistant content
+        try {
+          const assistantContent = safeJsonParse<ParsedContent>(completedToolCall.assistantCall.content, {});
+          const assistantMessage = messages.find(m => 
+            m.type === 'assistant' && 
+            (m.content === completedToolCall.assistantCall.content || 
+             (assistantContent.content && m.content.includes(assistantContent.content)))
+          );
+          if (assistantMessage?.message_id) {
+            completedToolCallsMap.set(assistantMessage.message_id, completedToolCall);
+          }
+        } catch (e) {
+          // Fallback: use tool name as key
+          completedToolCallsMap.set(completedToolCall.assistantCall.name, completedToolCall);
+        }
+      });
+      
+      // Process existing tool calls
+      const updatedToolCalls = prevToolCalls.map(tc => {
+        // If this is a streaming tool call, try to replace it with completed version
+        if (tc.toolResult?.content === 'STREAMING') {
+          // Try to find a matching completed tool call
+          for (const [key, completedToolCall] of completedToolCallsMap.entries()) {
+            // Match by tool name as fallback
+            if (tc.assistantCall.name === completedToolCall.assistantCall.name) {
+              console.log(`[TOOL_MERGE] Replacing streaming tool call ${tc.assistantCall.name} with completed version`);
+              completedToolCallsMap.delete(key); // Remove from map to avoid duplicates
+              return completedToolCall;
+            }
+          }
+          // If no match found, keep the streaming tool call
+          return tc;
+        }
+        
+        // For non-streaming tool calls, check if we have a newer version
+        const assistantContent = safeJsonParse<ParsedContent>(tc.assistantCall.content, {});
+        const assistantMessage = messages.find(m => 
+          m.type === 'assistant' && 
+          (m.content === tc.assistantCall.content || 
+           (assistantContent.content && m.content.includes(assistantContent.content)))
+        );
+        
+        if (assistantMessage?.message_id && completedToolCallsMap.has(assistantMessage.message_id)) {
+          const completedToolCall = completedToolCallsMap.get(assistantMessage.message_id);
+          completedToolCallsMap.delete(assistantMessage.message_id); // Remove to avoid duplicates
+          return completedToolCall;
+        }
+        
+        return tc;
+      });
+      
+      // Add any remaining completed tool calls that weren't matched
+      completedToolCallsMap.forEach(completedToolCall => {
+        // Check if this tool call already exists to avoid duplicates
+        const exists = updatedToolCalls.some(tc =>
+          tc.assistantCall.content === completedToolCall.assistantCall.content &&
+          tc.toolResult?.content === completedToolCall.toolResult?.content
+        );
+        
+        if (!exists) {
+          updatedToolCalls.push(completedToolCall);
+        }
+      });
       
       return updatedToolCalls;
     });
@@ -857,6 +881,85 @@ export default function ThreadPage({
       setAutoOpenedPanel(false);
     }
   }, [isSidePanelOpen]);
+
+  // Handle streaming tool calls from useAgentStream hook
+  useEffect(() => {
+    if (streamingToolCall && !userClosedPanelRef.current) {
+      // Normalize the tool name by replacing underscores with hyphens
+      const rawToolName = streamingToolCall.function_name || streamingToolCall.xml_tag_name || 'Unknown Tool';
+      const toolName = rawToolName.replace(/_/g, '-').toLowerCase();
+
+      // Skip <ask> tags from showing in the side panel during streaming
+      if (toolName === 'ask' || toolName === 'complete') {
+        return;
+      }
+
+      console.log('[STREAM] Received tool call:', toolName, '(raw:', rawToolName, ')');
+
+      // Create a properly formatted tool call input for the streaming tool
+      const toolArguments = streamingToolCall.arguments || '';
+
+      // Format the arguments in a way that matches the expected XML format for each tool
+      let formattedContent = toolArguments;
+      if (
+        toolName.includes('command') &&
+        !toolArguments.includes('<execute-command>')
+      ) {
+        formattedContent = `<execute-command>${toolArguments}</execute-command>`;
+      } else if (
+        toolName.includes('file') ||
+        toolName === 'create-file' ||
+        toolName === 'delete-file' ||
+        toolName === 'full-file-rewrite'
+      ) {
+        // For file operations, check if toolArguments contains a file path
+        const fileOpTags = ['create-file', 'delete-file', 'full-file-rewrite'];
+        const matchingTag = fileOpTags.find((tag) => toolName === tag);
+        if (matchingTag) {
+          // Check if arguments already have the proper XML format
+          if (!toolArguments.includes(`<${matchingTag}>`) && !toolArguments.includes('file_path=')) {
+            // If toolArguments looks like a raw file path, format it properly
+            const filePath = toolArguments.trim();
+            if (filePath && !filePath.startsWith('<')) {
+              formattedContent = `<${matchingTag} file_path="${filePath}">`;
+            } else {
+              formattedContent = `<${matchingTag}>${toolArguments}</${matchingTag}>`;
+            }
+          } else {
+            formattedContent = toolArguments;
+          }
+        }
+      }
+
+      const newToolCall: ToolCallInput = {
+        assistantCall: {
+          name: toolName,
+          content: formattedContent,
+          timestamp: new Date().toISOString(),
+        },
+        // For streaming tool calls, show real-time progress instead of fake 'STREAMING'
+        toolResult: {
+          content: 'STREAMING',
+          isSuccess: true,
+          timestamp: new Date().toISOString(),
+        },
+      };
+
+      // Update the tool calls state to reflect the streaming tool
+      setToolCalls((prev) => {
+        // If the same tool is already being streamed, update it instead of adding a new one
+        if (prev.length > 0 && prev[prev.length - 1].toolResult?.content === 'STREAMING') {
+          const updated = [...prev];
+          updated[updated.length - 1] = newToolCall;
+          return updated;
+        }
+        return [...prev, newToolCall];
+      });
+
+      setCurrentToolIndex(toolCalls.length);
+      setIsSidePanelOpen(true);
+    }
+  }, [streamingToolCall, toolCalls.length]);
 
   // Update handleToolClick to respect user closing preference and navigate correctly
   const handleToolClick = useCallback((clickedAssistantMessageId: string | null, clickedToolName: string) => {

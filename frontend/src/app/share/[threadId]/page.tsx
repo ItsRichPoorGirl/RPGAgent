@@ -501,42 +501,82 @@ export default function ThreadPage({
 
           // Merge streaming tool calls with completed ones instead of replacing them
           setToolCalls(prevToolCalls => {
-            // Find any streaming tool calls that should be replaced with completed ones
-            const updatedToolCalls = [...prevToolCalls];
+            // If no previous tool calls exist, just use the historical ones
+            if (prevToolCalls.length === 0) {
+              return historicalToolPairs;
+            }
             
-            // Replace streaming tool calls with their completed versions
-            historicalToolPairs.forEach(completedToolCall => {
-              const streamingIndex = updatedToolCalls.findIndex(tc => 
-                tc.toolResult?.content === 'STREAMING' && 
-                tc.assistantCall.name === completedToolCall.assistantCall.name
-              );
-              
-              if (streamingIndex !== -1) {
-                // Replace the streaming tool call with the completed one
-                updatedToolCalls[streamingIndex] = completedToolCall;
-              } else {
-                // Check if this completed tool call already exists (avoid duplicates)
-                const existingIndex = updatedToolCalls.findIndex(tc =>
-                  tc.assistantCall.content === completedToolCall.assistantCall.content &&
-                  tc.toolResult?.content === completedToolCall.toolResult?.content
-                );
-                
-                if (existingIndex === -1) {
-                  // Add new completed tool call if it doesn't exist
-                  updatedToolCalls.push(completedToolCall);
-                }
-              }
-            });
-            
-            // If no historical tool pairs exist, just return the current streaming ones
+            // If no historical tool pairs exist, keep the current streaming ones
             if (historicalToolPairs.length === 0) {
               return prevToolCalls;
             }
             
-            // If we have historical pairs but no previous tool calls, use historical ones
-            if (prevToolCalls.length === 0) {
-              return historicalToolPairs;
-            }
+            // Create a map of completed tool calls by assistant message ID for efficient lookup
+            const completedToolCallsMap = new Map();
+            historicalToolPairs.forEach(completedToolCall => {
+              // Extract assistant message ID from the completed tool call's assistant content
+              try {
+                const assistantContent = safeJsonParse<{ content?: string }>(completedToolCall.assistantCall.content, {});
+                const assistantMessage = unifiedMessages.find(m => 
+                  m.type === 'assistant' && 
+                  (m.content === completedToolCall.assistantCall.content || 
+                   (assistantContent.content && m.content.includes(assistantContent.content)))
+                );
+                if (assistantMessage?.message_id) {
+                  completedToolCallsMap.set(assistantMessage.message_id, completedToolCall);
+                }
+              } catch (e) {
+                // Fallback: use tool name as key
+                completedToolCallsMap.set(completedToolCall.assistantCall.name, completedToolCall);
+              }
+            });
+            
+            // Process existing tool calls
+            const updatedToolCalls = prevToolCalls.map(tc => {
+              // If this is a streaming tool call, try to replace it with completed version
+              if (tc.toolResult?.content === 'STREAMING') {
+                // Try to find a matching completed tool call
+                for (const [key, completedToolCall] of completedToolCallsMap.entries()) {
+                  // Match by tool name as fallback
+                  if (tc.assistantCall.name === completedToolCall.assistantCall.name) {
+                    console.log(`[TOOL_MERGE] Replacing streaming tool call ${tc.assistantCall.name} with completed version`);
+                    completedToolCallsMap.delete(key); // Remove from map to avoid duplicates
+                    return completedToolCall;
+                  }
+                }
+                // If no match found, keep the streaming tool call
+                return tc;
+              }
+              
+              // For non-streaming tool calls, check if we have a newer version
+              const assistantContent = safeJsonParse<{ content?: string }>(tc.assistantCall.content, {});
+              const assistantMessage = unifiedMessages.find(m => 
+                m.type === 'assistant' && 
+                (m.content === tc.assistantCall.content || 
+                 (assistantContent.content && m.content.includes(assistantContent.content)))
+              );
+              
+              if (assistantMessage?.message_id && completedToolCallsMap.has(assistantMessage.message_id)) {
+                const completedToolCall = completedToolCallsMap.get(assistantMessage.message_id);
+                completedToolCallsMap.delete(assistantMessage.message_id); // Remove to avoid duplicates
+                return completedToolCall;
+              }
+              
+              return tc;
+            });
+            
+            // Add any remaining completed tool calls that weren't matched
+            completedToolCallsMap.forEach(completedToolCall => {
+              // Check if this tool call already exists to avoid duplicates
+              const exists = updatedToolCalls.some(tc =>
+                tc.assistantCall.content === completedToolCall.assistantCall.content &&
+                tc.toolResult?.content === completedToolCall.toolResult?.content
+              );
+              
+              if (!exists) {
+                updatedToolCalls.push(completedToolCall);
+              }
+            });
             
             return updatedToolCalls;
           });
