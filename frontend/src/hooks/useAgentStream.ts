@@ -296,12 +296,18 @@ export function useAgentStream(
 
       switch (message.type) {
         case 'assistant':
-          console.log('[useAgentStream] test a:', parsedContent.content);
-          console.log('[useAgentStream] test a1:', parsedMetadata);
+          console.log('[useAgentStream] Assistant message received');
+          console.log('[useAgentStream] Content:', parsedContent);
+          console.log('[useAgentStream] Metadata:', parsedMetadata);
+          console.log('[useAgentStream] Message ID:', message.message_id);
+          console.log('[useAgentStream] Sequence:', message.sequence);
+          
           if (
             parsedMetadata.stream_status === 'chunk' &&
             parsedContent.content
           ) {
+            // Handle chunked streaming content
+            console.log('[useAgentStream] Adding chunk content:', parsedContent.content);
             setTextContent((prev) => {
               return prev.concat({
                 sequence: message.sequence,
@@ -310,13 +316,18 @@ export function useAgentStream(
             });
             callbacks.onAssistantChunk?.({ content: parsedContent.content });
           } else if (parsedMetadata.stream_status === 'complete') {
+            // Handle completion of streaming
+            console.log('[useAgentStream] Stream complete, clearing content');
             setTextContent([]);
             setToolCall(null);
             if (message.message_id) callbacks.onMessage(message);
           } else if (!parsedMetadata.stream_status) {
             // Handle non-chunked assistant messages if needed
+            console.log('[useAgentStream] Non-chunked assistant message');
             callbacks.onAssistantStart?.();
             if (message.message_id) callbacks.onMessage(message);
+          } else {
+            console.log('[useAgentStream] Unhandled assistant message case:', { parsedMetadata, parsedContent, message_id: message.message_id });
           }
           break;
         case 'tool':
