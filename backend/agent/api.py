@@ -503,17 +503,21 @@ async def test_stream_endpoint(agent_run_id: str):
 @router.get("/agent-run/{agent_run_id}/stream")
 async def stream_agent_run(agent_run_id: str, token: Optional[str] = None, request: Request = None):
     """Stream the responses of an agent run using Redis Lists and Pub/Sub."""
-    logger.error(f"[STREAM] ENDPOINT CALLED FOR {agent_run_id}")
+    # Use print() to bypass logging configuration issues
+    print(f"[STREAM] ENDPOINT CALLED FOR {agent_run_id}")
+    logger.warning(f"[STREAM] ENDPOINT CALLED FOR {agent_run_id}")
     
     # Simple test response first
     from fastapi.responses import StreamingResponse
     
     async def simple_test_generator():
-        logger.error(f"[STREAM] GENERATOR STARTED FOR {agent_run_id}")
+        print(f"[STREAM] GENERATOR STARTED FOR {agent_run_id}")
+        logger.warning(f"[STREAM] GENERATOR STARTED FOR {agent_run_id}")
         yield f"data: {{'test': 'working', 'agent_run_id': '{agent_run_id}'}}\n\n"
         yield f"data: {{'message': 'Stream endpoint is working'}}\n\n"
     
-    logger.error(f"[STREAM] RETURNING STREAMING RESPONSE FOR {agent_run_id}")
+    print(f"[STREAM] RETURNING STREAMING RESPONSE FOR {agent_run_id}")
+    logger.warning(f"[STREAM] RETURNING STREAMING RESPONSE FOR {agent_run_id}")
     return StreamingResponse(simple_test_generator(), media_type="text/event-stream")
 
 
