@@ -241,6 +241,10 @@ async def get_allowed_models_for_user(client, user_id: str):
 
 
 async def can_use_model(client, user_id: str, model_name: str):
+    logger.info(f"DEBUG: can_use_model called for user {user_id}, model {model_name}")
+    logger.info(f"DEBUG: ADMIN_USER_LIST: {config.ADMIN_USER_LIST}")
+    logger.info(f"DEBUG: Is user in admin list? {user_id in config.ADMIN_USER_LIST}")
+    
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
         return True, "Local development mode - billing disabled", {
@@ -251,7 +255,7 @@ async def can_use_model(client, user_id: str, model_name: str):
     
     # Check if user is an admin with unlimited access
     if user_id in config.ADMIN_USER_LIST:
-        logger.info(f"Admin user {user_id} has unlimited access")
+        logger.info(f"Admin user {user_id} has unlimited model access - bypassing all checks")
         return True, "Admin user - unlimited model access", {
             "price_id": "admin_unlimited",
             "plan_name": "Admin Unlimited",
@@ -721,6 +725,18 @@ async def get_subscription(
 ):
     """Get the current subscription status for the current user, including scheduled changes."""
     try:
+        # Check if user is an admin with unlimited access
+        if current_user_id in config.ADMIN_USER_LIST:
+            logger.info(f"Admin user {current_user_id} requesting subscription - returning unlimited access")
+            return SubscriptionStatus(
+                status="active",
+                plan_name="Admin Unlimited",
+                price_id="admin_unlimited",
+                minutes_limit=999999,
+                current_usage=0.0,
+                has_schedule=False
+            )
+        
         # Get subscription from Stripe (this helper already handles filtering/cleanup)
         subscription = await get_user_subscription(current_user_id)
         # print("Subscription data for status:", subscription)
