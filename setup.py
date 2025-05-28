@@ -7,6 +7,8 @@ import subprocess
 from getpass import getpass
 import re
 
+IS_WINDOWS = platform.system() == 'Windows'
+
 # ANSI colors for pretty output
 class Colors:
     HEADER = '\033[95m'
@@ -81,7 +83,8 @@ def check_requirements():
                 [cmd_to_check, '--version'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                check=True
+                check=True,
+                shell=IS_WINDOWS
             )
             print_success(f"{cmd} is installed")
         except (subprocess.SubprocessError, FileNotFoundError):
@@ -103,7 +106,8 @@ def check_docker_running():
             ['docker', 'info'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            check=True
+            check=True,
+            shell=IS_WINDOWS
         )
         print_success("Docker is running")
         return True
@@ -550,7 +554,8 @@ def setup_supabase():
             ['supabase', '--version'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            check=True
+            check=True,
+            shell=IS_WINDOWS
         )
     except (subprocess.SubprocessError, FileNotFoundError):
         print_error("Supabase CLI is not installed.")
@@ -599,7 +604,8 @@ def setup_supabase():
         subprocess.run(
             ['supabase', 'link', '--project-ref', project_ref],
             cwd=backend_dir,
-            check=True
+            check=True,
+            shell=IS_WINDOWS
         )
 
         # Push database migrations
@@ -628,7 +634,8 @@ def install_dependencies():
         subprocess.run(
             ['npm', 'install'],
             cwd='frontend',
-            check=True
+            check=True,
+            shell=IS_WINDOWS
         )
         print_success("Frontend dependencies installed successfully")
 
@@ -637,14 +644,16 @@ def install_dependencies():
         subprocess.run(
             ['poetry', 'lock'],
             cwd='backend',
-            check=True
+            check=True,
+            shell=IS_WINDOWS
         )
         # Install backend dependencies
         print_info("Installing backend dependencies...")
         subprocess.run(
             ['poetry', 'install'],
             cwd='backend',
-            check=True
+            check=True,
+            shell=IS_WINDOWS
         )
         print_success("Backend dependencies installed successfully")
 
@@ -715,7 +724,7 @@ def start_suna():
             #     subprocess.run(['docker', 'compose', 'up', '-d'], check=True)
 
             print_info("Building images locally...")
-            subprocess.run(['docker', 'compose', 'up', '-d'], check=True)
+            subprocess.run(['docker', 'compose', 'up', '-d', '--build'], check=True, shell=IS_WINDOWS)
 
             # Wait for services to be ready
             print_info("Waiting for services to start...")
@@ -723,11 +732,10 @@ def start_suna():
 
             # Check if services are running
             result = subprocess.run(
-                ['docker', 'compose', 'ps'],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-                text=True
+                ['docker', 'compose', 'ps', '-q'],
+                capture_output=True,
+                text=True,
+                shell=IS_WINDOWS
             )
 
             if "backend" in result.stdout and "frontend" in result.stdout:

@@ -46,6 +46,7 @@ export function WebSearchToolView({
   const [expandedResults, setExpandedResults] = useState<Record<number, boolean>>({});
 
   const query = extractSearchQuery(assistantContent);
+  console.log('toolContent', toolContent);
   const searchResults = extractSearchResults(toolContent);
   const toolTitle = getToolTitle(name);
 
@@ -73,7 +74,7 @@ export function WebSearchToolView({
         } else {
           parsedContent = {};
         }
-        
+
         // Check if it's the response format with answer
         if (parsedContent.answer && typeof parsedContent.answer === 'string') {
           setAnswer(parsedContent.answer);
@@ -149,7 +150,7 @@ export function WebSearchToolView({
 
       <CardContent className="p-0 h-full flex-1 overflow-hidden relative">
         {isStreaming ? (
-          <LoadingState 
+          <LoadingState
             icon={Search}
             iconColor="text-blue-500 dark:text-blue-400"
             bgColor="bg-gradient-to-b from-blue-100 to-blue-50 shadow-inner dark:from-blue-800/40 dark:to-blue-900/60 dark:shadow-blue-950/20"
@@ -226,6 +227,7 @@ export function WebSearchToolView({
               <div className="space-y-4">
                 {searchResults.map((result, idx) => {
                   const { icon: ResultTypeIcon, label: resultTypeLabel } = getResultType(result);
+                  console.log('result', result);
                   const isExpanded = expandedResults[idx] || false;
                   const favicon = getFavicon(result.url);
 
@@ -290,7 +292,18 @@ export function WebSearchToolView({
                             "text-sm text-zinc-600 dark:text-zinc-400",
                             isExpanded ? "" : "line-clamp-2"
                           )}>
-                            {result.snippet}
+                            {result?.snippet
+                              ?.replace(/\\\\\n/g, ' ')
+                              ?.replace(/\\\\n/g, ' ')
+                              ?.replace(/\\n/g, ' ')
+                              ?.replace(/\\\\\t/g, ' ')
+                              ?.replace(/\\\\t/g, ' ')
+                              ?.replace(/\\t/g, ' ')
+                              ?.replace(/\\\\\r/g, ' ')
+                              ?.replace(/\\\\r/g, ' ')
+                              ?.replace(/\\r/g, ' ')
+                              ?.replace(/\s+/g, ' ')
+                              ?.trim()}
                           </p>
                         )}
                       </div>
