@@ -255,6 +255,11 @@ export default function ThreadPage({
     setMessages,
   );
 
+  // Debug log for streamingToolCall changes
+  useEffect(() => {
+    console.log('[DEBUG] streamingToolCall changed:', streamingToolCall);
+  }, [streamingToolCall]);
+
   // Start streaming when agentRunId changes
   useEffect(() => {
     if (agentRunId && agentRunId !== currentHookRunId) {
@@ -995,7 +1000,14 @@ export default function ThreadPage({
 
       // Create a properly formatted tool call input for the streaming tool
       // that matches the format of historical tool calls
-      const toolArguments = toolCall.arguments || '';
+      const rawToolArguments = toolCall.arguments || '';
+      
+      // Ensure toolArguments is always a string
+      const toolArguments = typeof rawToolArguments === 'string' 
+        ? rawToolArguments 
+        : typeof rawToolArguments === 'object' && rawToolArguments !== null
+          ? JSON.stringify(rawToolArguments)
+          : String(rawToolArguments);
 
       // Format the arguments in a way that matches the expected XML format for each tool
       // This ensures the specialized tool views render correctly

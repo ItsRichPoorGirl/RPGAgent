@@ -271,7 +271,15 @@ export function useToolCalls(
 
       if (userClosedPanelRef.current) return;
 
-      const toolArguments = toolCall.arguments || '';
+      const rawToolArguments = toolCall.arguments || '';
+      
+      // Ensure toolArguments is always a string
+      const toolArguments = typeof rawToolArguments === 'string' 
+        ? rawToolArguments 
+        : typeof rawToolArguments === 'object' && rawToolArguments !== null
+          ? JSON.stringify(rawToolArguments)
+          : String(rawToolArguments);
+          
       let formattedContent = toolArguments;
       if (
         toolName.includes('command') &&
