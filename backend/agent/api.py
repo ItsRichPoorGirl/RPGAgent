@@ -501,7 +501,7 @@ async def test_stream_endpoint(agent_run_id: str):
     return {"message": f"Test endpoint working for {agent_run_id}"}
 
 @router.get("/agent-run/{agent_run_id}/stream")
-async def stream_agent_run(agent_run_id: str, token: Optional[str] = None, request: Request = None):
+async def stream_agent_run(agent_run_id: str, request: Request, token: Optional[str] = None):
     """Stream the responses of an agent run using Redis Lists and Pub/Sub."""
     logger.info(f"[STREAM] Starting stream for agent run: {agent_run_id}")
     
@@ -510,7 +510,7 @@ async def stream_agent_run(agent_run_id: str, token: Optional[str] = None, reque
         raise HTTPException(status_code=401, detail="Authentication token required")
     
     try:
-        user_id = await get_user_id_from_stream_auth(token)
+        user_id = await get_user_id_from_stream_auth(request, token)
     except Exception as e:
         logger.error(f"[STREAM] Auth error for {agent_run_id}: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid authentication token")
