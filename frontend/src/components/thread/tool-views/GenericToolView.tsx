@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingState } from './shared/LoadingState';
+import { Markdown } from '@/components/ui/markdown';
 
 export function GenericToolView({
   name = 'generic-tool',
@@ -31,6 +32,26 @@ export function GenericToolView({
   isStreaming = false,
 }: ToolViewProps) {
   const toolTitle = getToolTitle(name);
+
+  // Helper function to detect if content looks like markdown
+  const isMarkdownContent = (content: string) => {
+    if (!content || typeof content !== 'string') return false;
+    
+    // Check for common markdown patterns
+    const markdownPatterns = [
+      /^#{1,6}\s+/m,        // Headers
+      /^\s*[-*+]\s+/m,      // Unordered lists
+      /^\s*\d+\.\s+/m,      // Ordered lists
+      /^\s*-\s+\[[ x]\]\s+/m, // Task lists
+      /\*\*.*?\*\*/,        // Bold text
+      /\*.*?\*/,            // Italic text
+      /`.*?`/,              // Inline code
+      /```[\s\S]*?```/,     // Code blocks
+      /\[.*?\]\(.*?\)/,     // Links
+    ];
+    
+    return markdownPatterns.some(pattern => pattern.test(content));
+  };
 
   const formatContent = (content: any) => {
     if (!content) return null;
@@ -51,6 +72,35 @@ export function GenericToolView({
     }
 
     return String(content);
+  };
+
+  // New function to render content appropriately
+  const renderContent = (content: string, label: string) => {
+    if (!content) return null;
+    
+    const isMarkdown = isMarkdownContent(content);
+    
+    return (
+      <div className="space-y-2">
+        <div className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center">
+          <Wrench className="h-4 w-4 mr-2 text-zinc-500 dark:text-zinc-400" />
+          {label}
+        </div>
+        <div className="border-muted bg-muted/20 rounded-lg overflow-hidden border">
+          <div className="p-4">
+            {isMarkdown ? (
+              <Markdown className="text-sm prose prose-sm dark:prose-invert max-w-none">
+                {content}
+              </Markdown>
+            ) : (
+              <pre className="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap break-words font-mono">
+                {content}
+              </pre>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const formattedAssistantContent = React.useMemo(
@@ -110,37 +160,9 @@ export function GenericToolView({
         ) : formattedAssistantContent || formattedToolContent ? (
           <ScrollArea className="h-full w-full">
             <div className="p-4 space-y-4">
-              {formattedAssistantContent && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center">
-                    <Wrench className="h-4 w-4 mr-2 text-zinc-500 dark:text-zinc-400" />
-                    Input
-                  </div>
-                  <div className="border-muted bg-muted/20 rounded-lg overflow-hidden border">
-                    <div className="p-4">
-                      <pre className="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap break-words font-mono">
-                        {formattedAssistantContent}
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {renderContent(formattedAssistantContent, 'Input')}
 
-              {formattedToolContent && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center">
-                    <Wrench className="h-4 w-4 mr-2 text-zinc-500 dark:text-zinc-400" />
-                    Output
-                  </div>
-                  <div className="border-muted bg-muted/20 rounded-lg overflow-hidden border">
-                    <div className="p-4">
-                      <pre className="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap break-words font-mono">
-                        {formattedToolContent}
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {renderContent(formattedToolContent, 'Output')}
             </div>
           </ScrollArea>
         ) : (

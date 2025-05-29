@@ -369,11 +369,22 @@ export function useAgentStream(
               console.log('[useAgentStream] Tool completion message received:', {
                 status_type: parsedContent.status_type,
                 tool_index: parsedContent.tool_index,
+                function_name: parsedContent.function_name,
                 current_toolCall_index: toolCall?.tool_index,
+                current_toolCall_name: toolCall?.name,
                 will_clear: toolCall?.tool_index === parsedContent.tool_index
               });
-              if (toolCall?.tool_index === parsedContent.tool_index) {
+              // More robust tool clearing: match by index OR function name OR just clear if close match
+              const shouldClearCompleted = toolCall && (
+                toolCall.tool_index === parsedContent.tool_index ||
+                toolCall.name === parsedContent.function_name ||
+                (toolCall.xml_tag_name && toolCall.xml_tag_name === parsedContent.xml_tag_name)
+              );
+              if (shouldClearCompleted) {
                 console.log('[useAgentStream] Clearing toolCall state for completed tool');
+                setToolCall(null);
+              } else if (toolCall) {
+                console.log('[useAgentStream] MISMATCH: Tool completion did not match current toolCall - clearing anyway as fail-safe');
                 setToolCall(null);
               }
               break;
@@ -382,11 +393,22 @@ export function useAgentStream(
               console.log('[useAgentStream] Tool completion message received:', {
                 status_type: parsedContent.status_type,
                 tool_index: parsedContent.tool_index,
+                function_name: parsedContent.function_name,
                 current_toolCall_index: toolCall?.tool_index,
+                current_toolCall_name: toolCall?.name,
                 will_clear: toolCall?.tool_index === parsedContent.tool_index
               });
-              if (toolCall?.tool_index === parsedContent.tool_index) {
+              // More robust tool clearing: match by index OR function name OR just clear if close match
+              const shouldClearFailed = toolCall && (
+                toolCall.tool_index === parsedContent.tool_index ||
+                toolCall.name === parsedContent.function_name ||
+                (toolCall.xml_tag_name && toolCall.xml_tag_name === parsedContent.xml_tag_name)
+              );
+              if (shouldClearFailed) {
                 console.log('[useAgentStream] Clearing toolCall state for completed tool');
+                setToolCall(null);
+              } else if (toolCall) {
+                console.log('[useAgentStream] MISMATCH: Tool failure did not match current toolCall - clearing anyway as fail-safe');
                 setToolCall(null);
               }
               break;
