@@ -610,6 +610,11 @@ async def stream_agent_run(agent_run_id: str, request: Request, token: Optional[
             
             logger.info(f"[STREAM] Stream ended for {agent_run_id}")
             
+        except GeneratorExit:
+            # Handle client disconnection gracefully
+            logger.info(f"[STREAM] Client disconnected from stream for {agent_run_id}")
+            raise  # Re-raise GeneratorExit to properly terminate the generator
+            
         except Exception as e:
             logger.error(f"[STREAM] Critical error in generator for {agent_run_id}: {str(e)}")
             error_msg = json.dumps({"type": "status", "status": "error", "message": f"Critical stream error: {str(e)}"})
