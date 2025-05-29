@@ -31,15 +31,19 @@ import { useInitiateAgentWithInvalidation } from '@/hooks/react-query/dashboard/
 import { ModalProviders } from '@/providers/modal-providers';
 import { useModal } from '@/hooks/use-modal-store';
 import { Examples } from './_components/suggestions/examples';
+import { ErrorBoundary } from '@/components/error-boundary';
+import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useDebounce } from '@/hooks/use-debounce';
+import { toast } from 'sonner';
 
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
+const SUBMISSION_COOLDOWN = 2000; // 2 seconds cooldown between submissions
 
 function DashboardContent() {
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoSubmit, setAutoSubmit] = useState(false);
-  const { billingError, handleBillingError, clearBillingError } =
-    useBillingError();
+  const { billingError, handleBillingError, clearBillingError } = useBillingError();
   const router = useRouter();
   const isMobile = useIsMobile();
   const { setOpenMobile } = useSidebar();
@@ -48,9 +52,9 @@ function DashboardContent() {
   const chatInputRef = useRef<ChatInputHandles>(null);
   const initiateAgentMutation = useInitiateAgentWithInvalidation();
   const { onOpen } = useModal();
-
-  const secondaryGradient =
-    'bg-gradient-to-r from-blue-500 to-blue-500 bg-clip-text text-transparent';
+  const [lastSubmissionTime, setLastSubmissionTime] = useState(0);
+  const [pendingPrompt, setPendingPrompt] = useLocalStorage(PENDING_PROMPT_KEY, '');
+  const debouncedInputValue = useDebounce(inputValue, 300);
 
   const handleSubmit = async (
     message: string,
@@ -62,17 +66,28 @@ function DashboardContent() {
       enable_context_manager?: boolean;
     },
   ) => {
-    if (
-      (!message.trim() && !chatInputRef.current?.getPendingFiles().length) ||
-      isSubmitting
-    )
+    if (!message.trim() && !chatInputRef.current?.getPendingFiles().length) {
+      toast.error('Please enter a message or attach a file');
       return;
+    }
+
+    if (isSubmitting) {
+      toast.error('Please wait for the current submission to complete');
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastSubmissionTime < SUBMISSION_COOLDOWN) {
+      toast.error('Please wait a moment before submitting again');
+      return;
+    }
 
     setIsSubmitting(true);
+    setLastSubmissionTime(now);
 
     try {
       const files = chatInputRef.current?.getPendingFiles() || [];
-      localStorage.removeItem(PENDING_PROMPT_KEY);
+      setPendingPrompt(''); // Clear pending prompt
 
       const formData = new FormData();
       formData.append('prompt', message);
@@ -87,10 +102,7 @@ function DashboardContent() {
       formData.append('stream', String(options?.stream ?? true));
       formData.append('enable_context_manager', String(options?.enable_context_manager ?? false));
 
-      console.log('FormData content:', Array.from(formData.entries()));
-
       const result = await initiateAgentMutation.mutateAsync(formData);
-      console.log('Agent initiated:', result);
 
       if (result.thread_id) {
         router.push(`/agents/${result.thread_id}`);
@@ -101,8 +113,9 @@ function DashboardContent() {
     } catch (error: any) {
       console.error('Error during submission process:', error);
       if (error instanceof BillingError) {
-        console.log('Handling BillingError:', error.detail);
         onOpen("paymentRequiredDialog");
+      } else {
+        toast.error('An error occurred while processing your request');
       }
     } finally {
       setIsSubmitting(false);
@@ -110,31 +123,21 @@ function DashboardContent() {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const pendingPrompt = localStorage.getItem(PENDING_PROMPT_KEY);
-
-      if (pendingPrompt) {
-        setInputValue(pendingPrompt);
-        setAutoSubmit(true);
-      }
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, []);
+    if (pendingPrompt) {
+      setInputValue(pendingPrompt);
+      setAutoSubmit(true);
+    }
+  }, [pendingPrompt]);
 
   useEffect(() => {
-    if (autoSubmit && inputValue && !isSubmitting) {
-      const timer = setTimeout(() => {
-        handleSubmit(inputValue);
-        setAutoSubmit(false);
-      }, 500);
-
-      return () => clearTimeout(timer);
+    if (autoSubmit && debouncedInputValue && !isSubmitting) {
+      handleSubmit(debouncedInputValue);
+      setAutoSubmit(false);
     }
-  }, [autoSubmit, inputValue, isSubmitting]);
+  }, [autoSubmit, debouncedInputValue, isSubmitting]);
 
   return (
-    <>
+    <ErrorBoundary fallback={<div>Something went wrong. Please try refreshing the page.</div>}>
       <ModalProviders />
       <div className="flex flex-col h-screen w-full">
         {isMobile && (
@@ -178,7 +181,7 @@ function DashboardContent() {
               "text-2xl",
               "sm:text-3xl sm:mt-3 sm:px-4"
             )}>
-              What would you like Suna to do today?
+              What would you like Luciq to do today?
             </p>
           </div>
           
@@ -210,7 +213,7 @@ function DashboardContent() {
           isOpen={!!billingError}
         />
       </div>
-    </>
+    </ErrorBoundary>
   );
 }
 
