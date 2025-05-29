@@ -443,19 +443,33 @@ async def start_agent(
     except Exception as e:
         logger.warning(f"Failed to register agent run in Redis ({instance_key}): {str(e)}")
 
-    # Run the agent in the background
-    task = asyncio.create_task(
-        run_agent_background(
-            agent_run_id=agent_run_id, thread_id=thread_id, instance_id=instance_id,
-            project_id=project_id, sandbox=sandbox,
-            model_name=model_name,  # Already resolved above
-            enable_thinking=body.enable_thinking, reasoning_effort=body.reasoning_effort,
-            stream=body.stream, enable_context_manager=body.enable_context_manager
+    # Run agent in background
+    try:
+        logger.info(f"[AGENT] Creating background task for agent run: {agent_run_id}")
+        task = asyncio.create_task(
+            run_agent_background(
+                agent_run_id=agent_run_id, thread_id=thread_id, instance_id=instance_id,
+                project_id=project_id, sandbox=sandbox,
+                model_name=model_name,  # Already resolved above
+                enable_thinking=body.enable_thinking, reasoning_effort=body.reasoning_effort,
+                stream=body.stream, enable_context_manager=body.enable_context_manager
+            )
         )
-    )
-
-    # Set a callback to clean up Redis instance key when task is done
-    task.add_done_callback(lambda _: asyncio.create_task(_cleanup_redis_instance_key(agent_run_id)))
+        task.add_done_callback(lambda t: asyncio.create_task(_cleanup_redis_instance_key(agent_run_id)))
+        
+        # Add error callback to see if task fails
+        def task_error_callback(task):
+            if task.exception():
+                logger.error(f"[AGENT] Background task failed for {agent_run_id}: {task.exception()}")
+            else:
+                logger.info(f"[AGENT] Background task completed successfully for {agent_run_id}")
+        
+        task.add_done_callback(task_error_callback)
+        logger.info(f"[AGENT] Background task created successfully for agent run: {agent_run_id}")
+        
+    except Exception as task_error:
+        logger.error(f"[AGENT] Failed to create background task for {agent_run_id}: {str(task_error)}")
+        raise HTTPException(status_code=500, detail=f"Failed to start agent: {str(task_error)}")
 
     return {"agent_run_id": agent_run_id, "status": "running"}
 
@@ -656,48 +670,54 @@ async def run_agent_background(
     enable_context_manager: bool
 ):
     """Run the agent in the background using Redis for state."""
-    logger.info(f"Starting background agent run: {agent_run_id} for thread: {thread_id} (Instance: {instance_id})")
-    logger.info(f"🚀 Using model: {model_name} (thinking: {enable_thinking}, reasoning_effort: {reasoning_effort})")
-
-    client = await db.client
-    start_time = datetime.now(timezone.utc)
-    total_responses = 0
-    pubsub = None
-    stop_checker = None
-    stop_signal_received = False
-
-    # Define Redis keys and channels
-    response_list_key = f"agent_run:{agent_run_id}:responses"
-    response_channel = f"agent_run:{agent_run_id}:new_response"
-    instance_control_channel = f"agent_run:{agent_run_id}:control:{instance_id}"
-    global_control_channel = f"agent_run:{agent_run_id}:control"
-    instance_active_key = f"active_run:{instance_id}:{agent_run_id}"
-
-    async def check_for_stop_signal():
-        nonlocal stop_signal_received
-        if not pubsub: return
-        try:
-            while not stop_signal_received:
-                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=0.5)
-                if message and message.get("type") == "message":
-                    data = message.get("data")
-                    if isinstance(data, bytes): data = data.decode('utf-8')
-                    if data == "STOP":
-                        logger.info(f"Received STOP signal for agent run {agent_run_id} (Instance: {instance_id})")
-                        stop_signal_received = True
-                        break
-                # Periodically refresh the active run key TTL
-                if total_responses % 50 == 0: # Refresh every 50 responses or so
-                    try: await redis.expire(instance_active_key, redis.REDIS_KEY_TTL)
-                    except Exception as ttl_err: logger.warning(f"Failed to refresh TTL for {instance_active_key}: {ttl_err}")
-                await asyncio.sleep(0.1) # Short sleep to prevent tight loop
-        except asyncio.CancelledError:
-            logger.info(f"Stop signal checker cancelled for {agent_run_id} (Instance: {instance_id})")
-        except Exception as e:
-            logger.error(f"Error in stop signal checker for {agent_run_id}: {e}", exc_info=True)
-            stop_signal_received = True # Stop the run if the checker fails
+    logger.info(f"[AGENT_BG] ===== STARTING BACKGROUND AGENT RUN =====")
+    logger.info(f"[AGENT_BG] Agent Run ID: {agent_run_id}")
+    logger.info(f"[AGENT_BG] Thread ID: {thread_id}")
+    logger.info(f"[AGENT_BG] Instance ID: {instance_id}")
+    logger.info(f"[AGENT_BG] Project ID: {project_id}")
+    logger.info(f"[AGENT_BG] Model: {model_name}")
+    logger.info(f"[AGENT_BG] Thinking: {enable_thinking}, Effort: {reasoning_effort}")
+    logger.info(f"[AGENT_BG] Stream: {stream}, Context Manager: {enable_context_manager}")
 
     try:
+        client = await db.client
+        start_time = datetime.now(timezone.utc)
+        total_responses = 0
+        pubsub = None
+        stop_checker = None
+        stop_signal_received = False
+
+        # Define Redis keys and channels
+        response_list_key = f"agent_run:{agent_run_id}:responses"
+        response_channel = f"agent_run:{agent_run_id}:new_response"
+        instance_control_channel = f"agent_run:{agent_run_id}:control:{instance_id}"
+        global_control_channel = f"agent_run:{agent_run_id}:control"
+        instance_active_key = f"active_run:{instance_id}:{agent_run_id}"
+
+        async def check_for_stop_signal():
+            nonlocal stop_signal_received
+            if not pubsub: return
+            try:
+                while not stop_signal_received:
+                    message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=0.5)
+                    if message and message.get("type") == "message":
+                        data = message.get("data")
+                        if isinstance(data, bytes): data = data.decode('utf-8')
+                        if data == "STOP":
+                            logger.info(f"Received STOP signal for agent run {agent_run_id} (Instance: {instance_id})")
+                            stop_signal_received = True
+                            break
+                    # Periodically refresh the active run key TTL
+                    if total_responses % 50 == 0: # Refresh every 50 responses or so
+                        try: await redis.expire(instance_active_key, redis.REDIS_KEY_TTL)
+                        except Exception as ttl_err: logger.warning(f"Failed to refresh TTL for {instance_active_key}: {ttl_err}")
+                    await asyncio.sleep(0.1) # Short sleep to prevent tight loop
+            except asyncio.CancelledError:
+                logger.info(f"Stop signal checker cancelled for {agent_run_id} (Instance: {instance_id})")
+            except Exception as e:
+                logger.error(f"Error in stop signal checker for {agent_run_id}: {e}", exc_info=True)
+                stop_signal_received = True # Stop the run if the checker fails
+
         # Setup Pub/Sub listener for control signals
         pubsub = await redis.create_streaming_pubsub()
         
@@ -714,17 +734,26 @@ async def run_agent_background(
         await redis.set(instance_active_key, "running", ex=redis.REDIS_KEY_TTL)
 
         # Initialize agent generator
-        agent_gen = run_agent(
-            thread_id=thread_id, project_id=project_id, stream=stream,
-            thread_manager=None, model_name=model_name,
-            enable_thinking=enable_thinking, reasoning_effort=reasoning_effort,
-            enable_context_manager=enable_context_manager
-        )
+        logger.info(f"[AGENT_BG] Initializing run_agent generator...")
+        try:
+            agent_gen = run_agent(
+                thread_id=thread_id, project_id=project_id, stream=stream,
+                thread_manager=None, model_name=model_name,
+                enable_thinking=enable_thinking, reasoning_effort=reasoning_effort,
+                enable_context_manager=enable_context_manager
+            )
+            logger.info(f"[AGENT_BG] Agent generator created successfully")
+        except Exception as gen_error:
+            logger.error(f"[AGENT_BG] Failed to create agent generator: {str(gen_error)}")
+            raise
 
         final_status = "running"
         error_message = None
 
+        logger.info(f"[AGENT_BG] Starting agent response loop...")
         async for response in agent_gen:
+            logger.info(f"[AGENT_BG] Received response from agent: {response.get('type', 'unknown')} - {str(response)[:100]}...")
+            
             if stop_signal_received:
                 logger.info(f"Agent run {agent_run_id} stopped by signal.")
                 final_status = "stopped"
@@ -735,6 +764,7 @@ async def run_agent_background(
             await redis.rpush(response_list_key, response_json)
             await redis.publish(response_channel, "new")
             total_responses += 1
+            logger.debug(f"[AGENT_BG] Stored response #{total_responses} in Redis")
 
             # Check for agent-signaled completion or error
             if response.get('type') == 'status':
@@ -745,6 +775,8 @@ async def run_agent_background(
                      if status_val == 'failed' or status_val == 'stopped':
                          error_message = response.get('message', f"Run ended with status: {status_val}")
                      break
+
+        logger.info(f"[AGENT_BG] Agent response loop completed. Total responses: {total_responses}")
 
         # If loop finished without explicit completion/error/stop signal, mark as completed
         if final_status == "running":
@@ -1031,16 +1063,32 @@ async def initiate_agent_with_files(
             logger.warning(f"Failed to register agent run in Redis ({instance_key}): {str(e)}")
 
         # Run agent in background
-        task = asyncio.create_task(
-            run_agent_background(
-                agent_run_id=agent_run_id, thread_id=thread_id, instance_id=instance_id,
-                project_id=project_id, sandbox=sandbox,
-                model_name=model_name,  # Already resolved above
-                enable_thinking=enable_thinking, reasoning_effort=reasoning_effort,
-                stream=stream, enable_context_manager=enable_context_manager
+        try:
+            logger.info(f"[AGENT] Creating background task for agent run: {agent_run_id}")
+            task = asyncio.create_task(
+                run_agent_background(
+                    agent_run_id=agent_run_id, thread_id=thread_id, instance_id=instance_id,
+                    project_id=project_id, sandbox=sandbox,
+                    model_name=model_name,  # Already resolved above
+                    enable_thinking=enable_thinking, reasoning_effort=reasoning_effort,
+                    stream=stream, enable_context_manager=enable_context_manager
+                )
             )
-        )
-        task.add_done_callback(lambda _: asyncio.create_task(_cleanup_redis_instance_key(agent_run_id)))
+            task.add_done_callback(lambda t: asyncio.create_task(_cleanup_redis_instance_key(agent_run_id)))
+            
+            # Add error callback to see if task fails
+            def task_error_callback(task):
+                if task.exception():
+                    logger.error(f"[AGENT] Background task failed for {agent_run_id}: {task.exception()}")
+                else:
+                    logger.info(f"[AGENT] Background task completed successfully for {agent_run_id}")
+            
+            task.add_done_callback(task_error_callback)
+            logger.info(f"[AGENT] Background task created successfully for agent run: {agent_run_id}")
+            
+        except Exception as task_error:
+            logger.error(f"[AGENT] Failed to create background task for {agent_run_id}: {str(task_error)}")
+            raise HTTPException(status_code=500, detail=f"Failed to start agent: {str(task_error)}")
 
         return {"thread_id": thread_id, "agent_run_id": agent_run_id}
 
