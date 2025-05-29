@@ -815,7 +815,7 @@ export default function ThreadPage({
           const assistantMessage = messages.find(m => 
             m.type === 'assistant' && 
             (m.content === completedToolCall.assistantCall.content || 
-             (assistantContent.content && m.content.includes(assistantContent.content)))
+             (assistantContent.content && typeof m.content === 'string' && m.content.includes(assistantContent.content)))
           );
           if (assistantMessage?.message_id) {
             completedToolCallsMap.set(assistantMessage.message_id, completedToolCall);
@@ -848,7 +848,7 @@ export default function ThreadPage({
         const assistantMessage = messages.find(m => 
           m.type === 'assistant' && 
           (m.content === tc.assistantCall.content || 
-           (assistantContent.content && m.content.includes(assistantContent.content)))
+           (assistantContent.content && typeof m.content === 'string' && m.content.includes(assistantContent.content)))
         );
         
         if (assistantMessage?.message_id && completedToolCallsMap.has(assistantMessage.message_id)) {
@@ -898,15 +898,6 @@ export default function ThreadPage({
     }
   }, [isSidePanelOpen]);
 
-  // Connect streamingToolCall from useAgentStream to handleStreamingToolCall
-  useEffect(() => {
-    if (streamingToolCall) {
-      handleStreamingToolCall(streamingToolCall);
-    } else {
-      // Clear streaming tool call when it becomes null
-      handleStreamingToolCall(null);
-    }
-  }, [streamingToolCall, handleStreamingToolCall]);
 
   // Update handleToolClick to respect user closing preference and navigate correctly
   const handleToolClick = useCallback((clickedAssistantMessageId: string | null, clickedToolName: string) => {
@@ -1083,11 +1074,21 @@ export default function ThreadPage({
     [],
   );
 
+  // Connect streamingToolCall from useAgentStream to handleStreamingToolCall
+  useEffect(() => {
+    if (streamingToolCall) {
+      handleStreamingToolCall(streamingToolCall);
+    } else {
+      // Clear streaming tool call when it becomes null
+      handleStreamingToolCall(null);
+    }
+  }, [streamingToolCall, handleStreamingToolCall]);
+
   // SEO title update
   useEffect(() => {
     if (projectName) {
       // Update document title when project name changes
-      document.title = `${projectName} | Kortix Suna`;
+      document.title = `${projectName} | Luciq A.I.`;
 
       // Update meta tags for SEO
       const metaDescription = document.querySelector(

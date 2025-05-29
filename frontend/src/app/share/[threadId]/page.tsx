@@ -866,7 +866,7 @@ export default function ThreadPage({
             // Scan for matching tool call
             for (let j = 0; j < toolCalls.length; j++) {
               const content = toolCalls[j].assistantCall?.content || '';
-              if (content.includes(assistantId)) {
+              if (typeof content === 'string' && content.includes(assistantId)) {
                 console.log(
                   `Found matching tool call at index ${j}, updating panel`,
                 );
