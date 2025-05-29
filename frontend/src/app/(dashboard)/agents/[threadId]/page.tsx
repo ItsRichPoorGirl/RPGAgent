@@ -255,11 +255,6 @@ export default function ThreadPage({
     setMessages,
   );
 
-  // Debug log for streamingToolCall changes
-  useEffect(() => {
-    console.log('[DEBUG] streamingToolCall changed:', streamingToolCall);
-  }, [streamingToolCall]);
-
   // Start streaming when agentRunId changes
   useEffect(() => {
     if (agentRunId && agentRunId !== currentHookRunId) {

@@ -335,10 +335,8 @@ export function useAgentStream(
           if (message.message_id) callbacks.onMessage(message);
           break;
         case 'status':
-          console.log('[DEBUG] Status message received:', parsedContent.status_type, parsedContent);
           switch (parsedContent.status_type) {
             case 'tool_started':
-              console.log('[DEBUG] Setting toolCall state for tool_started:', parsedContent.function_name);
               setToolCall({
                 role: 'assistant',
                 status_type: 'tool_started',
