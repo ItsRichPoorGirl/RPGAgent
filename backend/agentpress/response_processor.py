@@ -1400,6 +1400,7 @@ class ResponseProcessor:
         content = {
             "role": "assistant", "status_type": "tool_started",
             "function_name": context.function_name, "xml_tag_name": context.xml_tag_name,
+            "arguments": context.tool_call.get("arguments", {}),  # Include tool arguments for frontend
             "message": f"Starting execution of {tool_name}", "tool_index": context.tool_index,
             "tool_call_id": context.tool_call.get("id") # Include tool_call ID if native
         }
