@@ -509,15 +509,6 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                 {groupIndex === groupedMessages.length - 1 && !readOnly && (streamHookStatus === 'streaming' || streamHookStatus === 'connecting') && (
                                                                     <div className="mt-2">
                                                                         {(() => {
-                                                                            // In debug mode, show raw streaming content
-                                                                            if (debugMode && streamingTextContent) {
-                                                                                return (
-                                                                                    <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto p-2 border border-border rounded-md bg-muted/30">
-                                                                                        {streamingTextContent}
-                                                                                    </pre>
-                                                                                );
-                                                                            }
-
                                                                             let detectedTag: string | null = null;
                                                                             let tagStartIndex = -1;
                                                                             if (streamingTextContent) {
@@ -616,31 +607,22 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
 
                                                                             return (
                                                                                 <>
-                                                                                    {/* In debug mode, show raw streaming content */}
-                                                                                    {debugMode && streamingText ? (
-                                                                                        <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto p-2 border border-border rounded-md bg-muted/30">
-                                                                                            {streamingText}
-                                                                                        </pre>
-                                                                                    ) : (
-                                                                                        <>
-                                                                                            {textBeforeTag && (
-                                                                                                <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3">{textBeforeTag}</Markdown>
-                                                                                            )}
-                                                                                            {showCursor && (
-                                                                                                <span className="inline-block h-4 w-0.5 bg-primary ml-0.5 -mb-1 animate-pulse" />
-                                                                                            )}
+                                                                                    {textBeforeTag && (
+                                                                                        <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3">{textBeforeTag}</Markdown>
+                                                                                    )}
+                                                                                    {showCursor && (
+                                                                                        <span className="inline-block h-4 w-0.5 bg-primary ml-0.5 -mb-1 animate-pulse" />
+                                                                                    )}
 
-                                                                                            {detectedTag && (
-                                                                                                <div className="mt-2 mb-1">
-                                                                                                    <button
-                                                                                                        className="animate-shimmer inline-flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-md transition-colors cursor-pointer border border-primary/20"
-                                                                                                    >
-                                                                                                        <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
-                                                                                                        <span className="font-mono text-xs text-primary">{detectedTag}</span>
-                                                                                                    </button>
-                                                                                                </div>
-                                                                                            )}
-                                                                                        </>
+                                                                                    {detectedTag && (
+                                                                                        <div className="mt-2 mb-1">
+                                                                                            <button
+                                                                                                className="animate-shimmer inline-flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-md transition-colors cursor-pointer border border-primary/20"
+                                                                                            >
+                                                                                                <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
+                                                                                                <span className="font-mono text-xs text-primary">{detectedTag}</span>
+                                                                                            </button>
+                                                                                        </div>
                                                                                     )}
                                                                                 </>
                                                                             );

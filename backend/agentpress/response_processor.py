@@ -242,6 +242,22 @@ class ResponseProcessor:
                     if not (config.max_xml_tool_calls > 0 and xml_tool_call_count >= config.max_xml_tool_calls):
                         # Only yield new content that hasn't been yielded before
                         new_content = chunk_content
+                        
+                        # Emergency filter: Prevent infinite HTML garbage streaming
+                        html_patterns = ['>\\n</html>', '</html>\\n</html>', '\\n</html>\\n</html>']
+                        is_garbage_html = any(pattern in new_content for pattern in html_patterns)
+                        
+                        # Also check for excessive repetition
+                        is_repetitive = new_content == last_yielded_content and len(new_content) < 20
+                        
+                        if is_garbage_html:
+                            logger.warning(f"Filtering garbage HTML content: {new_content[:50]}...")
+                            continue  # Skip this chunk
+                            
+                        if is_repetitive:
+                            logger.debug(f"Skipping repetitive content: {new_content}")
+                            continue  # Skip this chunk
+                        
                         if new_content and new_content != last_yielded_content:
                             now_chunk = datetime.now(timezone.utc).isoformat()
                             yield {
@@ -1395,53 +1411,51 @@ class ResponseProcessor:
         return context
         
     async def _yield_and_save_tool_started(self, context: ToolExecutionContext, thread_id: str, thread_run_id: str) -> Optional[Dict[str, Any]]:
-        """Formats, saves, and returns a tool started status message."""
+        """Save and yield tool_started status message."""
+        logger.info(f"DEBUG [Tool Started] function_name={context.function_name}, tool_index={context.tool_index}, arguments={getattr(context.tool_call, 'arguments', 'N/A')}")
+        tool_started_content = {
+            "status_type": "tool_started",
+            "tool_index": context.tool_index,
+            "function_name": context.function_name,
+            "xml_tag_name": context.xml_tag_name,
+            "arguments": context.tool_call.get("arguments", {}) if isinstance(context.tool_call, dict) else {}
+        }
+        
+        tool_started_msg_obj = await self.add_message(
+            thread_id=thread_id, type="status", content=tool_started_content,
+            is_llm_message=False, metadata={"thread_run_id": thread_run_id}
+        )
+        return tool_started_msg_obj
+
+    async def _yield_and_save_tool_completed(self, context: ToolExecutionContext, tool_message_id: Optional[str], thread_id: str, thread_run_id: str) -> Optional[Dict[str, Any]]:
+        """Save and yield tool_completed or tool_failed status message."""
+        logger.info(f"DEBUG [Tool Completed] function_name={context.function_name}, tool_index={context.tool_index}, success={context.error is None}")
+        status_type = "tool_failed" if context.error else "tool_completed"
         tool_name = context.xml_tag_name or context.function_name
+        result_summary = ""
+        
+        if context.result and not context.error:
+            if hasattr(context.result, 'content') and context.result.content:
+                result_summary = context.result.content[:100] + "..." if len(context.result.content) > 100 else context.result.content
+            elif hasattr(context.result, 'success'):
+                result_summary = f"Success: {context.result.success}"
+        elif context.error:
+            result_summary = f"Error: {str(context.error)[:100]}"
+        
         content = {
-            "role": "assistant", "status_type": "tool_started",
+            "role": "assistant", "status_type": status_type,
             "function_name": context.function_name, "xml_tag_name": context.xml_tag_name,
-            "arguments": context.tool_call.get("arguments", {}),  # Include tool arguments for frontend
-            "message": f"Starting execution of {tool_name}", "tool_index": context.tool_index,
-            "tool_call_id": context.tool_call.get("id") # Include tool_call ID if native
+            "message": f"{'Completed' if not context.error else 'Failed'} execution of {tool_name}",
+            "tool_index": context.tool_index,
+            "result_summary": result_summary,
+            "tool_message_id": tool_message_id,  # Link to the actual tool result message
+            "tool_call_id": context.tool_call.get("id") if isinstance(context.tool_call, dict) else None  # Include tool_call ID if native
         }
         metadata = {"thread_run_id": thread_run_id}
         saved_message_obj = await self.add_message(
             thread_id=thread_id, type="status", content=content, is_llm_message=False, metadata=metadata
         )
         return saved_message_obj # Return the full object (or None if saving failed)
-
-    async def _yield_and_save_tool_completed(self, context: ToolExecutionContext, tool_message_id: Optional[str], thread_id: str, thread_run_id: str) -> Optional[Dict[str, Any]]:
-        """Formats, saves, and returns a tool completed/failed status message."""
-        if not context.result:
-            # Delegate to error saving if result is missing (e.g., execution failed)
-            return await self._yield_and_save_tool_error(context, thread_id, thread_run_id)
-
-        tool_name = context.xml_tag_name or context.function_name
-        status_type = "tool_completed" if context.result.success else "tool_failed"
-        message_text = f"Tool {tool_name} {'completed successfully' if context.result.success else 'failed'}"
-
-        content = {
-            "role": "assistant", "status_type": status_type,
-            "function_name": context.function_name, "xml_tag_name": context.xml_tag_name,
-            "message": message_text, "tool_index": context.tool_index,
-            "tool_call_id": context.tool_call.get("id")
-        }
-        metadata = {"thread_run_id": thread_run_id}
-        # Add the *actual* tool result message ID to the metadata if available and successful
-        if context.result.success and tool_message_id:
-            metadata["linked_tool_result_message_id"] = tool_message_id
-            
-        # <<< ADDED: Signal if this is a terminating tool >>>
-        if context.function_name in ['ask', 'complete']:
-            metadata["agent_should_terminate"] = True
-            logger.info(f"Marking tool status for '{context.function_name}' with termination signal.")
-            self.trace.event(name="marking_tool_status_for_termination", level="DEFAULT", status_message=(f"Marking tool status for '{context.function_name}' with termination signal."))
-        # <<< END ADDED >>>
-
-        saved_message_obj = await self.add_message(
-            thread_id=thread_id, type="status", content=content, is_llm_message=False, metadata=metadata
-        )
-        return saved_message_obj
 
     async def _yield_and_save_tool_error(self, context: ToolExecutionContext, thread_id: str, thread_run_id: str) -> Optional[Dict[str, Any]]:
         """Formats, saves, and returns a tool error status message."""
