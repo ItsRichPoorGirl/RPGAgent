@@ -510,7 +510,7 @@ async def stream_agent_run(agent_run_id: str, token: Optional[str] = None, reque
         raise HTTPException(status_code=401, detail="Authentication token required")
     
     try:
-        user_id = get_user_id_from_stream_auth(token)
+        user_id = await get_user_id_from_stream_auth(token)
     except Exception as e:
         logger.error(f"[STREAM] Auth error for {agent_run_id}: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid authentication token")
