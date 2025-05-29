@@ -285,6 +285,14 @@ export function useAgentStream(
         return;
       }
 
+      // DEBUG: Log ALL messages received
+      console.log('[useAgentStream] RAW MESSAGE RECEIVED:', {
+        type: message.type,
+        content: typeof message.content === 'string' ? message.content.substring(0, 100) + '...' : message.content,
+        metadata: message.metadata,
+        message_id: message.message_id
+      });
+
       const parsedContent = safeJsonParse<ParsedContent>(message.content, {});
       const parsedMetadata = safeJsonParse<ParsedMetadata>(
         message.metadata,
