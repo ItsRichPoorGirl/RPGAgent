@@ -898,7 +898,15 @@ export default function ThreadPage({
     }
   }, [isSidePanelOpen]);
 
-
+  // Connect streamingToolCall from useAgentStream to handleStreamingToolCall
+  useEffect(() => {
+    if (streamingToolCall) {
+      handleStreamingToolCall(streamingToolCall);
+    } else {
+      // Clear streaming tool call when it becomes null
+      handleStreamingToolCall(null);
+    }
+  }, [streamingToolCall, handleStreamingToolCall]);
 
   // Update handleToolClick to respect user closing preference and navigate correctly
   const handleToolClick = useCallback((clickedAssistantMessageId: string | null, clickedToolName: string) => {
