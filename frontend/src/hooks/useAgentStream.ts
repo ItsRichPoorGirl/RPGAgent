@@ -335,8 +335,10 @@ export function useAgentStream(
           if (message.message_id) callbacks.onMessage(message);
           break;
         case 'status':
+          console.log('[useAgentStream] Status message received:', parsedContent.status_type, parsedContent);
           switch (parsedContent.status_type) {
             case 'tool_started':
+              console.log('[useAgentStream] Tool started, setting toolCall state');
               setToolCall({
                 role: 'assistant',
                 status_type: 'tool_started',
@@ -347,9 +349,27 @@ export function useAgentStream(
               });
               break;
             case 'tool_completed':
+              console.log('[useAgentStream] Tool completion message received:', {
+                status_type: parsedContent.status_type,
+                tool_index: parsedContent.tool_index,
+                current_toolCall_index: toolCall?.tool_index,
+                will_clear: toolCall?.tool_index === parsedContent.tool_index
+              });
+              if (toolCall?.tool_index === parsedContent.tool_index) {
+                console.log('[useAgentStream] Clearing toolCall state for completed tool');
+                setToolCall(null);
+              }
+              break;
             case 'tool_failed':
             case 'tool_error':
+              console.log('[useAgentStream] Tool completion message received:', {
+                status_type: parsedContent.status_type,
+                tool_index: parsedContent.tool_index,
+                current_toolCall_index: toolCall?.tool_index,
+                will_clear: toolCall?.tool_index === parsedContent.tool_index
+              });
               if (toolCall?.tool_index === parsedContent.tool_index) {
+                console.log('[useAgentStream] Clearing toolCall state for completed tool');
                 setToolCall(null);
               }
               break;

@@ -1277,6 +1277,7 @@ export default function ThreadPage({
           renderAssistantMessage={toolViewAssistant}
           renderToolResult={toolViewResult}
           isLoading={!initialLoadCompleted.current || isLoading}
+          onFileClick={handleOpenFileViewer}
         />
 
         {
@@ -1386,6 +1387,7 @@ export default function ThreadPage({
           renderAssistantMessage={toolViewAssistant}
           renderToolResult={toolViewResult}
           isLoading={!initialLoadCompleted.current || isLoading}
+          onFileClick={handleOpenFileViewer}
         />
 
         {sandboxId && (
