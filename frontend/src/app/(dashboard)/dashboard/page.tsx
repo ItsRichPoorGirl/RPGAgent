@@ -1,6 +1,3 @@
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 'use client';
 
 import React, { useState, Suspense, useEffect, useRef } from 'react';
@@ -35,6 +32,10 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'sonner';
+
+// These exports are handled by Next.js configuration
+// export const dynamic = 'force-dynamic';
+// export const revalidate = 0;
 
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
 const SUBMISSION_COOLDOWN = 2000; // 2 seconds cooldown between submissions
