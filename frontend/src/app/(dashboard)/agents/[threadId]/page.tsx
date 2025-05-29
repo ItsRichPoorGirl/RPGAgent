@@ -1201,7 +1201,7 @@ export default function ThreadPage({
     const debugParam = searchParams.get('debug');
     // Only enable debug mode in development or with explicit confirmation
     const isDev = process.env.NODE_ENV === 'development';
-    const allowDebug = debugParam === 'true' && (isDev || debugParam === 'force');
+    const allowDebug = (debugParam === 'true' && isDev) || debugParam === 'force';
     setDebugMode(allowDebug);
   }, [searchParams]);
 
