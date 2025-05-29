@@ -1199,7 +1199,10 @@ export default function ThreadPage({
 
   useEffect(() => {
     const debugParam = searchParams.get('debug');
-    setDebugMode(debugParam === 'true');
+    // Only enable debug mode in development or with explicit confirmation
+    const isDev = process.env.NODE_ENV === 'development';
+    const allowDebug = debugParam === 'true' && (isDev || debugParam === 'force');
+    setDebugMode(allowDebug);
   }, [searchParams]);
 
 
