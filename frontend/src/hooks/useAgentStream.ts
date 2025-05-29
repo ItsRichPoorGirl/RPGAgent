@@ -157,6 +157,8 @@ export function useAgentStream(
 
       // Reset streaming-specific state
       setTextContent([]);
+      // FAIL-SAFE: Always clear tool calls on finalization
+      console.log('[useAgentStream] FAIL-SAFE: Clearing toolCall on finalization');
       setToolCall(null);
 
       // Update status and clear run ID
@@ -355,6 +357,13 @@ export function useAgentStream(
                 xml_tag_name: parsedContent.xml_tag_name,
                 tool_index: parsedContent.tool_index,
               });
+              // FAIL-SAFE: Set timeout to clear stuck tool calls
+              setTimeout(() => {
+                if (isMountedRef.current) {
+                  console.log('[useAgentStream] TIMEOUT: Clearing potentially stuck toolCall');
+                  setToolCall(null);
+                }
+              }, 30000); // 30 seconds
               break;
             case 'tool_completed':
               console.log('[useAgentStream] Tool completion message received:', {
@@ -385,6 +394,11 @@ export function useAgentStream(
               console.log(
                 '[useAgentStream] Received thread run end status, finalizing.',
               );
+              // FAIL-SAFE: Clear any stuck tool calls when thread ends
+              if (toolCall) {
+                console.log('[useAgentStream] FAIL-SAFE: Clearing stuck toolCall on thread end');
+                setToolCall(null);
+              }
               break;
             case 'finish':
               // Optional: Handle finish reasons like 'xml_tool_limit_reached'
