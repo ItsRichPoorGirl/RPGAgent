@@ -111,14 +111,18 @@ allowed_origins = [
     "https://luciqai.com",
     "https://www.luciqai.com", 
     "https://v0-luciq-ai.vercel.app",
+    "https://luciq-ai-git-v158-itsrichpoorgirls-projects.vercel.app",  # Current Vercel deployment
     "http://localhost:3000"
 ]
-allow_origin_regex = None
 
-# Add staging-specific origins
+# Add regex patterns for dynamic Vercel deployments
+allow_origin_regex = r"https://luciq-.*\.vercel\.app"
+
+# Add additional staging-specific origins if in staging mode
 if config.ENV_MODE == EnvMode.STAGING:
-
-    allow_origin_regex = r"https://luciq-.*-projects\.vercel\.app"
+    logger.info("Adding staging CORS patterns")
+    # The regex already covers this, but we can be more specific
+    allow_origin_regex = r"https://luciq-.*\.vercel\.app"
 
 app.add_middleware(
     CORSMiddleware,

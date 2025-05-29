@@ -503,22 +503,138 @@ async def test_stream_endpoint(agent_run_id: str):
 @router.get("/agent-run/{agent_run_id}/stream")
 async def stream_agent_run(agent_run_id: str, token: Optional[str] = None, request: Request = None):
     """Stream the responses of an agent run using Redis Lists and Pub/Sub."""
-    # Use print() to bypass logging configuration issues
-    print(f"[STREAM] ENDPOINT CALLED FOR {agent_run_id}")
-    logger.warning(f"[STREAM] ENDPOINT CALLED FOR {agent_run_id}")
+    logger.info(f"[STREAM] Starting stream for agent run: {agent_run_id}")
     
-    # Simple test response first
-    from fastapi.responses import StreamingResponse
+    # Authenticate user
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication token required")
     
-    async def simple_test_generator():
-        print(f"[STREAM] GENERATOR STARTED FOR {agent_run_id}")
-        logger.warning(f"[STREAM] GENERATOR STARTED FOR {agent_run_id}")
-        yield f"data: {{'test': 'working', 'agent_run_id': '{agent_run_id}'}}\n\n"
-        yield f"data: {{'message': 'Stream endpoint is working'}}\n\n"
+    try:
+        user_id = get_user_id_from_stream_auth(token)
+    except Exception as e:
+        logger.error(f"[STREAM] Auth error for {agent_run_id}: {str(e)}")
+        raise HTTPException(status_code=401, detail="Invalid authentication token")
     
-    print(f"[STREAM] RETURNING STREAMING RESPONSE FOR {agent_run_id}")
-    logger.warning(f"[STREAM] RETURNING STREAMING RESPONSE FOR {agent_run_id}")
-    return StreamingResponse(simple_test_generator(), media_type="text/event-stream")
+    # Verify access to the agent run
+    client = await db.client
+    try:
+        agent_run_data = await get_agent_run_with_access_check(client, agent_run_id, user_id)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[STREAM] Access check error for {agent_run_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error checking agent run access")
+    
+    # Define Redis keys
+    response_list_key = f"agent_run:{agent_run_id}:responses"
+    response_channel = f"agent_run:{agent_run_id}:new_response"
+    global_control_channel = f"agent_run:{agent_run_id}:control"
+    
+    async def real_stream_generator():
+        """Generator that reads from Redis and streams agent responses."""
+        logger.info(f"[STREAM] Generator started for {agent_run_id}")
+        
+        pubsub = None
+        sent_indices = set()  # Track which response indices we've already sent
+        stream_ended = False
+        
+        try:
+            # Create pubsub connection for real-time notifications
+            pubsub = await redis.create_streaming_pubsub()
+            await pubsub.subscribe(response_channel)
+            await pubsub.subscribe(global_control_channel)
+            
+            # Send initial heartbeat
+            yield f"data: {json.dumps({'type': 'ping'})}\n\n"
+            
+            while not stream_ended:
+                try:
+                    # Get all responses from Redis list
+                    responses_json = await redis.lrange(response_list_key, 0, -1)
+                    
+                    # Send any new responses we haven't sent yet
+                    for i, response_json in enumerate(responses_json):
+                        if i not in sent_indices:
+                            try:
+                                response_data = json.loads(response_json)
+                                yield f"data: {response_json}\n\n"
+                                sent_indices.add(i)
+                                logger.debug(f"[STREAM] Sent response {i} for {agent_run_id}")
+                                
+                                # Check if this is a completion message
+                                if (response_data.get('type') == 'status' and 
+                                    response_data.get('status') in ['completed', 'failed', 'stopped']):
+                                    logger.info(f"[STREAM] Detected completion status for {agent_run_id}: {response_data.get('status')}")
+                                    stream_ended = True
+                                    break
+                                    
+                            except json.JSONDecodeError as e:
+                                logger.error(f"[STREAM] Invalid JSON in response {i} for {agent_run_id}: {e}")
+                                continue
+                    
+                    if stream_ended:
+                        break
+                    
+                    # Listen for new response notifications with timeout
+                    try:
+                        message = await asyncio.wait_for(
+                            pubsub.get_message(ignore_subscribe_messages=True),
+                            timeout=5.0
+                        )
+                        
+                        if message and message.get("type") == "message":
+                            channel = message.get("channel", b"").decode('utf-8') if isinstance(message.get("channel"), bytes) else str(message.get("channel", ""))
+                            data = message.get("data", b"").decode('utf-8') if isinstance(message.get("data"), bytes) else str(message.get("data", ""))
+                            
+                            logger.debug(f"[STREAM] Received pubsub message on {channel}: {data}")
+                            
+                            # Handle control signals
+                            if channel == global_control_channel:
+                                if data in ["END_STREAM", "ERROR", "STOP"]:
+                                    logger.info(f"[STREAM] Received {data} signal for {agent_run_id}")
+                                    stream_ended = True
+                                    break
+                            
+                            # For new response notifications, we'll pick them up in the next loop
+                            
+                    except asyncio.TimeoutError:
+                        # Timeout is normal, just continue the loop
+                        pass
+                        
+                except Exception as e:
+                    logger.error(f"[STREAM] Error in stream loop for {agent_run_id}: {str(e)}")
+                    # Send error and continue
+                    error_msg = json.dumps({"type": "status", "status": "error", "message": f"Stream error: {str(e)}"})
+                    yield f"data: {error_msg}\n\n"
+                    await asyncio.sleep(1)  # Brief pause before retrying
+            
+            logger.info(f"[STREAM] Stream ended for {agent_run_id}")
+            
+        except Exception as e:
+            logger.error(f"[STREAM] Critical error in generator for {agent_run_id}: {str(e)}")
+            error_msg = json.dumps({"type": "status", "status": "error", "message": f"Critical stream error: {str(e)}"})
+            yield f"data: {error_msg}\n\n"
+            
+        finally:
+            # Clean up pubsub connection
+            if pubsub:
+                try:
+                    await pubsub.unsubscribe()
+                    await pubsub.close()
+                    logger.debug(f"[STREAM] Closed pubsub for {agent_run_id}")
+                except Exception as e:
+                    logger.warning(f"[STREAM] Error closing pubsub for {agent_run_id}: {str(e)}")
+    
+    logger.info(f"[STREAM] Returning streaming response for {agent_run_id}")
+    return StreamingResponse(
+        real_stream_generator(), 
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
 
 
 
