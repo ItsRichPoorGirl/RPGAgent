@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import EditPersonalAccountName from '@/components/basejump/edit-personal-account-name';
 import { createClient } from '@/lib/supabase/server';
 

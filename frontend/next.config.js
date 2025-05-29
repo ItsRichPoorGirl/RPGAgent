@@ -22,12 +22,6 @@ const nextConfig = {
   async rewrites() {
     return [];
   },
-
-  // Configure experimental features
-  experimental: {
-    // Enable server actions
-    serverActions: true,
-  },
 };
 
 module.exports = nextConfig; 
