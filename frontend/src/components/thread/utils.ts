@@ -198,51 +198,30 @@ export const getToolIcon = (toolName: string): ElementType => {
 
 // Helper function to extract a primary parameter from XML/arguments
 export const extractPrimaryParam = (
-  toolName: string,
-  content: string | undefined,
+  toolName: string | undefined,
+  content?: string | any,
 ): string | null => {
-  if (!content) return null;
+  if (!content || !toolName) return null;
 
   try {
-    // Handle browser tools with a prefix check
-    if (toolName?.toLowerCase().startsWith('browser-')) {
-      // Try to extract URL for navigation
-      const urlMatch = content.match(/url=(?:"|')([^"|']+)(?:"|')/);
-      if (urlMatch) return urlMatch[1];
-
-      // For other browser operations, extract the goal or action
-      const goalMatch = content.match(/goal=(?:"|')([^"|']+)(?:"|')/);
-      if (goalMatch) {
-        const goal = goalMatch[1];
-        return goal.length > 30 ? goal.substring(0, 27) + '...' : goal;
+    // Ensure content is a string
+    let contentStr: string;
+    if (typeof content === 'string') {
+      contentStr = content;
+    } else if (typeof content === 'object' && content !== null) {
+      // If content is an object, try to extract the actual content or stringify it
+      if ('content' in content && typeof content.content === 'string') {
+        contentStr = content.content;
+      } else if ('arguments' in content && typeof content.arguments === 'string') {
+        contentStr = content.arguments;
+      } else {
+        contentStr = JSON.stringify(content);
       }
-
-      return null;
+    } else {
+      contentStr = String(content);
     }
 
-    // Special handling for XML content - extract file_path from the actual attributes
-    if (content.startsWith('<') && content.includes('>')) {
-      const xmlAttrs = content.match(/<[^>]+\s+([^>]+)>/);
-      if (xmlAttrs && xmlAttrs[1]) {
-        const attrs = xmlAttrs[1].trim();
-        const filePathMatch = attrs.match(/file_path=["']([^"']+)["']/);
-        if (filePathMatch) {
-          return filePathMatch[1].split('/').pop() || filePathMatch[1];
-        }
-
-        // Try to get command for execute-command
-        if (toolName?.toLowerCase() === 'execute-command') {
-          const commandMatch = attrs.match(/(?:command|cmd)=["']([^"']+)["']/);
-          if (commandMatch) {
-            const cmd = commandMatch[1];
-            return cmd.length > 30 ? cmd.substring(0, 27) + '...' : cmd;
-          }
-        }
-      }
-    }
-
-    // Simple regex for common parameters - adjust as needed
-    let match: RegExpMatchArray | null = null;
+    let match;
 
     switch (toolName?.toLowerCase()) {
       // File operations
@@ -252,14 +231,14 @@ export const extractPrimaryParam = (
       case 'delete-file':
       case 'str-replace':
         // Try to match file_path attribute
-        match = content.match(/file_path=(?:"|')([^"|']+)(?:"|')/);
+        match = contentStr.match(/file_path=(?:"|')([^"|']+)(?:"|')/);
         // Return just the filename part
         return match ? match[1].split('/').pop() || match[1] : null;
 
       // Shell commands
       case 'execute-command':
         // Extract command content
-        match = content.match(/command=(?:"|')([^"|']+)(?:"|')/);
+        match = contentStr.match(/command=(?:"|')([^"|']+)(?:"|')/);
         if (match) {
           const cmd = match[1];
           return cmd.length > 30 ? cmd.substring(0, 27) + '...' : cmd;
@@ -268,7 +247,7 @@ export const extractPrimaryParam = (
 
       // Web search
       case 'web-search':
-        match = content.match(/query=(?:"|')([^"|']+)(?:"|')/);
+        match = contentStr.match(/query=(?:"|')([^"|']+)(?:"|')/);
         return match
           ? match[1].length > 30
             ? match[1].substring(0, 27) + '...'
@@ -277,8 +256,8 @@ export const extractPrimaryParam = (
 
       // Data provider operations
       case 'call-data-provider':
-        match = content.match(/service_name=(?:"|')([^"|']+)(?:"|')/);
-        const route = content.match(/route=(?:"|')([^"|']+)(?:"|')/);
+        match = contentStr.match(/service_name=(?:"|')([^"|']+)(?:"|')/);
+        const route = contentStr.match(/route=(?:"|')([^"|']+)(?:"|')/);
         return match && route
           ? `${match[1]}/${route[1]}`
           : match
@@ -287,7 +266,7 @@ export const extractPrimaryParam = (
 
       // Deployment
       case 'deploy-site':
-        match = content.match(/site_name=(?:"|')([^"|']+)(?:"|')/);
+        match = contentStr.match(/site_name=(?:"|')([^"|']+)(?:"|')/);
         return match ? match[1] : null;
     }
 

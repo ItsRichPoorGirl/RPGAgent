@@ -760,8 +760,24 @@ export default function ThreadPage({
                 toolContent.includes('error') ||
                 toolContent.includes('failure'));
             }
+          } else if (toolResultContent && typeof toolResultContent === 'object') {
+            // Handle object content
+            const contentStr = JSON.stringify(toolResultContent);
+            const toolResultMatch = contentStr.match(/ToolResult\s*\(\s*success\s*=\s*(True|False|true|false)/i);
+            if (toolResultMatch) {
+              isSuccess = toolResultMatch[1].toLowerCase() === 'true';
+            } else {
+              const toolContent = contentStr.toLowerCase();
+              isSuccess = !(toolContent.includes('failed') ||
+                toolContent.includes('error') ||
+                toolContent.includes('failure'));
+            }
           }
-        } catch { }
+        } catch (error) {
+          console.warn('Error processing tool result content:', error);
+          // Default to success if we can't parse
+          isSuccess = true;
+        }
 
         historicalToolPairs.push({
           assistantCall: {
