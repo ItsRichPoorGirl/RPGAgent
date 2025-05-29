@@ -232,7 +232,7 @@ async def run_agent(
                     xml_tool_calling=True,
                     native_tool_calling=False,
                     execute_tools=True,
-                    execute_on_stream=False,
+                    execute_on_stream=True,
                     tool_execution_strategy="parallel",
                     xml_adding_strategy="user_message"
                 ),
