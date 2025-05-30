@@ -357,13 +357,6 @@ export function useAgentStream(
                 xml_tag_name: parsedContent.xml_tag_name,
                 tool_index: parsedContent.tool_index,
               });
-              // FAIL-SAFE: Set timeout to clear stuck tool calls
-              setTimeout(() => {
-                if (isMountedRef.current) {
-                  console.log('[useAgentStream] TIMEOUT: Clearing potentially stuck toolCall');
-                  setToolCall(null);
-                }
-              }, 30000); // 30 seconds
               break;
             case 'tool_completed':
               console.log('[useAgentStream] Tool completion message received:', {
