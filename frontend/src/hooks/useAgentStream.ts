@@ -355,7 +355,7 @@ export function useAgentStream(
                 name: parsedContent.function_name,
                 arguments: parsedContent.arguments,
                 xml_tag_name: parsedContent.xml_tag_name,
-                tool_index: parsedContent.tool_index,
+                index: parsedContent.tool_index,
               });
               break;
             case 'tool_completed':
@@ -363,13 +363,13 @@ export function useAgentStream(
                 status_type: parsedContent.status_type,
                 tool_index: parsedContent.tool_index,
                 function_name: parsedContent.function_name,
-                current_toolCall_index: toolCall?.tool_index,
+                current_toolCall_index: toolCall?.index,
                 current_toolCall_name: toolCall?.name,
-                will_clear: toolCall?.tool_index === parsedContent.tool_index
+                will_clear: toolCall?.index === parsedContent.tool_index
               });
               // More robust tool clearing: match by index OR function name OR just clear if close match
               const shouldClearCompleted = toolCall && (
-                toolCall.tool_index === parsedContent.tool_index ||
+                toolCall.index === parsedContent.tool_index ||
                 toolCall.name === parsedContent.function_name ||
                 (toolCall.xml_tag_name && toolCall.xml_tag_name === parsedContent.xml_tag_name)
               );
@@ -387,13 +387,13 @@ export function useAgentStream(
                 status_type: parsedContent.status_type,
                 tool_index: parsedContent.tool_index,
                 function_name: parsedContent.function_name,
-                current_toolCall_index: toolCall?.tool_index,
+                current_toolCall_index: toolCall?.index,
                 current_toolCall_name: toolCall?.name,
-                will_clear: toolCall?.tool_index === parsedContent.tool_index
+                will_clear: toolCall?.index === parsedContent.tool_index
               });
               // More robust tool clearing: match by index OR function name OR just clear if close match
               const shouldClearFailed = toolCall && (
-                toolCall.tool_index === parsedContent.tool_index ||
+                toolCall.index === parsedContent.tool_index ||
                 toolCall.name === parsedContent.function_name ||
                 (toolCall.xml_tag_name && toolCall.xml_tag_name === parsedContent.xml_tag_name)
               );
