@@ -881,6 +881,9 @@ class ResponseProcessor:
         chunks = []
         pos = 0
         
+        # CRITICAL FIX: Clean malformed XML before parsing
+        content = self._clean_malformed_xml(content)
+        
         try:
             while pos < len(content):
                 # Find the next tool tag
@@ -941,6 +944,35 @@ class ResponseProcessor:
             self.trace.event(name="error_extracting_xml_chunks", level="ERROR", status_message=(f"Error extracting XML chunks: {e}"), metadata={"content": content})
         
         return chunks
+
+    def _clean_malformed_xml(self, content: str) -> str:
+        """Clean malformed XML that commonly comes from LLMs."""
+        try:
+            # Fix double escaping issues
+            content = content.replace('\\\\n', '\n')
+            content = content.replace('\\"', '"')
+            content = content.replace("\\'", "'")
+            
+            # Fix common JSON-in-XML issues
+            content = re.sub(r'\\"}$', '', content)
+            content = re.sub(r'^{"[^"]*":\s*"', '', content)
+            
+            # Fix broken closing tags
+            content = re.sub(r'</create\\?"}>?', '</create-file>', content)
+            content = re.sub(r'</([a-zA-Z\-_]+)\\?"}>?', r'</\1>', content)
+            
+            # Fix malformed opening tags
+            content = re.sub(r'<([a-zA-Z\-_]+)([^>]*?)\\?"', r'<\1\2"', content)
+            
+            # Remove trailing garbage after closing tags
+            content = re.sub(r'(<\/[a-zA-Z\-_]+>)[^<]*$', r'\1', content)
+            
+            logger.debug(f"Cleaned XML content: {content[:200]}...")
+            return content
+            
+        except Exception as e:
+            logger.error(f"Error cleaning malformed XML: {e}")
+            return content
 
     def _parse_xml_tool_call(self, xml_chunk: str) -> Optional[Tuple[Dict[str, Any], Dict[str, Any]]]:
         """Parse XML chunk into tool call format and return parsing details.
