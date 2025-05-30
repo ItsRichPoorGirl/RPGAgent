@@ -329,7 +329,6 @@ export function useAgentStream(
             // Handle completion of streaming
             console.log('[useAgentStream] Stream complete, clearing content');
             setTextContent([]);
-            setToolCall(null);
             if (message.message_id) callbacks.onMessage(message);
           } else if (!parsedMetadata.stream_status) {
             // Handle non-chunked assistant messages if needed
@@ -341,7 +340,8 @@ export function useAgentStream(
           }
           break;
         case 'tool':
-          setToolCall(null); // Clear any streaming tool call
+          // Don't clear toolCall here - let tool_completed status handle it
+          // This allows the activity panel to show progress until actual completion
           if (message.message_id) callbacks.onMessage(message);
           break;
         case 'status':

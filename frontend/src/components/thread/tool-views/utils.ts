@@ -1053,10 +1053,16 @@ export function extractSearchResults(
   const contentStr = normalizeContentToString(content);
   if (!contentStr) return [];
 
-    try {
-    // Instead of trying to parse the complex ToolResult JSON, 
-    // let's look for the results array pattern directly in the content
-    
+  try {
+    // Sanitize the content string to handle common JSON issues
+    const sanitizedContent = contentStr
+      .replace(/\n/g, '\\n')  // Escape newlines
+      .replace(/\r/g, '\\r')  // Escape carriage returns
+      .replace(/\t/g, '\\t')  // Escape tabs
+      .replace(/"/g, '\\"')   // Escape quotes (will be restored selectively)
+      .replace(/\\\\"([^"]*)\\\\":/g, '"$1":')  // Restore property names
+      .replace(/:\s*\\\\"([^"]*)\\\\"([,}])/g, ': "$1"$2');  // Restore string values
+
     // Look for the results array pattern within the content
     const resultsPattern = /"results":\s*\[([^\]]*(?:\[[^\]]*\][^\]]*)*)\]/;
     const resultsMatch = contentStr.match(resultsPattern);
@@ -1065,7 +1071,20 @@ export function extractSearchResults(
       try {
         // Extract just the results array and parse it
         const resultsArrayStr = '[' + resultsMatch[1] + ']';
-        const results = JSON.parse(resultsArrayStr);
+        
+        // Additional sanitization for the results array
+        const sanitizedResults = resultsArrayStr
+          .replace(/\\"/g, '"')  // Restore escaped quotes
+          .replace(/\n/g, ' ')   // Replace newlines with spaces
+          .replace(/\r/g, ' ')   // Replace carriage returns with spaces
+          .replace(/\t/g, ' ')   // Replace tabs with spaces
+          .replace(/\\n/g, ' ')  // Replace literal \n with spaces
+          .replace(/\\r/g, ' ')  // Replace literal \r with spaces
+          .replace(/\\t/g, ' ')  // Replace literal \t with spaces
+          .replace(/\s+/g, ' ')  // Collapse multiple spaces
+          .trim();
+        
+        const results = JSON.parse(sanitizedResults);
         
         if (Array.isArray(results)) {
           return results.map(result => ({
@@ -1076,10 +1095,25 @@ export function extractSearchResults(
         }
       } catch (e) {
         console.warn('Failed to parse results array:', e);
+        console.warn('Original content snippet:', contentStr.substring(0, 500));
+        
+        // Try alternative parsing approaches
+        return parseResultsWithRegex(contentStr);
       }
     }
     
-    // Fallback: Look for individual result objects
+    // Fallback: Try regex-based extraction
+    return parseResultsWithRegex(contentStr);
+  } catch (e) {
+    console.warn('Failed to extract search results:', e);
+    return [];
+  }
+}
+
+// Helper function for regex-based result extraction
+function parseResultsWithRegex(contentStr: string): Array<{ title: string; url: string; snippet?: string }> {
+  try {
+    // Look for individual result objects with more flexible regex
     const resultObjectPattern = /\{\s*"url":\s*"([^"]+)"\s*,\s*"title":\s*"([^"]+)"\s*,\s*"content":\s*"([^"]*)"[^}]*\}/g;
     const results = [];
     let match;

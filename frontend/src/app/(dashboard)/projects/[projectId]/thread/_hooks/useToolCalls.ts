@@ -62,7 +62,9 @@ export function useToolCalls(
     const messageIdToIndex = new Map<string, number>();
     const assistantMessages = messages.filter(m => m.type === 'assistant' && m.message_id);
 
-    assistantMessages.forEach(assistantMsg => {
+    console.log(`[useToolCalls] Processing ${assistantMessages.length} assistant messages for tool mapping`);
+
+    assistantMessages.forEach((assistantMsg, index) => {
       const resultMessage = messages.find(toolMsg => {
         if (toolMsg.type !== 'tool' || !toolMsg.metadata || !assistantMsg.message_id) return false;
         try {
@@ -73,7 +75,21 @@ export function useToolCalls(
         }
       });
 
-      if (resultMessage) {
+      // Fallback: Try to find tool message by proximity if direct mapping fails
+      let fallbackToolMessage = null;
+      if (!resultMessage) {
+        // Look for the next tool message after this assistant message
+        const assistantIndex = messages.findIndex(m => m.message_id === assistantMsg.message_id);
+        if (assistantIndex !== -1) {
+          fallbackToolMessage = messages
+            .slice(assistantIndex + 1)
+            .find(m => m.type === 'tool');
+        }
+      }
+
+      const toolMessage = resultMessage || fallbackToolMessage;
+
+      if (toolMessage) {
         let toolName = 'unknown';
         try {
           const assistantContent = (() => {
@@ -110,10 +126,10 @@ export function useToolCalls(
         try {
           const toolResultContent = (() => {
             try {
-              const parsed = safeJsonParse<ParsedContent>(resultMessage.content, {});
-              return parsed.content || resultMessage.content;
+              const parsed = safeJsonParse<ParsedContent>(toolMessage.content, {});
+              return parsed.content || toolMessage.content;
             } catch {
-              return resultMessage.content;
+              return toolMessage.content;
             }
           })();
           
@@ -154,21 +170,25 @@ export function useToolCalls(
             timestamp: assistantMsg.created_at,
           },
           toolResult: {
-            content: resultMessage.content,
+            content: toolMessage.content,
             isSuccess: isSuccess,
-            timestamp: resultMessage.created_at,
+            timestamp: toolMessage.created_at,
           },
         });
 
         // Map the assistant message ID to its tool index
         if (assistantMsg.message_id) {
           messageIdToIndex.set(assistantMsg.message_id, toolIndex);
+          console.log(`[useToolCalls] Mapped assistant message ${assistantMsg.message_id} to tool index ${toolIndex} (${toolName})`);
+        } else {
+          console.warn(`[useToolCalls] Could not find tool result for assistant message ${assistantMsg.message_id} (${index})`);
         }
       }
     });
 
     // Update the ref with the new mapping
     assistantMessageToToolIndex.current = messageIdToIndex;
+    console.log(`[useToolCalls] Created ${historicalToolPairs.length} tool pairs with ${messageIdToIndex.size} mapped IDs`);
     setToolCalls(historicalToolPairs);
 
     // Auto-navigation logic

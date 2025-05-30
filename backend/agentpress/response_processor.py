@@ -1473,7 +1473,7 @@ class ResponseProcessor:
                 result_summary = f"Success: {context.result.success}"
         elif context.error:
             result_summary = f"Error: {str(context.error)[:100]}"
-        
+
         content = {
             "role": "assistant", "status_type": status_type,
             "function_name": context.function_name, "xml_tag_name": context.xml_tag_name,
