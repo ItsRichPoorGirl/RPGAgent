@@ -114,7 +114,8 @@ class Configuration:
     GROQ_API_KEY: Optional[str] = None
     OPENROUTER_API_KEY: Optional[str] = None
     OPENROUTER_API_BASE: Optional[str] = "https://openrouter.ai/api/v1"
-    OR_SITE_URL: Optional[str] = "https://luciq.ai"
+    OR_SITE_URL_PROD: Optional[str] = "https://luciqai.com"
+    OR_SITE_URL_STAGING: Optional[str] = "https://v0-luciq-ai.vercel.app"
     OR_APP_NAME: Optional[str] = "Luciq AI"
 
     # AWS Bedrock credentials
@@ -178,6 +179,12 @@ class Configuration:
         if self.ENV_MODE == EnvMode.STAGING:
             return self.STRIPE_PRODUCT_ID_STAGING
         return self.STRIPE_PRODUCT_ID_PROD
+
+    @property
+    def OR_SITE_URL(self) -> str:
+        if self.ENV_MODE == EnvMode.STAGING:
+            return self.OR_SITE_URL_STAGING
+        return self.OR_SITE_URL_PROD
 
     def __init__(self):
         """Initialize configuration by loading from environment variables."""
