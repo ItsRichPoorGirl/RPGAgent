@@ -998,3 +998,22 @@ async def get_available_models(
     except Exception as e:
         logger.error(f"Error getting available models: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error getting available models: {str(e)}")
+
+@router.get("/debug-user")
+async def debug_user(
+    current_user_id: str = Depends(get_current_user_id_from_jwt)
+):
+    """Debug endpoint to check current user ID and admin status."""
+    try:
+        is_admin = current_user_id in config.ADMIN_USER_LIST
+        
+        return {
+            "user_id": current_user_id,
+            "is_admin": is_admin,
+            "admin_user_list": config.ADMIN_USER_LIST,
+            "admin_user_ids_env": config.ADMIN_USER_IDS
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in debug user endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
