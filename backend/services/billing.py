@@ -207,6 +207,11 @@ async def get_allowed_models_for_user(client, user_id: str):
         List of model names allowed for the user's subscription tier.
     """
     # Check if user is an admin first
+    logger.info(f"DEBUG: Checking admin access for user {user_id}")
+    logger.info(f"DEBUG: ADMIN_USER_IDS config: {config.ADMIN_USER_IDS}")
+    logger.info(f"DEBUG: ADMIN_USER_LIST: {config.ADMIN_USER_LIST}")
+    logger.info(f"DEBUG: Is user in admin list? {user_id in config.ADMIN_USER_LIST}")
+    
     if user_id in config.ADMIN_USER_LIST:
         logger.info(f"Admin user {user_id} - all models available")
         # Return all available models from MODEL_NAME_ALIASES
@@ -233,6 +238,10 @@ async def get_allowed_models_for_user(client, user_id: str):
 
 async def can_use_model(client, user_id: str, model_name: str):
     # Check if user is an admin first
+    logger.info(f"DEBUG: can_use_model called for user {user_id}, model {model_name}")
+    logger.info(f"DEBUG: ADMIN_USER_LIST: {config.ADMIN_USER_LIST}")
+    logger.info(f"DEBUG: Is user in admin list? {user_id in config.ADMIN_USER_LIST}")
+    
     if user_id in config.ADMIN_USER_LIST:
         logger.info(f"Admin user {user_id} - model access unrestricted")
         return True, "Admin user - all models available", ["all_models"]
@@ -259,7 +268,12 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
     Returns:
         Tuple[bool, str, Optional[Dict]]: (can_run, message, subscription_info)
     """
+    logger.info(f"Checking billing status for user: {user_id}")
+    
     # Check if user is an admin first
+    logger.info(f"Admin user list: {config.ADMIN_USER_LIST}")
+    logger.info(f"Is user {user_id} in admin list? {user_id in config.ADMIN_USER_LIST}")
+    
     if user_id in config.ADMIN_USER_LIST:
         logger.info(f"Admin user {user_id} - billing checks bypassed")
         return True, "Admin user - unlimited access", {
@@ -267,6 +281,8 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
             "plan_name": "Admin",
             "minutes_limit": "unlimited"
         }
+    
+    logger.info(f"User {user_id} is not an admin, proceeding with normal billing checks")
     
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
@@ -701,6 +717,18 @@ async def get_subscription(
 ):
     """Get the current subscription status for the current user, including scheduled changes."""
     try:
+        # Check if user is an admin with unlimited access
+        if current_user_id in config.ADMIN_USER_LIST:
+            logger.info(f"Admin user {current_user_id} requesting subscription - returning unlimited access")
+            return SubscriptionStatus(
+                status="active",
+                plan_name="Admin Unlimited",
+                price_id="admin_unlimited",
+                minutes_limit=999999,
+                current_usage=0.0,
+                has_schedule=False
+            )
+        
         # Get subscription from Stripe (this helper already handles filtering/cleanup)
         subscription = await get_user_subscription(current_user_id)
         # print("Subscription data for status:", subscription)
