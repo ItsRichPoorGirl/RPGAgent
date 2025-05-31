@@ -206,6 +206,11 @@ async def get_allowed_models_for_user(client, user_id: str):
     Returns:
         List of model names allowed for the user's subscription tier.
     """
+    # Check if user is an admin first
+    if user_id in config.ADMIN_USER_LIST:
+        logger.info(f"Admin user {user_id} - all models available")
+        # Return all available models from MODEL_NAME_ALIASES
+        return list(MODEL_NAME_ALIASES.values())
 
     subscription = await get_user_subscription(user_id)
     tier_name = 'free'
@@ -227,6 +232,11 @@ async def get_allowed_models_for_user(client, user_id: str):
 
 
 async def can_use_model(client, user_id: str, model_name: str):
+    # Check if user is an admin first
+    if user_id in config.ADMIN_USER_LIST:
+        logger.info(f"Admin user {user_id} - model access unrestricted")
+        return True, "Admin user - all models available", ["all_models"]
+    
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
         return True, "Local development mode - billing disabled", {
@@ -249,6 +259,15 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
     Returns:
         Tuple[bool, str, Optional[Dict]]: (can_run, message, subscription_info)
     """
+    # Check if user is an admin first
+    if user_id in config.ADMIN_USER_LIST:
+        logger.info(f"Admin user {user_id} - billing checks bypassed")
+        return True, "Admin user - unlimited access", {
+            "price_id": "admin",
+            "plan_name": "Admin",
+            "minutes_limit": "unlimited"
+        }
+    
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
         return True, "Local development mode - billing disabled", {
@@ -871,6 +890,27 @@ async def get_available_models(
         # Get Supabase client
         db = DBConnection()
         client = await db.client
+        
+        # Check if user is an admin first
+        if current_user_id in config.ADMIN_USER_LIST:
+            logger.info(f"Admin user {current_user_id} - all models available")
+            
+            # Return all models as available for admin
+            model_info = []
+            for short_name, full_name in MODEL_NAME_ALIASES.items():
+                model_info.append({
+                    "id": full_name,
+                    "display_name": short_name,
+                    "short_name": short_name,
+                    "requires_subscription": False,  # No restrictions for admin
+                    "is_available": True  # All available for admin
+                })
+            
+            return {
+                "models": model_info,
+                "subscription_tier": "Admin",
+                "total_models": len(model_info)
+            }
         
         # Check if we're in local development mode
         if config.ENV_MODE == EnvMode.LOCAL:
