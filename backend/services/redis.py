@@ -41,6 +41,7 @@ def initialize():
             password=redis_password,
             ssl=redis_ssl,
             ssl_cert_reqs=None,  # Required for Upstash Redis
+            ssl_check_hostname=False,  # Also required for Upstash Redis
             decode_responses=True,
             socket_timeout=5.0,
             socket_connect_timeout=5.0,
