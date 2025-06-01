@@ -32,34 +32,18 @@ def initialize():
 
     logger.info(f"Initializing Redis connection to {redis_host}:{redis_port}")
 
-    # Create Redis client with proper configuration for Upstash Redis (official approach)
-    if redis_ssl:
-        # Use official Upstash Redis configuration with username
-        client = redis.Redis(
-            host=redis_host,
-            port=redis_port,
-            username='default',  # Upstash Redis requires username 'default'
-            password=redis_password,
-            ssl=redis_ssl,
-            decode_responses=True,
-            socket_timeout=5.0,
-            socket_connect_timeout=5.0,
-            retry_on_timeout=True,
-            health_check_interval=30
-        )
-    else:
-        # For local Redis without SSL
-        client = redis.Redis(
-            host=redis_host,
-            port=redis_port,
-            password=redis_password,
-            ssl=redis_ssl,
-            decode_responses=True,
-            socket_timeout=5.0,
-            socket_connect_timeout=5.0,
-            retry_on_timeout=True,
-            health_check_interval=30
-        )
+    # Create Redis client with basic configuration (matching upstream exactly)
+    client = redis.Redis(
+        host=redis_host,
+        port=redis_port,
+        password=redis_password,
+        ssl=redis_ssl,
+        decode_responses=True,
+        socket_timeout=5.0,
+        socket_connect_timeout=5.0,
+        retry_on_timeout=True,
+        health_check_interval=30
+    )
 
     return client
 
