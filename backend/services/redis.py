@@ -32,10 +32,11 @@ def initialize():
 
     logger.info(f"Initializing Redis connection to {redis_host}:{redis_port}")
 
-    # Create Redis client with basic configuration (matching upstream exactly)
+    # Create Redis client with proper configuration for Upstash Redis
     client = redis.Redis(
         host=redis_host,
         port=redis_port,
+        username='default',  # Required for Upstash Redis
         password=redis_password,
         ssl=redis_ssl,
         decode_responses=True,
