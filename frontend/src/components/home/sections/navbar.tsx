@@ -128,12 +128,13 @@ export function Navbar() {
           <div className="flex h-[56px] items-center justify-between p-4">
             <Link href="/" className="flex items-center gap-3">
               <Image
-                src={logoSrc}
-                alt="Kortix Logo"
-                width={140}
-                height={22}
+                src="/luciq-logo.png"
+                alt="Luciq AI Logo"
+                width={40}
+                height={40}
                 priority
               />
+              <span className="text-xl font-semibold text-primary">Luciq AI</span>
             </Link>
 
             <NavMenu />
@@ -157,12 +158,20 @@ export function Navbar() {
                     Dashboard
                   </Link>
                 ) : (
-                  <Link
-                    className="bg-secondary h-8 hidden md:flex items-center justify-center text-sm font-normal tracking-wide rounded-full text-primary-foreground dark:text-secondary-foreground w-fit px-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] border border-white/[0.12]"
-                    href="/auth"
-                  >
-                    Signup
-                  </Link>
+                  <>
+                    <Link
+                      className="border border-border text-primary hover:bg-accent/20 h-8 hidden md:flex items-center justify-center text-sm font-normal tracking-wide rounded-full w-fit px-4 transition-colors"
+                      href="/auth"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      className="bg-secondary h-8 hidden md:flex items-center justify-center text-sm font-normal tracking-wide rounded-full text-primary-foreground dark:text-secondary-foreground w-fit px-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] border border-white/[0.12]"
+                      href="/auth"
+                    >
+                      Get Started
+                    </Link>
+                  </>
                 )}
               </div>
               <ThemeToggle />
@@ -207,14 +216,14 @@ export function Navbar() {
                 <div className="flex items-center justify-between">
                   <Link href="/" className="flex items-center gap-3">
                     <Image
-                      src={logoSrc}
-                      alt="Kortix Logo"
-                      width={120}
-                      height={22}
+                      src="/luciq-logo.png"
+                      alt="Luciq AI Logo"
+                      width={30}
+                      height={30}
                       priority
                     />
                     <span className="font-medium text-primary text-sm">
-                      / Luciq
+                      Luciq AI
                     </span>
                   </Link>
                   <button
@@ -269,12 +278,20 @@ export function Navbar() {
                       Dashboard
                     </Link>
                   ) : (
-                    <Link
-                      href="/auth"
-                      className="bg-secondary h-8 flex items-center justify-center text-sm font-normal tracking-wide rounded-full text-primary-foreground dark:text-secondary-foreground w-full px-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] border border-white/[0.12] hover:bg-secondary/80 transition-all ease-out active:scale-95"
-                    >
-                      Signup
-                    </Link>
+                    <>
+                      <Link
+                        href="/auth"
+                        className="bg-secondary h-8 flex items-center justify-center text-sm font-normal tracking-wide rounded-full text-primary-foreground dark:text-secondary-foreground w-full px-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] border border-white/[0.12] hover:bg-secondary/80 transition-all ease-out active:scale-95"
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        href="/auth"
+                        className="bg-secondary h-8 flex items-center justify-center text-sm font-normal tracking-wide rounded-full text-primary-foreground dark:text-secondary-foreground w-full px-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] border border-white/[0.12] hover:bg-secondary/80 transition-all ease-out active:scale-95"
+                      >
+                        Get Started
+                      </Link>
+                    </>
                   )}
                   <div className="flex justify-between">
                     <ThemeToggle />

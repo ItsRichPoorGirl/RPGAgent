@@ -64,8 +64,8 @@ export const siteConfig = {
   nav: {
     links: [
       { id: 1, name: 'Home', href: '#hero' },
-      { id: 2, name: 'Use Cases', href: '#use-cases' },
-      { id: 3, name: 'Open Source', href: '#open-source' },
+      { id: 2, name: 'Features', href: '#features' },
+      { id: 3, name: 'Testimonials', href: '#testimonials' },
       { id: 4, name: 'Pricing', href: '#pricing' },
     ],
   },
@@ -97,11 +97,11 @@ export const siteConfig = {
       </svg>
     ),
     badge: '100% OPEN SOURCE',
-    githubUrl: 'https://github.com/kortix-ai/suna',
-    title: 'Suna, the AI Employee.',
+    githubUrl: 'https://github.com/ItsRichPoorGirl/Luciq-AI-Agent',
+    title: 'Luciq, your AI Employee.',
     description:
-      'Suna by Kortix – is a generalist AI Agent that acts on your behalf.',
-    inputPlaceholder: 'Ask Suna to...',
+      'Your personal AI employee that acts on your behalf.',
+    inputPlaceholder: 'Ask Luciq to...',
   },
   cloudPricingItems: [
     {
