@@ -32,16 +32,14 @@ def initialize():
 
     logger.info(f"Initializing Redis connection to {redis_host}:{redis_port}")
 
-    # Create Redis client with proper SSL configuration for Upstash
+    # Create Redis client with proper configuration for Upstash Redis (official approach)
     if redis_ssl:
-        # For Upstash Redis, we need specific SSL configuration
+        # Use official Upstash Redis configuration - simple and clean
         client = redis.Redis(
             host=redis_host,
             port=redis_port,
             password=redis_password,
             ssl=redis_ssl,
-            ssl_cert_reqs=None,  # Required for Upstash Redis
-            ssl_check_hostname=False,  # Also required for Upstash Redis
             decode_responses=True,
             socket_timeout=5.0,
             socket_connect_timeout=5.0,
