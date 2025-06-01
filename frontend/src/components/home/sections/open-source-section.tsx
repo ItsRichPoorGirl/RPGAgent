@@ -1,7 +1,8 @@
 import { SectionHeader } from '@/components/home/section-header';
 import { siteConfig } from '@/lib/home';
-import { Github } from 'lucide-react';
+import { Github, Star } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export function OpenSourceSection() {
   return (
@@ -14,9 +15,9 @@ export function OpenSourceSection() {
           <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-center text-balance pb-1">
             100% Open Source
           </h2>
-          <p className="text-muted-foreground text-center text-balance font-medium">
-            Suna is fully open source. Join our community and help shape the
-            future of AI.
+          <p className="text-muted-foreground text-center text-balance max-w-lg">
+            Luciq is fully open source. Join our community and help shape the
+            future of AI automation.
           </p>
         </SectionHeader>
 
@@ -25,14 +26,14 @@ export function OpenSourceSection() {
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-2 text-primary font-medium">
                 <Github className="h-5 w-5" />
-                <span>kortix-ai/suna</span>
+                <span>ItsRichPoorGirl/Luciq-AI-Agent</span>
               </div>
               <div className="relative">
                 <h3 className="text-2xl font-semibold tracking-tight">
                   The Generalist AI Agent
                 </h3>
                 <p className="text-muted-foreground mt-2">
-                  Explore, contribute, or fork our repository. Suna is built
+                  Explore, contribute, or fork our repository. Luciq is built
                   with transparency and collaboration at its core.
                 </p>
               </div>
@@ -47,32 +48,30 @@ export function OpenSourceSection() {
                   Apache 2.0 License
                 </span>
               </div>
-              <Link
-                href="https://github.com/Kortix-ai/Suna"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex h-10 items-center justify-center gap-2 text-sm font-medium tracking-wide rounded-full text-primary-foreground dark:text-black px-6 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] bg-primary dark:bg-white hover:bg-primary/90 dark:hover:bg-white/90 transition-all duration-200 w-fit"
-              >
-                <span>View on GitHub</span>
-                <span className="inline-flex items-center justify-center size-5 rounded-full bg-white/20 dark:bg-black/10 group-hover:bg-white/30 dark:group-hover:bg-black/20 transition-colors duration-200">
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-primary-foreground dark:text-black"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button variant="outline" className="w-full" asChild>
+                  <Link
+                    href="https://github.com/ItsRichPoorGirl/Luciq-AI-Agent"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2"
                   >
-                    <path
-                      d="M7 17L17 7M17 7H8M17 7V16"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              </Link>
+                    <Star className="h-4 w-4" />
+                    Star on GitHub
+                  </Link>
+                </Button>
+                <Button className="w-full" asChild>
+                  <Link
+                    href="https://github.com/ItsRichPoorGirl/Luciq-AI-Agent"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Github className="h-4 w-4" />
+                    View Source
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
 

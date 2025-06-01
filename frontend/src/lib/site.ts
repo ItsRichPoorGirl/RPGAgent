@@ -8,4 +8,7 @@ export const SITE_CONFIG = {
   },
 }
 
+// Export with the expected name for layout.tsx
+export const siteConfig = SITE_CONFIG;
+
 export type SiteConfig = typeof SITE_CONFIG;
