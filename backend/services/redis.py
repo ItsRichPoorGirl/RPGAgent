@@ -34,10 +34,11 @@ def initialize():
 
     # Create Redis client with proper configuration for Upstash Redis (official approach)
     if redis_ssl:
-        # Use official Upstash Redis configuration - simple and clean
+        # Use official Upstash Redis configuration with username
         client = redis.Redis(
             host=redis_host,
             port=redis_port,
+            username='default',  # Upstash Redis requires username 'default'
             password=redis_password,
             ssl=redis_ssl,
             decode_responses=True,
