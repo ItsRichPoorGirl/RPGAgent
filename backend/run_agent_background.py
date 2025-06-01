@@ -16,7 +16,6 @@ from dramatiq.brokers.rabbitmq import RabbitmqBroker
 import os
 from services.langfuse import langfuse
 
-# Use RabbitMQ broker for dramatiq - exactly as in upstream
 rabbitmq_host = os.getenv('RABBITMQ_HOST', 'rabbitmq')
 rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
 rabbitmq_broker = RabbitmqBroker(host=rabbitmq_host, port=rabbitmq_port, middleware=[dramatiq.middleware.AsyncIO()])
@@ -47,14 +46,16 @@ async def initialize():
 async def run_agent_background(
     agent_run_id: str,
     thread_id: str,
-    instance_id: str,
+    instance_id: str, # Use the global instance ID passed during initialization
     project_id: str,
     model_name: str,
     enable_thinking: Optional[bool],
     reasoning_effort: Optional[str],
     stream: bool,
     enable_context_manager: bool,
-    agent_config: Optional[dict] = None
+    agent_config: Optional[dict] = None,
+    is_agent_builder: Optional[bool] = False,
+    target_agent_id: Optional[str] = None
 ):
     """Run the agent in the background using Redis for state."""
     await initialize()
@@ -123,7 +124,9 @@ async def run_agent_background(
             enable_thinking=enable_thinking, reasoning_effort=reasoning_effort,
             enable_context_manager=enable_context_manager,
             agent_config=agent_config,
-            trace=trace
+            trace=trace,
+            is_agent_builder=is_agent_builder,
+            target_agent_id=target_agent_id
         )
 
         final_status = "running"
@@ -199,18 +202,19 @@ async def run_agent_background(
         try:
              all_responses_json = await redis.lrange(response_list_key, 0, -1)
              all_responses = [json.loads(r) for r in all_responses_json]
-        except Exception as redis_fetch_err:
-             logger.error(f"Failed to fetch responses from Redis for DB update: {redis_fetch_err}")
+        except Exception as fetch_err:
+             logger.error(f"Failed to fetch responses from Redis after error for {agent_run_id}: {fetch_err}")
+             all_responses = [error_response] # Use the error message we tried to push
 
-        # Update DB with error status
-        await update_agent_run_status(client, agent_run_id, final_status, error=error_message, responses=all_responses)
+        # Update DB status
+        await update_agent_run_status(client, agent_run_id, "failed", error=f"{error_message}\n{traceback_str}", responses=all_responses)
 
-        # Publish error control signal
+        # Publish ERROR signal
         try:
             await redis.publish(global_control_channel, "ERROR")
-            logger.debug(f"Published ERROR control signal to {global_control_channel}")
-        except Exception as pub_err:
-            logger.warning(f"Failed to publish ERROR signal: {str(pub_err)}")
+            logger.debug(f"Published ERROR signal to {global_control_channel}")
+        except Exception as e:
+            logger.warning(f"Failed to publish ERROR signal: {str(e)}")
 
     finally:
         # Cleanup stop checker task
@@ -235,29 +239,32 @@ async def run_agent_background(
         # Remove the instance-specific active run key
         await _cleanup_redis_instance_key(agent_run_id)
 
-        # End trace
-        trace.update(output={"final_status": final_status})
-
+        logger.info(f"Agent run background task fully completed for: {agent_run_id} (Instance: {instance_id}) with final status: {final_status}")
 
 async def _cleanup_redis_instance_key(agent_run_id: str):
-    """Remove the instance-specific active run key from Redis."""
-    instance_active_key = f"active_run:{instance_id}:{agent_run_id}"
+    """Clean up the instance-specific Redis key for an agent run."""
+    if not instance_id:
+        logger.warning("Instance ID not set, cannot clean up instance key.")
+        return
+    key = f"active_run:{instance_id}:{agent_run_id}"
+    logger.debug(f"Cleaning up Redis instance key: {key}")
     try:
-        await redis.delete(instance_active_key)
-        logger.debug(f"Deleted active run key: {instance_active_key}")
+        await redis.delete(key)
+        logger.debug(f"Successfully cleaned up Redis key: {key}")
     except Exception as e:
-        logger.warning(f"Failed to delete active run key {instance_active_key}: {str(e)}")
+        logger.warning(f"Failed to clean up Redis key {key}: {str(e)}")
 
+# TTL for Redis response lists (24 hours)
+REDIS_RESPONSE_LIST_TTL = 3600 * 24
 
 async def _cleanup_redis_response_list(agent_run_id: str):
-    """Set TTL on the response list in Redis to clean up later."""
+    """Set TTL on the Redis response list."""
     response_list_key = f"agent_run:{agent_run_id}:responses"
     try:
-        await redis.expire(response_list_key, redis.REDIS_KEY_TTL)
-        logger.debug(f"Set TTL on response list: {response_list_key}")
+        await redis.expire(response_list_key, REDIS_RESPONSE_LIST_TTL)
+        logger.debug(f"Set TTL ({REDIS_RESPONSE_LIST_TTL}s) on response list: {response_list_key}")
     except Exception as e:
         logger.warning(f"Failed to set TTL on response list {response_list_key}: {str(e)}")
-
 
 async def update_agent_run_status(
     client,
@@ -266,34 +273,52 @@ async def update_agent_run_status(
     error: Optional[str] = None,
     responses: Optional[list[any]] = None # Expects parsed list of dicts
 ) -> bool:
-    """Update the status of an agent run in the database."""
+    """
+    Centralized function to update agent run status.
+    Returns True if update was successful.
+    """
     try:
         update_data = {
             "status": status,
-            "ended_at": datetime.now(timezone.utc).isoformat()
+            "completed_at": datetime.now(timezone.utc).isoformat()
         }
 
         if error:
             update_data["error"] = error
 
         if responses:
+            # Ensure responses are stored correctly as JSONB
             update_data["responses"] = responses
 
-        response = await client.table("agent_runs")\
-            .update(update_data)\
-            .eq("id", agent_run_id)\
-            .execute()
+        # Retry up to 3 times
+        for retry in range(3):
+            try:
+                update_result = await client.table('agent_runs').update(update_data).eq("id", agent_run_id).execute()
 
-        if response.data:
-            logger.info(f"Updated agent run {agent_run_id} status to '{status}'")
-            return True
-        else:
-            logger.warning(f"Failed to update agent run {agent_run_id} status in database")
-            return False
+                if hasattr(update_result, 'data') and update_result.data:
+                    logger.info(f"Successfully updated agent run {agent_run_id} status to '{status}' (retry {retry})")
+
+                    # Verify the update
+                    verify_result = await client.table('agent_runs').select('status', 'completed_at').eq("id", agent_run_id).execute()
+                    if verify_result.data:
+                        actual_status = verify_result.data[0].get('status')
+                        completed_at = verify_result.data[0].get('completed_at')
+                        logger.info(f"Verified agent run update: status={actual_status}, completed_at={completed_at}")
+                    return True
+                else:
+                    logger.warning(f"Database update returned no data for agent run {agent_run_id} on retry {retry}: {update_result}")
+                    if retry == 2:  # Last retry
+                        logger.error(f"Failed to update agent run status after all retries: {agent_run_id}")
+                        return False
+            except Exception as db_error:
+                logger.error(f"Database error on retry {retry} updating status for {agent_run_id}: {str(db_error)}")
+                if retry < 2:  # Not the last retry yet
+                    await asyncio.sleep(0.5 * (2 ** retry))  # Exponential backoff
+                else:
+                    logger.error(f"Failed to update agent run status after all retries: {agent_run_id}", exc_info=True)
+                    return False
     except Exception as e:
-        logger.error(f"Error updating agent run {agent_run_id} status: {e}", exc_info=True)
+        logger.error(f"Unexpected error updating agent run status for {agent_run_id}: {str(e)}", exc_info=True)
         return False
 
-
-# Backwards compatibility alias
-run_agent_background_sync = run_agent_background
+    return False

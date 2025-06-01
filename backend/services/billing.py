@@ -206,16 +206,6 @@ async def get_allowed_models_for_user(client, user_id: str):
     Returns:
         List of model names allowed for the user's subscription tier.
     """
-    # Check if user is an admin first
-    logger.info(f"DEBUG: Checking admin access for user {user_id}")
-    logger.info(f"DEBUG: ADMIN_USER_IDS config: {config.ADMIN_USER_IDS}")
-    logger.info(f"DEBUG: ADMIN_USER_LIST: {config.ADMIN_USER_LIST}")
-    logger.info(f"DEBUG: Is user in admin list? {user_id in config.ADMIN_USER_LIST}")
-    
-    if user_id in config.ADMIN_USER_LIST:
-        logger.info(f"Admin user {user_id} - all models available")
-        # Return all available models from MODEL_NAME_ALIASES
-        return list(MODEL_NAME_ALIASES.values())
 
     subscription = await get_user_subscription(user_id)
     tier_name = 'free'
@@ -237,15 +227,6 @@ async def get_allowed_models_for_user(client, user_id: str):
 
 
 async def can_use_model(client, user_id: str, model_name: str):
-    # Check if user is an admin first
-    logger.info(f"DEBUG: can_use_model called for user {user_id}, model {model_name}")
-    logger.info(f"DEBUG: ADMIN_USER_LIST: {config.ADMIN_USER_LIST}")
-    logger.info(f"DEBUG: Is user in admin list? {user_id in config.ADMIN_USER_LIST}")
-    
-    if user_id in config.ADMIN_USER_LIST:
-        logger.info(f"Admin user {user_id} - model access unrestricted")
-        return True, "Admin user - all models available", ["all_models"]
-    
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
         return True, "Local development mode - billing disabled", {
@@ -268,22 +249,6 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
     Returns:
         Tuple[bool, str, Optional[Dict]]: (can_run, message, subscription_info)
     """
-    logger.info(f"Checking billing status for user: {user_id}")
-    
-    # Check if user is an admin first
-    logger.info(f"Admin user list: {config.ADMIN_USER_LIST}")
-    logger.info(f"Is user {user_id} in admin list? {user_id in config.ADMIN_USER_LIST}")
-    
-    if user_id in config.ADMIN_USER_LIST:
-        logger.info(f"Admin user {user_id} - billing checks bypassed")
-        return True, "Admin user - unlimited access", {
-            "price_id": "admin",
-            "plan_name": "Admin",
-            "minutes_limit": "unlimited"
-        }
-    
-    logger.info(f"User {user_id} is not an admin, proceeding with normal billing checks")
-    
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
         return True, "Local development mode - billing disabled", {
@@ -717,18 +682,6 @@ async def get_subscription(
 ):
     """Get the current subscription status for the current user, including scheduled changes."""
     try:
-        # Check if user is an admin with unlimited access
-        if current_user_id in config.ADMIN_USER_LIST:
-            logger.info(f"Admin user {current_user_id} requesting subscription - returning unlimited access")
-            return SubscriptionStatus(
-                status="active",
-                plan_name="Admin Unlimited",
-                price_id="admin_unlimited",
-                minutes_limit=999999,
-                current_usage=0.0,
-                has_schedule=False
-            )
-        
         # Get subscription from Stripe (this helper already handles filtering/cleanup)
         subscription = await get_user_subscription(current_user_id)
         # print("Subscription data for status:", subscription)
@@ -919,27 +872,6 @@ async def get_available_models(
         db = DBConnection()
         client = await db.client
         
-        # Check if user is an admin first
-        if current_user_id in config.ADMIN_USER_LIST:
-            logger.info(f"Admin user {current_user_id} - all models available")
-            
-            # Return all models as available for admin
-            model_info = []
-            for short_name, full_name in MODEL_NAME_ALIASES.items():
-                model_info.append({
-                    "id": full_name,
-                    "display_name": short_name,
-                    "short_name": short_name,
-                    "requires_subscription": False,  # No restrictions for admin
-                    "is_available": True  # All available for admin
-                })
-            
-            return {
-                "models": model_info,
-                "subscription_tier": "Admin",
-                "total_models": len(model_info)
-            }
-        
         # Check if we're in local development mode
         if config.ENV_MODE == EnvMode.LOCAL:
             logger.info("Running in local development mode - billing checks are disabled")
@@ -1026,22 +958,3 @@ async def get_available_models(
     except Exception as e:
         logger.error(f"Error getting available models: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error getting available models: {str(e)}")
-
-@router.get("/debug-user")
-async def debug_user(
-    current_user_id: str = Depends(get_current_user_id_from_jwt)
-):
-    """Debug endpoint to check current user ID and admin status."""
-    try:
-        is_admin = current_user_id in config.ADMIN_USER_LIST
-        
-        return {
-            "user_id": current_user_id,
-            "is_admin": is_admin,
-            "admin_user_list": config.ADMIN_USER_LIST,
-            "admin_user_ids_env": config.ADMIN_USER_IDS
-        }
-        
-    except Exception as e:
-        logger.error(f"Error in debug user endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))

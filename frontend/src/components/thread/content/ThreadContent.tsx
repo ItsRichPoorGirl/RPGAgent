@@ -213,16 +213,16 @@ export function renderMarkdownContent(
             // Render tool button as a clickable element
             contentParts.push(
                 <div key={toolCallKey} className="my-1">
-                    <button
-                        onClick={() => handleToolClick(messageId, toolName)}
+                <button
+                    onClick={() => handleToolClick(messageId, toolName)}
                         className="inline-flex items-center gap-1.5 py-1 px-1 text-xs text-muted-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors cursor-pointer border border-neutral-200 dark:border-neutral-700/50"
-                    >
-                        <div className='border-2 bg-gradient-to-br from-neutral-200 to-neutral-300 dark:from-neutral-700 dark:to-neutral-800 flex items-center justify-center p-0.5 rounded-sm border-neutral-400/20 dark:border-neutral-600'>
-                            <IconComponent className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                        </div>
-                        <span className="font-mono text-xs text-foreground">{getUserFriendlyToolName(toolName)}</span>
-                        {paramDisplay && <span className="ml-1 text-muted-foreground truncate max-w-[200px]" title={paramDisplay}>{paramDisplay}</span>}
-                    </button>
+                >
+                    <div className='border-2 bg-gradient-to-br from-neutral-200 to-neutral-300 dark:from-neutral-700 dark:to-neutral-800 flex items-center justify-center p-0.5 rounded-sm border-neutral-400/20 dark:border-neutral-600'>
+                        <IconComponent className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                    </div>
+                    <span className="font-mono text-xs text-foreground">{getUserFriendlyToolName(toolName)}</span>
+                    {paramDisplay && <span className="ml-1 text-muted-foreground truncate max-w-[200px]" title={paramDisplay}>{paramDisplay}</span>}
+                </button>
                 </div>
             );
         }
@@ -256,6 +256,9 @@ export interface ThreadContentProps {
     project?: Project; // Add project prop
     debugMode?: boolean; // Add debug mode parameter
     isPreviewMode?: boolean;
+    agentName?: string;
+    agentAvatar?: React.ReactNode;
+    emptyStateComponent?: React.ReactNode; // Add custom empty state component prop
 }
 
 export const ThreadContent: React.FC<ThreadContentProps> = ({
@@ -275,6 +278,9 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
     project,
     debugMode = false,
     isPreviewMode = false,
+    agentName = 'Suna',
+    agentAvatar = <KortixLogo size={16} />,
+    emptyStateComponent,
 }) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -342,21 +348,24 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
 
     return (
         <>
-
-            <div
-                ref={messagesContainerRef}
-                className={containerClassName}
-                onScroll={handleScroll}
-            >
-                <div className="mx-auto max-w-3xl min-w-0">
                     {displayMessages.length === 0 && !streamingTextContent && !streamingToolCall &&
                         !streamingText && !currentToolCall && agentStatus === 'idle' ? (
-                        <div className="flex h-full items-center justify-center">
+                // Render empty state outside scrollable container
+                <div className="flex-1 min-h-[60vh] flex items-center justify-center">
+                    {emptyStateComponent || (
                             <div className="text-center text-muted-foreground">
                                 {readOnly ? "No messages to display." : "Send a message to start."}
-                            </div>
+                        </div>
+                    )}
                         </div>
                     ) : (
+                // Render scrollable content container
+                <div
+                    ref={messagesContainerRef}
+                    className={containerClassName}
+                    onScroll={handleScroll}
+                >
+                    <div className="mx-auto max-w-3xl md:px-8 min-w-0">
                         <div className="space-y-8 min-w-0">
                             {(() => {
 
@@ -503,13 +512,18 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                     } else if (group.type === 'assistant_group') {
                                         return (
                                             <div key={group.key} ref={groupIndex === groupedMessages.length - 1 ? latestMessageRef : null}>
-                                                <div className="flex items-start gap-3">
-                                                    <div className="flex-shrink-0 w-5 h-5 mt-2 rounded-md flex items-center justify-center ml-auto mr-2">
-                                                        <KortixLogo />
+                                                <div className="flex flex-col gap-2">
+                                                    {/* Logo positioned above the message content */}
+                                                    <div className="flex items-center">
+                                                        <div className="rounded-md flex items-center justify-center">
+                                                            {agentAvatar}
+                                                        </div>
+                                                        <p className='ml-2 text-sm text-muted-foreground'>{agentName ? agentName : 'Suna'}</p>
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex max-w-[90%] rounded-lg px-4 text-sm break-words overflow-hidden">
-                                                            <div className="space-y-2 min-w-0 flex-1">
+                                                    
+                                                    {/* Message content */}
+                                                    <div className="flex  max-w-[90%] rounded-lg text-sm break-words overflow-hidden">
+                                                        <div className="space-y-2 min-w-0 flex-1">
                                                                 {(() => {
                                                                     // In debug mode, just show raw messages content
                                                                     if (debugMode) {
@@ -573,9 +587,9 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
 
                                                                             elements.push(
                                                                                 <div key={msgKey} className={assistantMessageCount > 0 ? "mt-2" : ""}>
-                                                                                    <div className="prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3 break-words overflow-hidden">
+                                                                                <div className="prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3 break-words overflow-hidden">
                                                                                         {renderedContent}
-                                                                                    </div>
+                                                                                </div>
                                                                                 </div>
                                                                             );
                                                                             assistantMessageCount++;
@@ -600,22 +614,22 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                             let detectedTag: string | null = null;
                                                                             let tagStartIndex = -1;
                                                                             if (streamingTextContent) {
-                                                                                // First check for new format
-                                                                                const functionCallsIndex = streamingTextContent.indexOf('<function_calls>');
-                                                                                if (functionCallsIndex !== -1) {
-                                                                                    detectedTag = 'function_calls';
-                                                                                    tagStartIndex = functionCallsIndex;
-                                                                                } else {
-                                                                                    // Fall back to old format detection
-                                                                                    for (const tag of HIDE_STREAMING_XML_TAGS) {
-                                                                                        const openingTagPattern = `<${tag}`;
-                                                                                        const index = streamingTextContent.indexOf(openingTagPattern);
-                                                                                        if (index !== -1) {
-                                                                                            detectedTag = tag;
-                                                                                            tagStartIndex = index;
-                                                                                            break;
-                                                                                        }
+                                                                            // First check for new format
+                                                                            const functionCallsIndex = streamingTextContent.indexOf('<function_calls>');
+                                                                            if (functionCallsIndex !== -1) {
+                                                                                detectedTag = 'function_calls';
+                                                                                tagStartIndex = functionCallsIndex;
+                                                                            } else {
+                                                                                // Fall back to old format detection
+                                                                                for (const tag of HIDE_STREAMING_XML_TAGS) {
+                                                                                    const openingTagPattern = `<${tag}`;
+                                                                                    const index = streamingTextContent.indexOf(openingTagPattern);
+                                                                                    if (index !== -1) {
+                                                                                        detectedTag = tag;
+                                                                                        tagStartIndex = index;
+                                                                                        break;
                                                                                     }
+                                                                                }
                                                                                 }
                                                                             }
 
@@ -623,18 +637,18 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                             const textToRender = streamingTextContent || '';
                                                                             const textBeforeTag = detectedTag ? textToRender.substring(0, tagStartIndex) : textToRender;
                                                                             const showCursor = (streamHookStatus === 'streaming' || streamHookStatus === 'connecting') && !detectedTag;
-                                                                            const IconComponent = detectedTag && detectedTag !== 'function_calls' ? getToolIcon(detectedTag) : null;
+                                                                        const IconComponent = detectedTag && detectedTag !== 'function_calls' ? getToolIcon(detectedTag) : null;
 
                                                                             return (
                                                                                 <>
                                                                                     {textBeforeTag && (
-                                                                                        <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3 break-words overflow-wrap-anywhere">{textBeforeTag}</Markdown>
+                                                                                    <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3 break-words overflow-wrap-anywhere">{textBeforeTag}</Markdown>
                                                                                     )}
                                                                                     {showCursor && (
                                                                                         <span className="inline-block h-4 w-0.5 bg-primary ml-0.5 -mb-1 animate-pulse" />
                                                                                     )}
 
-                                                                                    {detectedTag && detectedTag !== 'function_calls' && (
+                                                                                {detectedTag && detectedTag !== 'function_calls' && (
                                                                                         <div className="mt-2 mb-1">
                                                                                             <button
                                                                                                 className="animate-shimmer inline-flex items-center gap-1.5 py-1 px-1 text-xs font-medium text-primary bg-muted hover:bg-muted/80 rounded-md transition-colors cursor-pointer border border-primary/20"
@@ -647,20 +661,20 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                                         </div>
                                                                                     )}
 
-                                                                                    {detectedTag === 'function_calls' && (
-                                                                                        <div className="mt-2 mb-1">
-                                                                                            <button
-                                                                                                className="animate-shimmer inline-flex items-center gap-1.5 py-1 px-1 text-xs font-medium text-primary bg-muted hover:bg-muted/80 rounded-md transition-colors cursor-pointer border border-primary/20"
-                                                                                            >
-                                                                                                <div className='border-2 bg-gradient-to-br from-neutral-200 to-neutral-300 dark:from-neutral-700 dark:to-neutral-800 flex items-center justify-center p-0.5 rounded-sm border-neutral-400/20 dark:border-neutral-600'>
-                                                                                                    <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
-                                                                                                </div>
-                                                                                                <span className="font-mono text-xs text-primary">
-                                                                                                    {extractToolNameFromStream(streamingTextContent) || 'Using Tool...'}
-                                                                                                </span>
-                                                                                            </button>
-                                                                                        </div>
-                                                                                    )}
+                                                                                {detectedTag === 'function_calls' && (
+                                                                                    <div className="mt-2 mb-1">
+                                                                                        <button
+                                                                                            className="animate-shimmer inline-flex items-center gap-1.5 py-1 px-1 text-xs font-medium text-primary bg-muted hover:bg-muted/80 rounded-md transition-colors cursor-pointer border border-primary/20"
+                                                                                        >
+                                                                                            <div className='border-2 bg-gradient-to-br from-neutral-200 to-neutral-300 dark:from-neutral-700 dark:to-neutral-800 flex items-center justify-center p-0.5 rounded-sm border-neutral-400/20 dark:border-neutral-600'>
+                                                                                                <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
+                                                                                            </div>
+                                                                                            <span className="font-mono text-xs text-primary">
+                                                                                                {extractToolNameFromStream(streamingTextContent) || 'Using Tool...'}
+                                                                                            </span>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                )}
 
                                                                                     {streamingToolCall && !detectedTag && (
                                                                                         <div className="mt-2 mb-1">
@@ -695,21 +709,21 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                             let detectedTag: string | null = null;
                                                                             let tagStartIndex = -1;
                                                                             if (streamingText) {
-                                                                                // First check for new format
-                                                                                const functionCallsIndex = streamingText.indexOf('<function_calls>');
-                                                                                if (functionCallsIndex !== -1) {
-                                                                                    detectedTag = 'function_calls';
-                                                                                    tagStartIndex = functionCallsIndex;
-                                                                                } else {
-                                                                                    // Fall back to old format detection
-                                                                                    for (const tag of HIDE_STREAMING_XML_TAGS) {
-                                                                                        const openingTagPattern = `<${tag}`;
-                                                                                        const index = streamingText.indexOf(openingTagPattern);
-                                                                                        if (index !== -1) {
-                                                                                            detectedTag = tag;
-                                                                                            tagStartIndex = index;
-                                                                                            break;
-                                                                                        }
+                                                                            // First check for new format
+                                                                            const functionCallsIndex = streamingText.indexOf('<function_calls>');
+                                                                            if (functionCallsIndex !== -1) {
+                                                                                detectedTag = 'function_calls';
+                                                                                tagStartIndex = functionCallsIndex;
+                                                                            } else {
+                                                                                // Fall back to old format detection
+                                                                                for (const tag of HIDE_STREAMING_XML_TAGS) {
+                                                                                    const openingTagPattern = `<${tag}`;
+                                                                                    const index = streamingText.indexOf(openingTagPattern);
+                                                                                    if (index !== -1) {
+                                                                                        detectedTag = tag;
+                                                                                        tagStartIndex = index;
+                                                                                        break;
+                                                                                    }
                                                                                     }
                                                                                 }
                                                                             }
@@ -728,7 +742,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                                     ) : (
                                                                                         <>
                                                                                             {textBeforeTag && (
-                                                                                                <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3 break-words overflow-wrap-anywhere">{textBeforeTag}</Markdown>
+                                                                                            <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3 break-words overflow-wrap-anywhere">{textBeforeTag}</Markdown>
                                                                                             )}
                                                                                             {showCursor && (
                                                                                                 <span className="inline-block h-4 w-0.5 bg-primary ml-0.5 -mb-1 animate-pulse" />
@@ -740,9 +754,9 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                                                         className="animate-shimmer inline-flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-md transition-colors cursor-pointer border border-primary/20"
                                                                                                     >
                                                                                                         <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
-                                                                                                        <span className="font-mono text-xs text-primary">
-                                                                                                            {detectedTag === 'function_calls' ? (extractToolNameFromStream(streamingText) || 'Using Tool...') : detectedTag}
-                                                                                                        </span>
+                                                                                                    <span className="font-mono text-xs text-primary">
+                                                                                                        {detectedTag === 'function_calls' ? (extractToolNameFromStream(streamingText) || 'Using Tool...') : detectedTag}
+                                                                                                    </span>
                                                                                                     </button>
                                                                                                 </div>
                                                                                             )}
@@ -753,7 +767,6 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                         })()}
                                                                     </div>
                                                                 )}
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -767,11 +780,17 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                 !readOnly &&
                                 (messages.length === 0 || messages[messages.length - 1].type === 'user')) && (
                                     <div ref={latestMessageRef} className='w-full h-22 rounded'>
-                                        <div className="flex items-start gap-3">
-                                            <div className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center bg-primary/10">
-                                                <KortixLogo />
+                                        <div className="flex flex-col gap-2">
+                                            {/* Logo positioned above the loader */}
+                                            <div className="flex items-center">
+                                                <div className="rounded-md flex items-center justify-center">
+                                                    {agentAvatar}
+                                                </div>
+                                                <p className='ml-2 text-sm text-muted-foreground'>{agentName}</p>
                                             </div>
-                                            <div className="flex-1 space-y-2 w-full h-12">
+                                            
+                                            {/* Loader content */}
+                                            <div className="space-y-2 w-full h-12">
                                                 <AgentLoader />
                                             </div>
                                         </div>
@@ -781,11 +800,17 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                             {/* For playback mode - Show tool call animation if active */}
                             {readOnly && currentToolCall && (
                                 <div ref={latestMessageRef}>
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex-shrink-0 w-5 h-5 mt-2 rounded-md flex items-center justify-center bg-primary/10">
-                                            <KortixLogo />
+                                    <div className="flex flex-col gap-2">
+                                        {/* Logo positioned above the tool call */}
+                                        <div className="flex justify-start">
+                                            <div className="rounded-md flex items-center justify-center">
+                                                {agentAvatar}
+                                            </div>
+                                            <p className='ml-2 text-sm text-muted-foreground'>{agentName}</p>
                                         </div>
-                                        <div className="flex-1 space-y-2">
+                                        
+                                        {/* Tool call content */}
+                                        <div className="space-y-2">
                                             <div className="animate-shimmer inline-flex items-center gap-1.5 py-1.5 px-3 text-xs font-medium text-primary bg-primary/10 rounded-md border border-primary/20">
                                                 <CircleDashed className="h-3.5 w-3.5 text-primary flex-shrink-0 animate-spin animation-duration-2000" />
                                                 <span className="font-mono text-xs text-primary">
@@ -800,27 +825,31 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                             {/* For playback mode - Show streaming indicator if no messages yet */}
                             {readOnly && visibleMessages && visibleMessages.length === 0 && isStreamingText && (
                                 <div ref={latestMessageRef}>
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex-shrink-0 w-5 h-5 mt-2 rounded-md flex items-center justify-center bg-primary/10">
-                                            <KortixLogo />
+                                    <div className="flex flex-col gap-2">
+                                        {/* Logo positioned above the streaming indicator */}
+                                        <div className="flex justify-start">
+                                            <div className="rounded-md flex items-center justify-center">
+                                                {agentAvatar}
+                                            </div>
+                                            <p className='ml-2 text-sm text-muted-foreground'>{agentName}</p>
                                         </div>
-                                        <div className="flex-1 space-y-2">
+                                        
+                                        {/* Streaming indicator content */}
                                             <div className="max-w-[90%] px-4 py-3 text-sm">
                                                 <div className="flex items-center gap-1.5 py-1">
                                                     <div className="h-1.5 w-1.5 rounded-full bg-primary/50 animate-pulse" />
                                                     <div className="h-1.5 w-1.5 rounded-full bg-primary/50 animate-pulse delay-150" />
                                                     <div className="h-1.5 w-1.5 rounded-full bg-primary/50 animate-pulse delay-300" />
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             )}
                         </div>
-                    )}
+                    </div>
                     <div ref={messagesEndRef} className="h-1" />
                 </div>
-            </div>
+            )}
 
             {/* Scroll to bottom button */}
             {showScrollButton && (

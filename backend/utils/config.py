@@ -40,24 +40,24 @@ class Configuration:
     ENV_MODE: EnvMode = EnvMode.LOCAL
     
     # Subscription tier IDs - Production
-    STRIPE_FREE_TIER_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBKkOp4qfZ'  # Free tier
-    STRIPE_TIER_2_20_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBEsEwW6cO'  # Tier 2
-    STRIPE_TIER_6_50_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBoLIdk8yv'  # Tier 6
-    STRIPE_TIER_12_100_ID_PROD: str = 'price_1RMZYBCQSpuIbcUB4xpnBWn2'  # Tier 12
-    STRIPE_TIER_25_200_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBrVEJblS7'  # Tier 25
-    STRIPE_TIER_50_400_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBXR5gNWHO'  # Tier 50
-    STRIPE_TIER_125_800_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBF4PsfCG9'  # Tier 125
-    STRIPE_TIER_200_1000_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBlv69Sl4i'  # Tier 200
+    STRIPE_FREE_TIER_ID_PROD: str = 'price_1RILb4G6l1KZGqIrK4QLrx9i'
+    STRIPE_TIER_2_20_ID_PROD: str = 'price_1RILb4G6l1KZGqIrhomjgDnO'
+    STRIPE_TIER_6_50_ID_PROD: str = 'price_1RILb4G6l1KZGqIr5q0sybWn'
+    STRIPE_TIER_12_100_ID_PROD: str = 'price_1RILb4G6l1KZGqIr5Y20ZLHm'
+    STRIPE_TIER_25_200_ID_PROD: str = 'price_1RILb4G6l1KZGqIrGAD8rNjb'
+    STRIPE_TIER_50_400_ID_PROD: str = 'price_1RILb4G6l1KZGqIruNBUMTF1'
+    STRIPE_TIER_125_800_ID_PROD: str = 'price_1RILb3G6l1KZGqIrbJA766tN'
+    STRIPE_TIER_200_1000_ID_PROD: str = 'price_1RILb3G6l1KZGqIrmauYPOiN'
     
-    # Subscription tier IDs - Staging (using same IDs as production since we only use live products)
-    STRIPE_FREE_TIER_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBKkOp4qfZ'  # Free tier
-    STRIPE_TIER_2_20_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBEsEwW6cO'  # Tier 2
-    STRIPE_TIER_6_50_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBoLIdk8yv'  # Tier 6
-    STRIPE_TIER_12_100_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUB4xpnBWn2'  # Tier 12
-    STRIPE_TIER_25_200_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBrVEJblS7'  # Tier 25
-    STRIPE_TIER_50_400_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBXR5gNWHO'  # Tier 50
-    STRIPE_TIER_125_800_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBF4PsfCG9'  # Tier 125
-    STRIPE_TIER_200_1000_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBlv69Sl4i'  # Tier 200
+    # Subscription tier IDs - Staging
+    STRIPE_FREE_TIER_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrw14abxeL'
+    STRIPE_TIER_2_20_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrCRu0E4Gi'
+    STRIPE_TIER_6_50_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrvjlz5p5V'
+    STRIPE_TIER_12_100_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrT6UfgblC'
+    STRIPE_TIER_25_200_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrOVLKlOMj'
+    STRIPE_TIER_50_400_ID_STAGING: str = 'price_1RIKNgG6l1KZGqIrvsat5PW7'
+    STRIPE_TIER_125_800_ID_STAGING: str = 'price_1RIKNrG6l1KZGqIrjKT0yGvI'
+    STRIPE_TIER_200_1000_ID_STAGING: str = 'price_1RIKQ2G6l1KZGqIrum9n8SI7'
     
     # Computed subscription tier IDs based on environment
     @property
@@ -114,9 +114,8 @@ class Configuration:
     GROQ_API_KEY: Optional[str] = None
     OPENROUTER_API_KEY: Optional[str] = None
     OPENROUTER_API_BASE: Optional[str] = "https://openrouter.ai/api/v1"
-    OR_SITE_URL_PROD: Optional[str] = "https://luciqai.com"
-    OR_SITE_URL_STAGING: Optional[str] = "https://v0-luciq-ai.vercel.app"
-    OR_APP_NAME: Optional[str] = "Luciq AI"    
+    OR_SITE_URL: Optional[str] = "https://kortix.ai"
+    OR_APP_NAME: Optional[str] = "Kortix AI"    
     
     # AWS Bedrock credentials
     AWS_ACCESS_KEY_ID: Optional[str] = None
@@ -156,8 +155,8 @@ class Configuration:
     STRIPE_DEFAULT_TRIAL_DAYS: int = 14
     
     # Stripe Product IDs
-    STRIPE_PRODUCT_ID_PROD: str = 'prod_SH7nxrLxYVFTgM'  # Production product ID
-    STRIPE_PRODUCT_ID_STAGING: str = 'prod_SH7nxrLxYVFTgM'  # Staging product ID (using same as production)
+    STRIPE_PRODUCT_ID_PROD: str = 'prod_SCl7AQ2C8kK1CD'
+    STRIPE_PRODUCT_ID_STAGING: str = 'prod_SCgIj3G7yPOAWY'
     
     # Sandbox configuration
     SANDBOX_IMAGE_NAME = "kortix/suna:0.1.2.8"
@@ -168,27 +167,11 @@ class Configuration:
     LANGFUSE_SECRET_KEY: Optional[str] = None
     LANGFUSE_HOST: str = "https://cloud.langfuse.com"
 
-    # Admin configuration - users with unlimited access
-    ADMIN_USER_IDS: Optional[str] = None  # Comma-separated list of admin user IDs
-    
-    @property
-    def ADMIN_USER_LIST(self) -> list:
-        """Get list of admin user IDs with unlimited access."""
-        if not self.ADMIN_USER_IDS:
-            return []
-        return [uid.strip() for uid in self.ADMIN_USER_IDS.split(',') if uid.strip()]
-
     @property
     def STRIPE_PRODUCT_ID(self) -> str:
         if self.ENV_MODE == EnvMode.STAGING:
             return self.STRIPE_PRODUCT_ID_STAGING
         return self.STRIPE_PRODUCT_ID_PROD
-    
-    @property
-    def OR_SITE_URL(self) -> str:
-        if self.ENV_MODE == EnvMode.STAGING:
-            return self.OR_SITE_URL_STAGING
-        return self.OR_SITE_URL_PROD
     
     def __init__(self):
         """Initialize configuration by loading from environment variables."""
@@ -210,7 +193,6 @@ class Configuration:
         
         # Perform validation
         self._validate()
-        logger.info(f"DEBUG: OpenRouter API key set: {bool(self.OPENROUTER_API_KEY)}, API base: {self.OPENROUTER_API_BASE}")
         
     def _load_from_env(self):
         """Load configuration values from environment variables."""
