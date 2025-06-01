@@ -4,7 +4,11 @@ import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
-export function KortixLogo() {
+interface KortixLogoProps {
+  size?: number;
+}
+
+export function KortixLogo({ size = 24 }: KortixLogoProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -14,12 +18,12 @@ export function KortixLogo() {
   }, []);
 
   return (
-    <div className="flex h-6 w-6 items-center justify-center flex-shrink-0">
+    <div className="flex items-center justify-center flex-shrink-0" style={{ height: size, width: size }}>
       <Image
         src="/kortix-symbol.svg"
         alt="Kortix"
-        width={24}
-        height={24}
+        width={size}
+        height={size}
         className={`${mounted && theme === 'dark' ? 'invert' : ''}`}
       />
     </div>
