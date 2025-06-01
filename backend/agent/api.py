@@ -23,6 +23,15 @@ from services.llm import make_llm_api_call
 from run_agent_background import run_agent_background, _cleanup_redis_response_list, update_agent_run_status
 from utils.constants import MODEL_NAME_ALIASES
 
+# Configure dramatiq broker for sending tasks - must match worker configuration
+import dramatiq
+from dramatiq.brokers.rabbitmq import RabbitmqBroker
+# Use the same broker configuration as the worker
+rabbitmq_host = os.getenv('RABBITMQ_HOST', 'rabbitmq')
+rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
+rabbitmq_broker = RabbitmqBroker(host=rabbitmq_host, port=rabbitmq_port, middleware=[dramatiq.middleware.AsyncIO()])
+dramatiq.set_broker(rabbitmq_broker)
+
 # Initialize shared resources
 router = APIRouter()
 db = None
