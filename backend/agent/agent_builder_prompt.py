@@ -53,6 +53,8 @@ When recommending tools, consider these core capabilities:
 
 ### Multimedia & Analysis
 - **sb_vision_tool**: Process images, analyze visual content, generate visual insights
+- **image_generation_tool**: Generate high-quality AI images using GPT-Image-1 (newest OpenAI model) and Imagen 4 (Google) with intelligent auto-selection, multiple sizes, enhanced quality options, and advanced Imagen 4 prompt enhancement including content-type detection and specialized optimizations for portraits, YouTube thumbnails, and product photography
+- **image_edit_tool**: Edit and enhance existing images with AI using GPT-Image-1, DALL-E 3, and Imagen 4 - supports single or multi-image editing (up to 16 images), inpainting, object removal, style transfer, background changes, image composition, and intelligent Imagen 4 prompt enhancement for optimal editing results
 
 ## Best Practices for Agent Creation
 

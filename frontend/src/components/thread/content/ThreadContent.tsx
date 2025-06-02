@@ -355,7 +355,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                     {emptyStateComponent || (
                             <div className="text-center text-muted-foreground">
                                 {readOnly ? "No messages to display." : "Send a message to start."}
-                        </div>
+                            </div>
                     )}
                         </div>
                     ) : (
@@ -589,7 +589,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                                 <div key={msgKey} className={assistantMessageCount > 0 ? "mt-2" : ""}>
                                                                                 <div className="prose prose-sm dark:prose-invert chat-markdown max-w-none [&>:first-child]:mt-0 prose-headings:mt-3 break-words overflow-hidden">
                                                                                         {renderedContent}
-                                                                                </div>
+                                                                                    </div>
                                                                                 </div>
                                                                             );
                                                                             assistantMessageCount++;
@@ -672,9 +672,9 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                                                             <span className="font-mono text-xs text-primary">
                                                                                                 {extractToolNameFromStream(streamingTextContent) || 'Using Tool...'}
                                                                                             </span>
-                                                                                        </button>
-                                                                                    </div>
-                                                                                )}
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    )}
 
                                                                                     {streamingToolCall && !detectedTag && (
                                                                                         <div className="mt-2 mb-1">

@@ -9,6 +9,8 @@ from agent.tools.message_tool import MessageTool
 from agent.tools.sb_deploy_tool import SandboxDeployTool
 from agent.tools.sb_expose_tool import SandboxExposeTool
 from agent.tools.web_search_tool import SandboxWebSearchTool
+from agent.tools.image_generation_tool import ImageGenerationTool
+from agent.tools.image_edit_tool import ImageEditTool
 from dotenv import load_dotenv
 from utils.config import config
 
@@ -98,17 +100,19 @@ async def run_agent(
     if enabled_tools is None:
         # No agent specified - register ALL tools for full Luciq experience
         logger.info("No agent specified - registering all tools for full Luciq capabilities")
-    thread_manager.add_tool(SandboxShellTool, project_id=project_id, thread_manager=thread_manager)
-    thread_manager.add_tool(SandboxFilesTool, project_id=project_id, thread_manager=thread_manager)
-    thread_manager.add_tool(SandboxBrowserTool, project_id=project_id, thread_id=thread_id, thread_manager=thread_manager)
-    thread_manager.add_tool(SandboxDeployTool, project_id=project_id, thread_manager=thread_manager)
-    thread_manager.add_tool(SandboxExposeTool, project_id=project_id, thread_manager=thread_manager)
+        thread_manager.add_tool(SandboxShellTool, project_id=project_id, thread_manager=thread_manager)
+        thread_manager.add_tool(SandboxFilesTool, project_id=project_id, thread_manager=thread_manager)
+        thread_manager.add_tool(SandboxBrowserTool, project_id=project_id, thread_id=thread_id, thread_manager=thread_manager)
+        thread_manager.add_tool(SandboxDeployTool, project_id=project_id, thread_manager=thread_manager)
+        thread_manager.add_tool(SandboxExposeTool, project_id=project_id, thread_manager=thread_manager)
         thread_manager.add_tool(ExpandMessageTool, thread_id=thread_id, thread_manager=thread_manager)
         thread_manager.add_tool(MessageTool)
-    thread_manager.add_tool(SandboxWebSearchTool, project_id=project_id, thread_manager=thread_manager)
-    thread_manager.add_tool(SandboxVisionTool, project_id=project_id, thread_id=thread_id, thread_manager=thread_manager)
-    if config.RAPID_API_KEY:
-        thread_manager.add_tool(DataProvidersTool)
+        thread_manager.add_tool(SandboxWebSearchTool, project_id=project_id, thread_manager=thread_manager)
+        thread_manager.add_tool(SandboxVisionTool, project_id=project_id, thread_id=thread_id, thread_manager=thread_manager)
+        thread_manager.add_tool(ImageGenerationTool)
+        thread_manager.add_tool(ImageEditTool)
+        if config.RAPID_API_KEY:
+            thread_manager.add_tool(DataProvidersTool)
     else:
         logger.info("Custom agent specified - registering only enabled tools")
         thread_manager.add_tool(ExpandMessageTool, thread_id=thread_id, thread_manager=thread_manager)
@@ -127,6 +131,10 @@ async def run_agent(
             thread_manager.add_tool(SandboxWebSearchTool, project_id=project_id, thread_manager=thread_manager)
         if enabled_tools.get('sb_vision_tool', {}).get('enabled', False):
             thread_manager.add_tool(SandboxVisionTool, project_id=project_id, thread_id=thread_id, thread_manager=thread_manager)
+        if enabled_tools.get('image_generation_tool', {}).get('enabled', False):
+            thread_manager.add_tool(ImageGenerationTool)
+        if enabled_tools.get('image_edit_tool', {}).get('enabled', False):
+            thread_manager.add_tool(ImageEditTool)
         if config.RAPID_API_KEY and enabled_tools.get('data_providers_tool', {}).get('enabled', False):
             thread_manager.add_tool(DataProvidersTool)
 

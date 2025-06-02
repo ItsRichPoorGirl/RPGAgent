@@ -6,6 +6,8 @@ export const DEFAULT_AGENTPRESS_TOOLS: Record<string, { enabled: boolean; descri
     'sb_expose_tool': { enabled: false, description: 'Expose services and manage ports for application accessibility', icon: '🔌', color: 'bg-orange-100 dark:bg-orange-800/20' },
     'web_search_tool': { enabled: false, description: 'Search the web using Tavily API and scrape webpages with Firecrawl for research', icon: '🔍', color: 'bg-yellow-100 dark:bg-yellow-800/50' },
     'sb_vision_tool': { enabled: false, description: 'Vision and image processing capabilities for visual content analysis', icon: '👁️', color: 'bg-pink-100 dark:bg-pink-800/50' },
+    'image_generation_tool': { enabled: false, description: 'Generate high-quality AI images using GPT-Image-1 (newest OpenAI model) and Imagen 4 (Google) with intelligent auto-selection, multiple sizes, enhanced quality options, and advanced Imagen 4 prompt enhancement including content-type detection and specialized optimizations for portraits, YouTube thumbnails, and product photography', icon: '🎨', color: 'bg-purple-100 dark:bg-purple-800/50' },
+    'image_edit_tool': { enabled: false, description: 'Edit and enhance existing images with AI using GPT-Image-1, DALL-E 3, and Imagen 4 - supports single or multi-image editing (up to 16 images), inpainting, object removal, style transfer, background changes, image composition, and intelligent Imagen 4 prompt enhancement for optimal editing results', icon: '✏️', color: 'bg-violet-100 dark:bg-violet-800/50' },
     'data_providers_tool': { enabled: false, description: 'Access to data providers and external APIs (requires RapidAPI key)', icon: '🔗', color: 'bg-cyan-100 dark:bg-cyan-800/50' },
 };
 
@@ -18,6 +20,8 @@ export const getToolDisplayName = (toolName: string): string => {
       'sb_expose_tool': 'Port Exposure',
       'web_search_tool': 'Web Search',
       'sb_vision_tool': 'Image Processing',
+      'image_generation_tool': 'Image Generation',
+      'image_edit_tool': 'Image Editing',
       'data_providers_tool': 'Data Providers',
     };
     

@@ -100,6 +100,11 @@ public = false
 file_size_limit = "50MiB"
 allowed_mime_types = ["text/plain", "application/json", "text/markdown", "text/css", "text/javascript", "application/javascript", "text/html", "text/xml", "application/xml"]
 
+[storage.buckets.generated-images]
+public = true
+file_size_limit = "10MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"]
+
 [auth]
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used

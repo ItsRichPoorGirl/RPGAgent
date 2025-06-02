@@ -637,9 +637,9 @@ export default function LandingPage() {
                   </Button>
                 </div>
               </div>
-            </div>
+        </div>
           </section>
-        </main>
+      </main>
 
         <footer className="w-full border-t border-teal-400/10 py-8 bg-[#0a0a1f]">
           <div className="container mx-auto max-w-6xl px-4 md:px-6">
