@@ -23,19 +23,18 @@ export function UpgradeDialog({ open, onOpenChange, onDismiss }: UpgradeDialogPr
   const handleUpgradeClick = () => {
     router.push('/settings/billing');
     onOpenChange(false);
-    localStorage.setItem('suna_upgrade_dialog_displayed', 'true');
+    localStorage.setItem('luciq_upgrade_dialog_displayed', 'true');
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Crown className="h-5 w-5 mr-2 text-primary" />
-            Unlock the Full Suna Experience
+          <DialogTitle className="text-xl font-semibold mb-2">
+            Unlock the Full Luciq Experience
           </DialogTitle>
           <DialogDescription>
-            You're currently using Suna's free tier with limited capabilities.
+            You're currently using Luciq's free tier with limited capabilities.
             Upgrade now to access our most powerful AI model.
           </DialogDescription>
         </DialogHeader>
