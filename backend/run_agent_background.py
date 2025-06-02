@@ -18,21 +18,7 @@ from services.langfuse import langfuse
 
 rabbitmq_host = os.getenv('RABBITMQ_HOST', 'rabbitmq')
 rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
-rabbitmq_user = os.getenv('RABBITMQ_USER')
-rabbitmq_password = os.getenv('RABBITMQ_PASSWORD')
-
-# Ensure RabbitMQ credentials are provided
-if not rabbitmq_user or not rabbitmq_password:
-    logger.error("RABBITMQ_USER and RABBITMQ_PASSWORD environment variables are required")
-    raise ValueError("Missing RabbitMQ credentials")
-
-rabbitmq_broker = RabbitmqBroker(
-    host=rabbitmq_host, 
-    port=rabbitmq_port, 
-    username=rabbitmq_user,
-    password=rabbitmq_password,
-    middleware=[dramatiq.middleware.AsyncIO()]
-)
+rabbitmq_broker = RabbitmqBroker(host=rabbitmq_host, port=rabbitmq_port, middleware=[dramatiq.middleware.AsyncIO()])
 dramatiq.set_broker(rabbitmq_broker)
 
 _initialized = False
