@@ -9,8 +9,8 @@ from services.supabase import DBConnection
 import uuid
 from datetime import datetime
 from PIL import Image, ImageDraw
+from PIL import Image
 import io
-from agent.tools.imagen_prompt_enhancer import imagen_enhancer, ContentType
 
 class ImageEditTool(Tool):
     """Tool for editing, enhancing, and modifying existing images using AI."""
@@ -405,49 +405,33 @@ class ImageEditTool(Tool):
         """Edit image using Imagen 4 (simulated - actual implementation would depend on Google's API)."""
         logger.info(f"Editing image with Imagen 4: {edit_type}")
         
-        # Use advanced prompt enhancement for Imagen 4 editing
-        content_type = imagen_enhancer.detect_content_type(prompt)
-        
-        # Create an editing-specific prompt
-        edit_prompt = f"Edit this image: {prompt}"
-        
-        # Apply specialized enhancements based on content type and edit type
-        if edit_type == "background_change" and content_type == ContentType.PORTRAIT:
-            enhanced_prompt, enhancement_log = imagen_enhancer.enhance_for_portrait(edit_prompt, style)
-        elif edit_type in ["composite", "multi_edit"] and content_type == ContentType.PRODUCT:
-            enhanced_prompt, enhancement_log = imagen_enhancer.enhance_for_product_photography(edit_prompt, style)
-        else:
-            enhanced_prompt, enhancement_log = imagen_enhancer.enhance_for_imagen4(edit_prompt, style, quality, content_type)
-        
-        # Add edit-type specific guidance
-        if edit_type == "object_removal":
-            enhanced_prompt += ", seamlessly blend background, natural composition"
-        elif edit_type == "background_change":
-            enhanced_prompt += ", maintain subject lighting, realistic integration"
-        elif edit_type == "style_transfer":
-            enhanced_prompt += ", preserve subject details, apply style consistently"
-        
-        # Optimize prompt length
-        enhanced_prompt = imagen_enhancer.optimize_prompt_length(enhanced_prompt, max_length=350)
-        
-        logger.info(f"Imagen 4 edit enhancement:\n{enhancement_log}")
-        
         # Note: This is a placeholder implementation
-        # Actual Imagen 4 editing API calls would be implemented here
-        # For now, we'll fall back to generation with reference
+        # Real implementation would use Google's Imagen 4 API when available
         
-        # Size mapping
-        size_map = {
-            "1024x1024": (1024, 1024),
-            "1792x1024": (1792, 1024), 
-            "1024x1792": (1024, 1792),
-            "original": tuple(map(int, original_size.split('x')))
-        }
-        width, height = size_map.get(size, (1024, 1024))
-
-        # This would be the actual Imagen 4 editing API call
-        # For demonstration, we'll return a placeholder response
-        return self.fail_response("Imagen 4 image editing is not yet implemented. Please use DALL-E 3 or GPT-Image-1 for image editing operations.")
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            response = await client.post(
+                "https://aiplatform.googleapis.com/v1beta1/projects/your-project/locations/us-central1/publishers/google/models/imagen-2:predict",
+                headers={"Authorization": f"Bearer {self.google_api_key}", "Content-Type": "application/json"},
+                json={
+                    "instances": [{"prompt": prompt, "image": {"bytesBase64Encoded": image_base64}}],
+                    "parameters": {"sampleCount": 1}
+                }
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"Imagen 4 API error: {response.status_code} - {response.text}")
+                return await self._fallback_to_dalle3(image_base64, prompt, edit_type, mask_path, size, quality, style, save_to_file, filename, original_size)
+            
+            result = response.json()
+            if result.get("predictions"):
+                b64_image = result["predictions"][0]["bytesBase64Encoded"]
+                return await self._process_image_result(
+                    b64_image, prompt, prompt, "Imagen 4", 
+                    size, quality, style, save_to_file, filename
+                )
+            else:
+                logger.error("No image returned from Imagen 4")
+                return await self._fallback_to_dalle3(image_base64, prompt, edit_type, mask_path, size, quality, style, save_to_file, filename, original_size)
 
     async def _process_edit_result(self, b64_image, prompt, provider, edit_type, size, quality, style, save_to_file, filename):
         """Process and save the edited image."""

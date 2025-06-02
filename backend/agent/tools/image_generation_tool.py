@@ -8,7 +8,6 @@ from utils.logger import logger
 from services.supabase import DBConnection
 import uuid
 from datetime import datetime
-from agent.tools.imagen_prompt_enhancer import imagen_enhancer, ContentType
 
 class ImageGenerationTool(Tool):
     """Tool for generating images using GPT-Image-1 and Imagen 4."""
@@ -236,30 +235,12 @@ class ImageGenerationTool(Tool):
         }
         width, height = size_map.get(size, (1024, 1024))
         
-        # Use advanced prompt enhancement for Imagen 4
-        content_type = imagen_enhancer.detect_content_type(prompt)
-        
-        # Apply specialized enhancements based on content type
-        if content_type == ContentType.YOUTUBE_THUMBNAIL:
-            enhanced_prompt, enhancement_log = imagen_enhancer.enhance_for_youtube_thumbnail(prompt)
-        elif content_type == ContentType.PRODUCT:
-            enhanced_prompt, enhancement_log = imagen_enhancer.enhance_for_product_photography(prompt, style)
-        elif content_type == ContentType.PORTRAIT:
-            enhanced_prompt, enhancement_log = imagen_enhancer.enhance_for_portrait(prompt, style)
-        else:
-            enhanced_prompt, enhancement_log = imagen_enhancer.enhance_for_imagen4(prompt, style, quality, content_type)
-        
-        # Optimize prompt length for API
-        enhanced_prompt = imagen_enhancer.optimize_prompt_length(enhanced_prompt, max_length=400)
-        
-        logger.info(f"Imagen 4 prompt enhancement:\n{enhancement_log}")
-
         async with httpx.AsyncClient(timeout=90.0) as client:
             response = await client.post(
                 "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:generateImage",
                 headers={"Authorization": f"Bearer {self.google_api_key}", "Content-Type": "application/json"},
                 json={
-                    "prompt": enhanced_prompt,
+                    "prompt": prompt,
                     "config": {"width": width, "height": height, "outputFormat": "PNG", "safetySetting": "BLOCK_ONLY_HIGH"}
                 }
             )
@@ -279,7 +260,7 @@ class ImageGenerationTool(Tool):
             raise Exception("No image data in Imagen 4 response")
 
         return await self._process_image_result(
-            b64_image, prompt, enhanced_prompt, "Imagen 4", 
+            b64_image, prompt, prompt, "Imagen 4", 
             f"{width}x{height}", quality, style, save_to_file, filename
         )
 
