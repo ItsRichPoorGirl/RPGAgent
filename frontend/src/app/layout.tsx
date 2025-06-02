@@ -31,25 +31,24 @@ export const metadata: Metadata = {
     template: `%s - ${siteConfig.name}`,
   },
   description:
-    'Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease. Through natural conversation, Suna becomes your digital companion for research, data analysis, and everyday challenges.',
+    'Luciq AI is an intelligent AI assistant that helps you automate tasks, analyze data, and create content with unprecedented speed and accuracy. Your fully automated digital companion.',
   keywords: [
     'AI',
     'artificial intelligence',
-    'browser automation',
-    'web scraping',
-    'file management',
-    'AI assistant',
-    'open source',
-    'research',
+    'automation',
+    'content creation', 
     'data analysis',
+    'AI assistant',
+    'task automation',
+    'intelligent assistant',
+    'productivity',
+    'digital companion',
   ],
-  authors: [{ name: 'Kortix Team', url: 'https://suna.so' }],
-  creator:
-    'Kortix Team - Adam Cohen Hillel, Marko Kraemer, Domenico Gagliardi, and Quoc Dat Le',
-  publisher:
-    'Kortix Team - Adam Cohen Hillel, Marko Kraemer, Domenico Gagliardi, and Quoc Dat Le',
+  authors: [{ name: 'Luciq Team', url: 'https://luciqai.com' }],
+  creator: 'Luciq Team',
+  publisher: 'Luciq Team',
   category: 'Technology',
-  applicationName: 'Suna',
+  applicationName: 'Luciq AI',
   formatDetection: {
     telephone: false,
     email: false,
@@ -64,17 +63,17 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Suna - Open Source Generalist AI Agent',
+    title: 'Luciq AI - Your Intelligent Assistant Fully Automated',
     description:
-      'Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
+      'Luciq AI helps you automate tasks, analyze data, and create content with unprecedented speed and accuracy. Your fully automated digital companion.',
     url: siteConfig.url,
-    siteName: 'Suna',
+    siteName: 'Luciq AI',
     images: [
       {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'Suna - Open Source Generalist AI Agent',
+        alt: 'Luciq AI - Your Intelligent Assistant Fully Automated',
         type: 'image/png',
       },
     ],
@@ -83,17 +82,17 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Suna - Open Source Generalist AI Agent',
+    title: 'Luciq AI - Your Intelligent Assistant Fully Automated',
     description:
-      'Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
-    creator: '@kortixai',
-    site: '@kortixai',
+      'Luciq AI helps you automate tasks, analyze data, and create content with unprecedented speed and accuracy.',
+    creator: '@luciqai',
+    site: '@luciqai',
     images: [
       {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'Suna - Open Source Generalist AI Agent',
+        alt: 'Luciq AI - Your Intelligent Assistant Fully Automated',
       },
     ],
   },
@@ -142,9 +141,10 @@ export default function RootLayout({
 
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+          defaultTheme="dark"
+          // enableSystem  // Commented out - forcing dark theme only
+          // disableTransitionOnChange  // Commented out for now
+          forcedTheme="dark"
         >
           <Providers>
             {children}

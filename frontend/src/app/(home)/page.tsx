@@ -147,30 +147,34 @@ export default function LandingPage() {
       <ModalProviders />
       <AnnouncementPopup />
       <div className="flex min-h-screen flex-col bg-[#0a0a1f]">
-        {/* Header - Updated with scroll behavior */}
+        {/* Header - Updated with scroll behavior and top margin */}
         <header
-          className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
-            scrolled ? "bg-[#0a0a1f]/90 backdrop-blur-md" : "bg-transparent"
+          className={`fixed left-0 right-0 z-50 w-full transition-all duration-300 ${
+            scrolled 
+              ? "top-4 bg-[#0a0a1f]/95 backdrop-blur-md border border-teal-400/20 rounded-xl mx-4 max-w-7xl left-1/2 transform -translate-x-1/2" 
+              : "top-6 bg-transparent"
           }`}
         >
-          <div className="container mx-auto max-w-6xl flex h-16 items-center justify-between">
+          <div className={`container mx-auto max-w-6xl flex items-center justify-between transition-all duration-300 ${
+            scrolled ? "h-14 px-4" : "h-16 px-6"
+          }`}>
             <div className="flex items-center gap-2">
               <Image src="/luciq-logo.png" alt="Luciq AI Logo" width={40} height={40} className="h-10 w-auto" />
               <span className="text-xl font-semibold text-white">Luciq AI</span>
             </div>
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="#" className="text-sm text-white/70 hover:text-white transition-colors">
+              <a href="#" className="text-sm text-white/70 hover:text-white transition-colors">
                 Home
-              </Link>
-              <Link href="#features" className="text-sm text-white/70 hover:text-white transition-colors">
+              </a>
+              <a href="#features" className="text-sm text-white/70 hover:text-white transition-colors">
                 Features
-              </Link>
-              <Link href="#testimonials" className="text-sm text-white/70 hover:text-white transition-colors">
+              </a>
+              <a href="#testimonials" className="text-sm text-white/70 hover:text-white transition-colors">
                 Testimonials
-              </Link>
-              <Link href="#pricing" className="text-sm text-white/70 hover:text-white transition-colors">
+              </a>
+              <a href="#pricing" className="text-sm text-white/70 hover:text-white transition-colors">
                 Pricing
-              </Link>
+              </a>
             </nav>
             <div className="flex items-center gap-4">
               <Button
@@ -180,7 +184,10 @@ export default function LandingPage() {
               >
                 Login
               </Button>
-              <Button className="bg-gradient-to-r from-teal-400 to-purple-500 hover:opacity-90 text-teal-950 font-medium rounded-full" onClick={handleGetStarted}>
+              <Button 
+                className="bg-gradient-to-r from-teal-400 to-purple-500 hover:opacity-90 text-white font-medium rounded-full" 
+                onClick={handleGetStarted}
+              >
                 Get Started
               </Button>
             </div>
@@ -188,8 +195,8 @@ export default function LandingPage() {
         </header>
 
         <main className="flex-1">
-          {/* Hero Section - Updated with new design */}
-          <section className="hero-section relative w-full pt-32 pb-24 md:pt-40 md:pb-32 hero-bg overflow-hidden bg-[#0a0a1f]">
+          {/* Hero Section - Updated with better top padding */}
+          <section className="hero-section relative w-full pt-40 pb-24 md:pt-48 md:pb-32 hero-bg overflow-hidden bg-[#0a0a1f]">
             {/* Grid lines */}
             <div className="grid-lines"></div>
 
