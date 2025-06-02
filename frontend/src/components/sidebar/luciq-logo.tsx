@@ -18,14 +18,12 @@ export function LuciqLogo({ size = 24 }: LuciqLogoProps) {
   }, []);
 
   return (
-    <div className="flex items-center justify-center flex-shrink-0" style={{ height: size, width: size }}>
-      <Image
+    <Image
         src="/luciq-logo.png"
         alt="Luciq AI"
         width={size}
         height={size}
-        className="rounded-sm"
+        className={`${mounted && theme === 'dark' ? 'invert' : ''} flex-shrink-0`}
       />
-    </div>
   );
 }

@@ -104,7 +104,7 @@ class ResponseProcessor:
         self.xml_parser = XMLToolParser(strict_mode=False)
         self.is_agent_builder = is_agent_builder
         self.target_agent_id = target_agent_id
-        
+
     async def _yield_message(self, message_obj: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         """Helper to yield a message with proper formatting.
         
@@ -1614,43 +1614,31 @@ class ResponseProcessor:
                 }
             }
         }
-        
-        # For backwards compatibility with LLM, also include a human-readable summary
-        # Use the original string output for the summary to avoid complex object representation
+
         summary_output = result.output if hasattr(result, 'output') else str(result)
         success_status = structured_result_v1["tool_execution"]["result"]["success"]
         
         # Create a more comprehensive summary for the LLM
         if xml_tag_name:
-            # For XML tools, create a detailed readable summary
             status = "completed successfully" if success_status else "failed"
-            summary = f"""[Tool Execution Result]
-Tool: {xml_tag_name} ({function_name})
-Status: {status}
-Arguments: {json.dumps(arguments)}
-Output: {summary_output}"""
-            if not success_status and structured_result_v1["tool_execution"]["result"].get("error"):
-                summary += f"\nError: {structured_result_v1['tool_execution']['result']['error']}"
+            summary = f"Tool '{xml_tag_name}' {status}. Output: {summary_output}"
         else:
-            # For native tools, create a detailed readable summary
             status = "completed successfully" if success_status else "failed"
-            summary = f"""[Function Call Result]
-Function: {function_name}
-Status: {status}
-Arguments: {json.dumps(arguments)}
-Output: {summary_output}"""
-            if not success_status and structured_result_v1["tool_execution"]["result"].get("error"):
-                summary += f"\nError: {structured_result_v1['tool_execution']['result']['error']}"
+            summary = f"Function '{function_name}' {status}. Output: {summary_output}"
         
         structured_result_v1["summary"] = summary
         
+        STRUCTURED_OUTPUT_TOOLS = {
+            "str_replace", 
+            "get_data_provider_endpoints",
+        }
+        
         if self.is_agent_builder:
             return summary
-        elif function_name == "get_data_provider_endpoints":
-            logger.info(f"Returning sumnary for data provider call: {summary}")
-            return summary
-        else:
+        elif function_name in STRUCTURED_OUTPUT_TOOLS:
             return structured_result_v1
+        else:
+            return summary
 
     def _format_xml_tool_result(self, tool_call: Dict[str, Any], result: ToolResult) -> str:
         """Format a tool result wrapped in a <tool_result> tag.
