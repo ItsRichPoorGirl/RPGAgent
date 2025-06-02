@@ -638,3 +638,316 @@
   width: 100%;
   transform: translateX(-100%);
 }
+
+/* V1.5 Specific Styling - Dark Theme & Electric Animations */
+
+/* Hero Background with Grid Lines */
+.hero-bg {
+  background-color: #0a0a1f;
+  background-image: 
+    linear-gradient(rgba(20, 184, 166, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 184, 166, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Grid Lines Animation */
+.grid-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(20, 184, 166, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 184, 166, 0.15) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: grid-drift 20s linear infinite;
+  z-index: 1;
+}
+
+@keyframes grid-drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-60px, -60px); }
+}
+
+/* Glowing Dots */
+.glowing-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.8) 0%, rgba(20, 184, 166, 0.4) 50%, transparent 100%);
+  border-radius: 50%;
+  animation: pulse-glow 3s ease-in-out infinite;
+  z-index: 2;
+}
+
+.glowing-dot-1 { top: 20%; left: 15%; animation-delay: 0s; }
+.glowing-dot-2 { top: 40%; right: 20%; animation-delay: 1s; }
+.glowing-dot-3 { bottom: 30%; left: 10%; animation-delay: 2s; }
+.glowing-dot-4 { top: 60%; left: 70%; animation-delay: 0.5s; }
+.glowing-dot-5 { bottom: 20%; right: 15%; animation-delay: 1.5s; }
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    opacity: 0.4; 
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(20, 184, 166, 0.3);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.5);
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.6);
+  }
+}
+
+/* Electric Animation Container */
+.electric-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+}
+
+.hero-section:hover .electric-container {
+  opacity: 1;
+}
+
+/* Electric Lines - Horizontal */
+.electric-line {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.8), transparent);
+  animation: electric-flow 2s ease-in-out infinite;
+}
+
+.electric-line-1 { top: 25%; left: 0; width: 40%; animation-delay: 0s; }
+.electric-line-2 { top: 50%; right: 0; width: 35%; animation-delay: 0.7s; }
+.electric-line-3 { top: 75%; left: 20%; width: 45%; animation-delay: 1.4s; }
+.electric-line-4 { top: 30%; left: 60%; width: 30%; animation-delay: 0.3s; }
+
+/* Electric Lines - Vertical */
+.electric-line-vertical {
+  position: absolute;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, rgba(20, 184, 166, 0.8), transparent);
+  animation: electric-flow-vertical 2.5s ease-in-out infinite;
+}
+
+.electric-line-v1 { left: 20%; top: 0; height: 50%; animation-delay: 0.2s; }
+.electric-line-v2 { right: 25%; top: 30%; height: 40%; animation-delay: 1s; }
+.electric-line-v3 { left: 70%; top: 10%; height: 60%; animation-delay: 1.8s; }
+.electric-line-v4 { left: 10%; bottom: 0; height: 45%; animation-delay: 0.5s; }
+
+/* Electric Lines - Diagonal */
+.electric-diagonal {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(45deg, transparent, rgba(20, 184, 166, 0.6), transparent);
+  transform-origin: left center;
+  animation: electric-diagonal-flow 3s ease-in-out infinite;
+}
+
+.electric-diagonal-1 { top: 35%; left: 15%; width: 30%; transform: rotate(45deg); animation-delay: 0.8s; }
+.electric-diagonal-2 { top: 65%; right: 20%; width: 25%; transform: rotate(-45deg); animation-delay: 1.6s; }
+.electric-diagonal-3 { top: 20%; left: 60%; width: 35%; transform: rotate(30deg); animation-delay: 0.4s; }
+.electric-diagonal-4 { bottom: 25%; left: 30%; width: 40%; transform: rotate(-30deg); animation-delay: 1.2s; }
+
+/* Electric Pulses */
+.electric-pulse {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(20, 184, 166, 1) 0%, rgba(20, 184, 166, 0.4) 70%, transparent 100%);
+  border-radius: 50%;
+  animation: electric-pulse 2s ease-in-out infinite;
+}
+
+.electric-pulse-1 { top: 25%; left: 10%; animation-delay: 0s; }
+.electric-pulse-2 { top: 45%; right: 15%; animation-delay: 0.3s; }
+.electric-pulse-3 { bottom: 35%; left: 25%; animation-delay: 0.6s; }
+.electric-pulse-4 { top: 65%; left: 65%; animation-delay: 0.9s; }
+.electric-pulse-5 { bottom: 20%; right: 30%; animation-delay: 1.2s; }
+.electric-pulse-6 { top: 15%; left: 50%; animation-delay: 1.5s; }
+.electric-pulse-7 { top: 80%; left: 40%; animation-delay: 1.8s; }
+.electric-pulse-8 { bottom: 10%; left: 80%; animation-delay: 0.4s; }
+
+/* Electric Nodes */
+.electric-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(20, 184, 166, 0.9);
+  border-radius: 50%;
+  animation: electric-node-glow 1.5s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(20, 184, 166, 0.5);
+}
+
+.electric-node-1 { top: 25%; left: 20%; animation-delay: 0s; }
+.electric-node-2 { top: 50%; right: 25%; animation-delay: 0.5s; }
+.electric-node-3 { bottom: 30%; left: 15%; animation-delay: 1s; }
+.electric-node-4 { top: 70%; left: 70%; animation-delay: 1.5s; }
+
+/* Keyframes for Electric Animations */
+@keyframes electric-flow {
+  0% { 
+    transform: translateX(-100%); 
+    opacity: 0; 
+  }
+  20% { 
+    opacity: 1; 
+  }
+  80% { 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateX(100%); 
+    opacity: 0; 
+  }
+}
+
+@keyframes electric-flow-vertical {
+  0% { 
+    transform: translateY(-100%); 
+    opacity: 0; 
+  }
+  20% { 
+    opacity: 1; 
+  }
+  80% { 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(100%); 
+    opacity: 0; 
+  }
+}
+
+@keyframes electric-diagonal-flow {
+  0% { 
+    transform: scale(0) rotate(45deg); 
+    opacity: 0; 
+  }
+  30% { 
+    opacity: 1; 
+  }
+  70% { 
+    opacity: 1; 
+  }
+  100% { 
+    transform: scale(1.5) rotate(45deg); 
+    opacity: 0; 
+  }
+}
+
+@keyframes electric-pulse {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 0.7; 
+    box-shadow: 0 0 10px rgba(20, 184, 166, 0.5);
+  }
+  50% { 
+    transform: scale(1.5); 
+    opacity: 1; 
+    box-shadow: 0 0 25px rgba(20, 184, 166, 0.8);
+  }
+}
+
+@keyframes electric-node-glow {
+  0%, 100% { 
+    box-shadow: 0 0 15px rgba(20, 184, 166, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(20, 184, 166, 0.9);
+    transform: scale(1.2);
+  }
+}
+
+/* Feature Cards */
+.feature-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(20, 184, 166, 0.2);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.feature-card:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(20, 184, 166, 0.4);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(20, 184, 166, 0.1);
+}
+
+.feature-icon-container {
+  width: fit-content;
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon-container {
+  transform: scale(1.1);
+}
+
+/* Testimonial Cards */
+.testimonial-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(20, 184, 166, 0.2);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.testimonial-card:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(20, 184, 166, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(20, 184, 166, 0.1);
+}
+
+/* Pricing Cards */
+.pricing-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(20, 184, 166, 0.2);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+.pricing-card:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(20, 184, 166, 0.4);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(20, 184, 166, 0.15);
+}
+
+.pricing-card.popular {
+  border-color: rgba(20, 184, 166, 0.5);
+  background: rgba(20, 184, 166, 0.05);
+}
+
+.pricing-card.popular:hover {
+  border-color: rgba(20, 184, 166, 0.7);
+  background: rgba(20, 184, 166, 0.1);
+}
+
+/* Mobile Navigation Fixes */
+@media (max-width: 768px) {
+  .hero-section {
+    padding-top: 6rem;
+    padding-bottom: 3rem;
+  }
+  
+  .electric-container {
+    opacity: 0.3; /* Show some animations on mobile */
+  }
+}
