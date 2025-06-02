@@ -83,19 +83,13 @@ class ImageGenerationTool(Tool):
             {"param_name": "save_to_file", "node_type": "attribute", "path": ".", "required": False},
             {"param_name": "filename", "node_type": "attribute", "path": ".", "required": False}
         ],
-        alternative_mappings=[
-            {"param_name": "prompt", "node_type": "attribute", "path": ".", "required": True}
-        ],
         example='''
-        <!-- Option 1: Use prompt as content between tags -->
+        <!-- Use prompt as content between tags -->
         <generate-image provider="gpt-image-1" size="1024x1536" quality="high">
         A photorealistic portrait of a majestic cat with soft fur, striking eyes, and whiskers.
         </generate-image>
         
-        <!-- Option 2: Use prompt as an attribute -->
-        <generate-image prompt="A cute baby sea otter floating on its back" size="1024x1024" quality="high" provider="imagen4"></generate-image>
-        
-        <!-- Option 3: YouTube thumbnail with auto-selection -->
+        <!-- YouTube thumbnail with auto-selection -->
         <generate-image size="1536x1024" quality="high">
         SHOCKING: AI discovers cure for aging! Excited scientist pointing at glowing test tube, vibrant blue and orange lighting, bold text space, photorealistic
         </generate-image>

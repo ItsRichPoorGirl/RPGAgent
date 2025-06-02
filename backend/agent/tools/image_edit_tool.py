@@ -66,7 +66,7 @@ class ImageEditTool(Tool):
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "images": {
+                    "image_paths": {
                         "type": "string",
                         "description": "Path to the source image file(s) to edit. For multiple images, separate paths with commas (e.g., 'img1.png,img2.jpg,img3.png'). Maximum 16 images."
                     },
@@ -126,42 +126,40 @@ class ImageEditTool(Tool):
                         "default": None
                     }
                 },
-                "required": ["images", "prompt"]
+                "required": ["image_paths", "prompt"]
             }
         }
     })
     @xml_schema(
         tag_name="edit-image",
         mappings=[
-            {"param_name": "images", "node_type": "attribute", "path": ".", "required": True},
             {"param_name": "prompt", "node_type": "content", "path": ".", "required": True},
+            {"param_name": "image_paths", "node_type": "attribute", "path": ".", "required": True},
             {"param_name": "edit_type", "node_type": "attribute", "path": ".", "required": False},
-            {"param_name": "mask_path", "node_type": "attribute", "path": ".", "required": False},
             {"param_name": "provider", "node_type": "attribute", "path": ".", "required": False},
+            {"param_name": "mode", "node_type": "attribute", "path": ".", "required": False},
+            {"param_name": "mask_path", "node_type": "attribute", "path": ".", "required": False},
             {"param_name": "size", "node_type": "attribute", "path": ".", "required": False},
             {"param_name": "quality", "node_type": "attribute", "path": ".", "required": False},
-            {"param_name": "mode", "node_type": "attribute", "path": ".", "required": False},
             {"param_name": "style", "node_type": "attribute", "path": ".", "required": False},
             {"param_name": "save_to_file", "node_type": "attribute", "path": ".", "required": False},
             {"param_name": "filename", "node_type": "attribute", "path": ".", "required": False}
         ],
-        alternative_mappings=[
-            {"param_name": "images", "node_type": "attribute", "path": ".", "required": True},
-            {"param_name": "prompt", "node_type": "attribute", "path": ".", "required": True}
-        ],
         example='''
-        <!-- Multi-image composite editing -->
-        <edit-image images="soap.png,bath-bomb.png,incense-kit.png" size="1024x1024" quality="high" mode="moderate">
-        A photorealistic gift basket containing all these items with a ribbon labeled "Relax & Unwind"
+        <!-- Single image editing -->
+        <edit-image image_paths="workspace/photo1.jpg" edit_type="inpainting" provider="gpt-image-1">
+        Replace the background with a tropical beach scene
         </edit-image>
         
-        <!-- Single image with prompt as attribute -->
-        <edit-image images="landscape.jpg" prompt="Remove the power lines from the sky and replace with clear blue sky" edit_type="object_removal" provider="gpt-image-1" quality="high" style="photorealistic"></edit-image>
+        <!-- Multi-image composition -->
+        <edit-image image_paths="workspace/photo1.jpg,workspace/photo2.jpg,workspace/photo3.jpg" edit_type="composite" provider="imagen4" mode="dramatic">
+        Create a dynamic collage with overlapping elements and vibrant color grading
+        </edit-image>
         '''
     )
     async def edit_image(
         self,
-        images: str,
+        image_paths: str,
         prompt: str,
         edit_type: Literal["inpaint", "outpaint", "variation", "style_transfer", "object_removal", "background_change", "composite", "multi_edit"] = "inpaint",
         mask_path: Optional[str] = None,
@@ -176,25 +174,25 @@ class ImageEditTool(Tool):
         """Edit existing image(s) using AI. Supports single or multiple images (up to 16)."""
         try:
             # Parse and validate image paths
-            image_paths = [path.strip() for path in images.split(',')]
+            image_path_list = [path.strip() for path in image_paths.split(',')]
             
             # Limit to 16 images as per GPT-Image-1 specification
-            if len(image_paths) > 16:
-                return self.fail_response(f"Too many images provided ({len(image_paths)}). Maximum is 16 images.")
+            if len(image_path_list) > 16:
+                return self.fail_response(f"Too many images provided ({len(image_path_list)}). Maximum is 16 images.")
             
             # Validate all images exist
-            for image_path in image_paths:
+            for image_path in image_path_list:
                 if not os.path.exists(image_path):
                     return self.fail_response(f"Source image not found: {image_path}")
 
             # Handle multi-image vs single-image editing
-            if len(image_paths) > 1:
+            if len(image_path_list) > 1:
                 return await self._edit_multiple_images(
-                    image_paths, prompt, edit_type, provider, size, quality, mode, style, save_to_file, filename
+                    image_path_list, prompt, edit_type, provider, size, quality, mode, style, save_to_file, filename
                 )
             else:
                 return await self._edit_single_image(
-                    image_paths[0], prompt, edit_type, mask_path, provider, size, quality, mode, style, save_to_file, filename
+                    image_path_list[0], prompt, edit_type, mask_path, provider, size, quality, mode, style, save_to_file, filename
                 )
                 
         except Exception as e:
