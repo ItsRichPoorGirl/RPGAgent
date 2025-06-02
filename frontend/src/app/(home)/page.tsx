@@ -9,6 +9,7 @@ import { ChevronDown, ChevronRight, Check, MessageSquare, FileText, Database, Za
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/AuthProvider"
 import { ModalProviders } from '@/providers/modal-providers';
+import AnnouncementPopup from '@/components/announcement-popup';
 
 export default function LandingPage() {
   const [customTier, setCustomTier] = useState("6 hours - $50")
@@ -144,6 +145,7 @@ export default function LandingPage() {
   return (
     <>
       <ModalProviders />
+      <AnnouncementPopup />
       <div className="flex min-h-screen flex-col bg-[#0a0a1f]">
         {/* Header - Updated with scroll behavior */}
         <header
@@ -646,9 +648,9 @@ export default function LandingPage() {
                   </Button>
                 </div>
               </div>
-            </div>
+        </div>
           </section>
-        </main>
+      </main>
 
         <footer className="w-full border-t border-teal-400/10 py-8 hero-bg bg-[#0a0a1f]">
           <div className="container mx-auto max-w-6xl px-4 md:px-6">
