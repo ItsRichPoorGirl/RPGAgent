@@ -166,6 +166,9 @@ class Configuration:
     LANGFUSE_PUBLIC_KEY: Optional[str] = None
     LANGFUSE_SECRET_KEY: Optional[str] = None
     LANGFUSE_HOST: str = "https://cloud.langfuse.com"
+    
+    # Admin configuration
+    ADMIN_USER_IDS: Optional[str] = None
 
     @property
     def STRIPE_PRODUCT_ID(self) -> str:
