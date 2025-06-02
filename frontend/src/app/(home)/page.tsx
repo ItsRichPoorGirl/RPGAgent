@@ -197,9 +197,6 @@ export default function LandingPage() {
         <main className="flex-1">
           {/* Hero Section - Updated with better top padding */}
           <section className="hero-section relative w-full pt-40 pb-24 md:pt-48 md:pb-32 hero-bg overflow-hidden bg-[#0a0a1f]">
-            {/* Grid lines */}
-            <div className="grid-lines"></div>
-
             {/* Glowing dots */}
             <div className="glowing-dot glowing-dot-1"></div>
             <div className="glowing-dot glowing-dot-2"></div>
@@ -207,32 +204,17 @@ export default function LandingPage() {
             <div className="glowing-dot glowing-dot-4"></div>
             <div className="glowing-dot glowing-dot-5"></div>
 
-            {/* Electric current animations - visible on hover */}
+            {/* Electric current animations - visible on hover (simplified) */}
             <div className="electric-container">
               <div className="electric-line electric-line-1"></div>
-              <div className="electric-line electric-line-2"></div>
               <div className="electric-line electric-line-3"></div>
-              <div className="electric-line electric-line-4"></div>
               <div className="electric-line-vertical electric-line-v1"></div>
-              <div className="electric-line-vertical electric-line-v2"></div>
               <div className="electric-line-vertical electric-line-v3"></div>
-              <div className="electric-line-vertical electric-line-v4"></div>
-              <div className="electric-diagonal electric-diagonal-1"></div>
-              <div className="electric-diagonal electric-diagonal-2"></div>
-              <div className="electric-diagonal electric-diagonal-3"></div>
-              <div className="electric-diagonal electric-diagonal-4"></div>
               <div className="electric-pulse electric-pulse-1"></div>
-              <div className="electric-pulse electric-pulse-2"></div>
               <div className="electric-pulse electric-pulse-3"></div>
-              <div className="electric-pulse electric-pulse-4"></div>
               <div className="electric-pulse electric-pulse-5"></div>
-              <div className="electric-pulse electric-pulse-6"></div>
-              <div className="electric-pulse electric-pulse-7"></div>
-              <div className="electric-pulse electric-pulse-8"></div>
               <div className="electric-node electric-node-1"></div>
-              <div className="electric-node electric-node-2"></div>
               <div className="electric-node electric-node-3"></div>
-              <div className="electric-node electric-node-4"></div>
             </div>
 
             <div className="container mx-auto max-w-6xl relative z-10 px-4 md:px-6">
@@ -306,8 +288,8 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* Features Section - Updated with new design */}
-          <section id="features" className="w-full py-24 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
+          {/* Features Section - Updated with clean background */}
+          <section id="features" className="w-full py-24 border-t border-teal-400/10 bg-[#0a0a1f]">
             <div className="container mx-auto max-w-6xl px-4 md:px-6">
               <div className="text-center mb-16">
                 <div className="inline-block bg-gradient-to-r from-teal-400/20 to-purple-500/20 rounded-full px-4 py-1 text-sm text-white/80 mb-4">
@@ -385,7 +367,7 @@ export default function LandingPage() {
           </section>
 
           {/* Testimonials Section - Updated with capitalized words in headline */}
-          <section id="testimonials" className="w-full py-24 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
+          <section id="testimonials" className="w-full py-24 border-t border-teal-400/10 bg-[#0a0a1f]">
             <div className="container mx-auto max-w-6xl px-4 md:px-6">
               <div className="text-center mb-16">
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">
@@ -456,7 +438,7 @@ export default function LandingPage() {
           </section>
 
           {/* Pricing Section - Updated with gradient button only for Pro tier */}
-          <section id="pricing" className="w-full py-24 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
+          <section id="pricing" className="w-full py-24 border-t border-teal-400/10 bg-[#0a0a1f]">
             <div className="container mx-auto max-w-6xl px-4 md:px-6">
               <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">
@@ -636,7 +618,7 @@ export default function LandingPage() {
           </section>
 
           {/* CTA Section */}
-          <section className="w-full py-20 hero-bg border-t border-teal-400/10 bg-[#0a0a1f]">
+          <section className="w-full py-20 border-t border-teal-400/10 bg-[#0a0a1f]">
             <div className="container mx-auto max-w-6xl px-4 md:px-6">
               <div className="flex flex-col items-center justify-center space-y-6 text-center">
                 <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-white">
@@ -655,11 +637,11 @@ export default function LandingPage() {
                   </Button>
                 </div>
               </div>
-        </div>
+            </div>
           </section>
-      </main>
+        </main>
 
-        <footer className="w-full border-t border-teal-400/10 py-8 hero-bg bg-[#0a0a1f]">
+        <footer className="w-full border-t border-teal-400/10 py-8 bg-[#0a0a1f]">
           <div className="container mx-auto max-w-6xl px-4 md:px-6">
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
               <div>
