@@ -1724,6 +1724,6 @@ async def get_agent_builder_chat_history(
         
     except HTTPException:
         raise
-                            except Exception as e:
+    except Exception as e:
         logger.error(f"Error fetching agent builder chat history for agent {agent_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch chat history: {str(e)}")
