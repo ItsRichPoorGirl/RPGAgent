@@ -32,6 +32,14 @@ SUBSCRIPTION_TIERS = {
     config.STRIPE_TIER_200_1000_ID: {'name': 'tier_200_1000', 'minutes': 12000},  # 200 hours
 }
 
+def is_admin_user(user_id: str) -> bool:
+    """Check if a user is an admin user"""
+    if not config.ADMIN_USER_IDS:
+        return False
+    
+    admin_ids = [id.strip() for id in config.ADMIN_USER_IDS.split(',')]
+    return user_id in admin_ids
+
 # Pydantic models for request/response validation
 class CreateCheckoutSessionRequest(BaseModel):
     price_id: str
@@ -234,6 +242,15 @@ async def can_use_model(client, user_id: str, model_name: str):
             "plan_name": "Local Development",
             "minutes_limit": "no limit"
         }
+    
+    # Check if user is an admin
+    if is_admin_user(user_id):
+        logger.info(f"Admin user {user_id} - billing checks bypassed")
+        return True, "Admin user - billing checks bypassed", {
+            "price_id": "admin",
+            "plan_name": "Admin",
+            "minutes_limit": "unlimited"
+        }
         
     allowed_models = await get_allowed_models_for_user(client, user_id)
     resolved_model = MODEL_NAME_ALIASES.get(model_name, model_name)
@@ -255,6 +272,15 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
             "price_id": "local_dev",
             "plan_name": "Local Development",
             "minutes_limit": "no limit"
+        }
+    
+    # Check if user is an admin
+    if is_admin_user(user_id):
+        logger.info(f"Admin user {user_id} - billing checks bypassed")
+        return True, "Admin user - billing checks bypassed", {
+            "price_id": "admin", 
+            "plan_name": "Admin",
+            "minutes_limit": "unlimited"
         }
     
     # Get current subscription
