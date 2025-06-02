@@ -4,11 +4,11 @@ import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
-interface KortixLogoProps {
+interface LuciqLogoProps {
   size?: number;
 }
 
-export function KortixLogo({ size = 24 }: KortixLogoProps) {
+export function LuciqLogo({ size = 24 }: LuciqLogoProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -20,11 +20,11 @@ export function KortixLogo({ size = 24 }: KortixLogoProps) {
   return (
     <div className="flex items-center justify-center flex-shrink-0" style={{ height: size, width: size }}>
       <Image
-        src="/kortix-symbol.svg"
-        alt="Kortix"
+        src="/luciq-logo.png"
+        alt="Luciq AI"
         width={size}
         height={size}
-        className={`${mounted && theme === 'dark' ? 'invert' : ''}`}
+        className="rounded-sm"
       />
     </div>
   );

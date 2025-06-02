@@ -40,11 +40,9 @@ export function KortixProcessModal() {
           <div className="p-8 flex flex-col bg-white dark:bg-black relative h-full overflow-y-auto border-r border-gray-200 dark:border-gray-800">
             <div className="relative z-10 flex flex-col h-full">
               <div className="mb-8 mt-0 flex-shrink-0">
-                <Image
-                  src={
-                    isDarkMode ? '/kortix-logo-white.svg' : '/kortix-logo.svg'
-                  }
-                  alt="Kortix Logo"
+                <img
+                  src="/luciq-logo.png"
+                  alt="Luciq AI"
                   width={60}
                   height={21}
                   className="h-6 w-auto"

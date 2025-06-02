@@ -50,10 +50,10 @@ export function OpenSourceSection() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button variant="outline" className="w-full" asChild>
-                  <Link
+              <Link
                     href="https://github.com/ItsRichPoorGirl/Luciq-AI-Agent"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                target="_blank"
+                rel="noopener noreferrer"
                     className="inline-flex items-center gap-2"
                   >
                     <Star className="h-4 w-4" />
@@ -69,7 +69,7 @@ export function OpenSourceSection() {
                   >
                     <Github className="h-4 w-4" />
                     View Source
-                  </Link>
+              </Link>
                 </Button>
               </div>
             </div>
