@@ -145,18 +145,11 @@ class ImageEditTool(Tool):
             {"param_name": "save_to_file", "node_type": "attribute", "path": ".", "required": False},
             {"param_name": "filename", "node_type": "attribute", "path": ".", "required": False}
         ],
-        alternative_mappings=[
-            {"param_name": "images", "node_type": "attribute", "path": ".", "required": True},
-            {"param_name": "prompt", "node_type": "attribute", "path": ".", "required": True}
-        ],
         example='''
         <!-- Multi-image composite editing -->
         <edit-image images="soap.png,bath-bomb.png,incense-kit.png" size="1024x1024" quality="high" mode="moderate">
         A photorealistic gift basket containing all these items with a ribbon labeled "Relax & Unwind"
         </edit-image>
-        
-        <!-- Single image with prompt as attribute -->
-        <edit-image images="landscape.jpg" prompt="Remove the power lines from the sky and replace with clear blue sky" edit_type="object_removal" provider="gpt-image-1" quality="high" style="photorealistic"></edit-image>
         '''
     )
     async def edit_image(
