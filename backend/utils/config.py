@@ -167,11 +167,21 @@ class Configuration:
     LANGFUSE_SECRET_KEY: Optional[str] = None
     LANGFUSE_HOST: str = "https://cloud.langfuse.com"
 
+    # Admin configuration - comma-separated list of admin user IDs
+    ADMIN_USER_IDS: Optional[str] = None
+
     @property
     def STRIPE_PRODUCT_ID(self) -> str:
         if self.ENV_MODE == EnvMode.STAGING:
             return self.STRIPE_PRODUCT_ID_STAGING
         return self.STRIPE_PRODUCT_ID_PROD
+    
+    @property
+    def get_admin_user_ids(self) -> list[str]:
+        """Parse comma-separated admin user IDs into a list."""
+        if not self.ADMIN_USER_IDS:
+            return []
+        return [user_id.strip() for user_id in self.ADMIN_USER_IDS.split(',') if user_id.strip()]
     
     def __init__(self):
         """Initialize configuration by loading from environment variables."""
