@@ -227,6 +227,8 @@ async def get_allowed_models_for_user(client, user_id: str):
 
 
 async def can_use_model(client, user_id: str, model_name: str):
+    logger.info(f"ENTRY DEBUG: can_use_model called with user_id={user_id}, model_name={model_name}")
+    
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
         return True, "Local development mode - billing disabled", {
@@ -261,6 +263,8 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
     Returns:
         Tuple[bool, str, Optional[Dict]]: (can_run, message, subscription_info)
     """
+    logger.info(f"ENTRY DEBUG: check_billing_status called with user_id={user_id}")
+    
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
         return True, "Local development mode - billing disabled", {
@@ -895,6 +899,8 @@ async def get_available_models(
     current_user_id: str = Depends(get_current_user_id_from_jwt)
 ):
     """Get the list of models available to the user based on their subscription tier."""
+    logger.info(f"ENTRY DEBUG: get_available_models called with user_id={current_user_id}")
+    
     try:
         # Get Supabase client
         db = DBConnection()
