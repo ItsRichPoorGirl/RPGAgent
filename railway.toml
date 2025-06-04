@@ -1,2 +1,2 @@
 [environments.preview.services.luciq-worker]
-startCommand = "cd backend && python3 -m dramatiq run_agent_background" 
+startCommand = "python3 -m dramatiq run_agent_background" 
