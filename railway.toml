@@ -1,2 +1,5 @@
 [environments.preview.services.luciq-worker]
+startCommand = "python3 -m dramatiq run_agent_background"
+
+[environments.production.services.luciq-worker]
 startCommand = "python3 -m dramatiq run_agent_background" 
