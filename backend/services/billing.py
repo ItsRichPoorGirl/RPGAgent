@@ -238,9 +238,12 @@ async def can_use_model(client, user_id: str, model_name: str):
     # Admin bypass - check if user is admin
     try:
         admin_user_ids = config.get_admin_user_ids
+        logger.info(f"DEBUG: admin_user_ids={admin_user_ids}, user_id={user_id}")
         if user_id in admin_user_ids:
             logger.info(f"Admin model access bypass activated for user ID: {user_id}")
             return True, "Admin access - all models available", ["all_models"]
+        else:
+            logger.info(f"DEBUG: User {user_id} not in admin list {admin_user_ids}")
     except Exception as e:
         logger.warning(f"Error checking admin status for model access for user {user_id}: {str(e)}")
         
@@ -269,6 +272,7 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
     # Admin bypass - check if user is admin
     try:
         admin_user_ids = config.get_admin_user_ids
+        logger.info(f"DEBUG: admin_user_ids={admin_user_ids}, user_id={user_id}")
         if user_id in admin_user_ids:
             logger.info(f"Admin billing bypass activated for user ID: {user_id}")
             return True, "Admin access - billing bypassed", {
@@ -276,6 +280,8 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
                 "plan_name": "Admin Unlimited", 
                 "minutes_limit": "unlimited"
             }
+        else:
+            logger.info(f"DEBUG: User {user_id} not in admin list {admin_user_ids}")
     except Exception as e:
         logger.warning(f"Error checking admin status for user {user_id}: {str(e)}")
     
