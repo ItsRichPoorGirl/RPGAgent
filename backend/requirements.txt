@@ -1,3 +1,5 @@
+# Railway deployment requirements - Updated 2025-06-04 to fix MCP import issue
+mcp==1.1.0
 python-dotenv==1.0.1
 litellm==1.66.1
 click==8.1.7
