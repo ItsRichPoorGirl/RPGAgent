@@ -185,15 +185,25 @@ class ImageGenerationTool(Tool):
             raise ValueError("No image generation providers are configured")
 
     async def _generate_with_gpt_image_1(self, prompt, size, quality, style, save_to_file, filename):
-        """Generate image using GPT-Image-1 (newest OpenAI model)."""
+        """Generate image using GPT-Image-1 (OpenAI's latest image model)."""
         logger.info(f"Generating image with GPT-Image-1: {prompt[:100]}...")
 
         # Normalize parameters for GPT-Image-1
         size_map = {
-            "square": "1024x1024", "landscape": "1536x1024", "portrait": "1024x1536",
-            "1792x1024": "1536x1024", "1024x1792": "1024x1536"  # Map to supported sizes
+            "square": "1024x1024", "landscape": "1792x1024", "portrait": "1024x1792",
+            "1536x1024": "1792x1024", "1024x1536": "1024x1792"  # Map to supported sizes
         }
         gpt_size = size_map.get(size, size)
+        
+        # Map quality parameters correctly
+        quality_map = {
+            "standard": "medium",
+            "hd": "high", 
+            "high": "high"
+        }
+        gpt_quality = quality_map.get(quality, quality)
+        if gpt_quality not in ["low", "medium", "high", "auto"]:
+            gpt_quality = "auto"
 
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
@@ -203,8 +213,7 @@ class ImageGenerationTool(Tool):
                     "model": "gpt-image-1", 
                     "prompt": prompt, 
                     "size": gpt_size,
-                    "response_format": "b64_json", 
-                    "n": 1
+                    "quality": gpt_quality
                 }
             )
 
@@ -214,15 +223,18 @@ class ImageGenerationTool(Tool):
             raise Exception(f"GPT-Image-1 API error: {error_detail}")
 
         result = response.json()
-        image_data = result.get("data", [{}])[0]
-        b64_image = image_data.get("b64_json")
-
+        
+        # Fix: GPT-Image-1 returns data array with b64_json directly
+        if not result.get("data") or len(result["data"]) == 0:
+            raise Exception("No image data returned from GPT-Image-1")
+            
+        b64_image = result["data"][0].get("b64_json")
         if not b64_image:
-            raise Exception("No image data in GPT-Image-1 response")
+            raise Exception("No base64 image data in GPT-Image-1 response")
 
         return await self._process_image_result(
             b64_image, prompt, prompt, "GPT-Image-1", 
-            gpt_size, quality, style, save_to_file, filename
+            gpt_size, gpt_quality, style, save_to_file, filename
         )
 
     async def _generate_with_imagen4(self, prompt, size, quality, style, save_to_file, filename):
