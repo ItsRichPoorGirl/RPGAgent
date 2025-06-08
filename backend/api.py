@@ -61,6 +61,17 @@ async def lifespan(app: FastAPI):
             logger.error(f"Failed to initialize Redis connection: {e}")
             # Continue without Redis - the application will handle Redis failures gracefully
         
+        # Initialize feature flags for Luciq deployment
+        try:
+            from flags import flags
+            logger.info("Initializing Luciq feature flags...")
+            await flags.enable_flag("custom_agents", "Enable custom agent builder and management functionality")
+            await flags.enable_flag("agent_marketplace", "Enable agent marketplace for discovering and sharing agents")
+            logger.info("Luciq feature flags initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize feature flags: {e}")
+            # Continue without feature flags - they can be set manually later
+        
         # Start background tasks
         # asyncio.create_task(agent_api.restore_running_agent_runs())
         
