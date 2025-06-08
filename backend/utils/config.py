@@ -39,25 +39,25 @@ class Configuration:
     # Environment mode
     ENV_MODE: EnvMode = EnvMode.LOCAL
     
-    # Subscription tier IDs - Production
-    STRIPE_FREE_TIER_ID_PROD: str = 'price_1RILb4G6l1KZGqIrK4QLrx9i'
-    STRIPE_TIER_2_20_ID_PROD: str = 'price_1RILb4G6l1KZGqIrhomjgDnO'
-    STRIPE_TIER_6_50_ID_PROD: str = 'price_1RILb4G6l1KZGqIr5q0sybWn'
-    STRIPE_TIER_12_100_ID_PROD: str = 'price_1RILb4G6l1KZGqIr5Y20ZLHm'
-    STRIPE_TIER_25_200_ID_PROD: str = 'price_1RILb4G6l1KZGqIrGAD8rNjb'
-    STRIPE_TIER_50_400_ID_PROD: str = 'price_1RILb4G6l1KZGqIruNBUMTF1'
-    STRIPE_TIER_125_800_ID_PROD: str = 'price_1RILb3G6l1KZGqIrbJA766tN'
-    STRIPE_TIER_200_1000_ID_PROD: str = 'price_1RILb3G6l1KZGqIrmauYPOiN'
+    # Subscription tier IDs - Production (Luciq)
+    STRIPE_FREE_TIER_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBKkOp4qfZ'  # Free tier
+    STRIPE_TIER_2_20_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBEsEwW6cO'  # Tier 2
+    STRIPE_TIER_6_50_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBoLIdk8yv'  # Tier 6
+    STRIPE_TIER_12_100_ID_PROD: str = 'price_1RMZYBCQSpuIbcUB4xpnBWn2'  # Tier 12
+    STRIPE_TIER_25_200_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBrVEJblS7'  # Tier 25
+    STRIPE_TIER_50_400_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBXR5gNWHO'  # Tier 50
+    STRIPE_TIER_125_800_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBF4PsfCG9'  # Tier 125
+    STRIPE_TIER_200_1000_ID_PROD: str = 'price_1RMZYBCQSpuIbcUBlv69Sl4i'  # Tier 200
     
-    # Subscription tier IDs - Staging
-    STRIPE_FREE_TIER_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrw14abxeL'
-    STRIPE_TIER_2_20_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrCRu0E4Gi'
-    STRIPE_TIER_6_50_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrvjlz5p5V'
-    STRIPE_TIER_12_100_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrT6UfgblC'
-    STRIPE_TIER_25_200_ID_STAGING: str = 'price_1RIGvuG6l1KZGqIrOVLKlOMj'
-    STRIPE_TIER_50_400_ID_STAGING: str = 'price_1RIKNgG6l1KZGqIrvsat5PW7'
-    STRIPE_TIER_125_800_ID_STAGING: str = 'price_1RIKNrG6l1KZGqIrjKT0yGvI'
-    STRIPE_TIER_200_1000_ID_STAGING: str = 'price_1RIKQ2G6l1KZGqIrum9n8SI7'
+    # Subscription tier IDs - Staging (Luciq - same as production)
+    STRIPE_FREE_TIER_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBKkOp4qfZ'  # Free tier
+    STRIPE_TIER_2_20_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBEsEwW6cO'  # Tier 2
+    STRIPE_TIER_6_50_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBoLIdk8yv'  # Tier 6
+    STRIPE_TIER_12_100_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUB4xpnBWn2'  # Tier 12
+    STRIPE_TIER_25_200_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBrVEJblS7'  # Tier 25
+    STRIPE_TIER_50_400_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBXR5gNWHO'  # Tier 50
+    STRIPE_TIER_125_800_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBF4PsfCG9'  # Tier 125
+    STRIPE_TIER_200_1000_ID_STAGING: str = 'price_1RMZYBCQSpuIbcUBlv69Sl4i'  # Tier 200
     
     # Computed subscription tier IDs based on environment
     @property
@@ -154,9 +154,9 @@ class Configuration:
     STRIPE_DEFAULT_PLAN_ID: Optional[str] = None
     STRIPE_DEFAULT_TRIAL_DAYS: int = 14
     
-    # Stripe Product IDs
-    STRIPE_PRODUCT_ID_PROD: str = 'prod_SCl7AQ2C8kK1CD'
-    STRIPE_PRODUCT_ID_STAGING: str = 'prod_SCgIj3G7yPOAWY'
+    # Stripe Product IDs (Luciq)
+    STRIPE_PRODUCT_ID_PROD: str = 'prod_SH7nxrLxYVFTgM'  # Production product ID
+    STRIPE_PRODUCT_ID_STAGING: str = 'prod_SH7nxrLxYVFTgM'  # Staging product ID (using same as production)
     
     # Sandbox configuration
     SANDBOX_IMAGE_NAME = "kortix/suna:0.1.3"
@@ -166,6 +166,16 @@ class Configuration:
     LANGFUSE_PUBLIC_KEY: Optional[str] = None
     LANGFUSE_SECRET_KEY: Optional[str] = None
     LANGFUSE_HOST: str = "https://cloud.langfuse.com"
+
+    # Admin configuration - comma-separated list of admin user IDs
+    ADMIN_USER_IDS: Optional[str] = None
+
+    @property
+    def get_admin_user_ids(self) -> list[str]:
+        """Parse comma-separated admin user IDs into a list."""
+        if not self.ADMIN_USER_IDS:
+            return []
+        return [user_id.strip() for user_id in self.ADMIN_USER_IDS.split(',') if user_id.strip()]
 
     @property
     def STRIPE_PRODUCT_ID(self) -> str:
