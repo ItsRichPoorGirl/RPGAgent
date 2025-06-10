@@ -234,6 +234,15 @@ async def can_use_model(client, user_id: str, model_name: str):
             "plan_name": "Local Development",
             "minutes_limit": "no limit"
         }
+    
+    # Admin bypass - check if user is admin
+    try:
+        admin_user_ids = config.get_admin_user_ids
+        if user_id in admin_user_ids:
+            logger.info(f"Admin model access bypass activated for user ID: {user_id}")
+            return True, "Admin access - all models allowed", ["admin_unlimited"]
+    except Exception as e:
+        logger.warning(f"Error checking admin status for user {user_id}: {str(e)}")
         
     allowed_models = await get_allowed_models_for_user(client, user_id)
     resolved_model = MODEL_NAME_ALIASES.get(model_name, model_name)
