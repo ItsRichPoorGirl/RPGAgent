@@ -123,8 +123,8 @@ async def log_requests_middleware(request: Request, call_next):
 # Define allowed origins based on environment
 allowed_origins = [
     "https://v0-luciq-ai.vercel.app",  # Luciq production frontend
-    "https://www.luciq-ai.com", 
-    "https://luciq-ai.com", 
+    "https://www.luciqai.com", 
+    "https://luciqai.com", 
     "http://localhost:3000"
 ]
 allow_origin_regex = None
@@ -132,7 +132,7 @@ allow_origin_regex = None
 # Add staging-specific origins
 if config.ENV_MODE == EnvMode.STAGING:
     allowed_origins.extend([
-        "https://staging.luciq-ai.com",
+        "https://staging.luciqai.com",
         "https://v0-luciq-ai.vercel.app"  # Also allow in staging
     ])
     allow_origin_regex = r"https://.*-luciq-ai\.vercel\.app"
